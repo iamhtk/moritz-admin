@@ -1,4 +1,8 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+Moritz admin — firm operations dashboard for same-day flat-fee matters.
+
+Ask and client-update drafting stream from **Google Gemini** (`gemini-3.5-flash-lite`) via `GEMINI_API_KEY`. Copy `.env.example` to `.env.local` and fill in Supabase plus the Gemini key.
+
+Before the first seed (or after pulling relative-time changes), run `supabase/relative-time.sql` in the Supabase SQL editor. Seeded matters and activity store minute offsets so the demo clock stays a busy Friday afternoon without re-seeding.
 
 ## Getting Started
 
@@ -34,3 +38,4 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+# moritz-admin
