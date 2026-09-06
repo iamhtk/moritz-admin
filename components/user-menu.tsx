@@ -1,0 +1,101 @@
+"use client";
+
+import { Moon, Sun } from "lucide-react";
+import { useTheme } from "next-themes";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
+export function UserMenu() {
+  const { theme, setTheme } = useTheme();
+  const isDark = theme === "dark";
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          type="button"
+          variant="ghost"
+          className="h-auto w-full justify-start gap-2.5 rounded-md px-1 py-1.5 text-left hover:bg-surface-hover group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"
+        >
+          <Avatar size="sm">
+            <AvatarFallback
+              className="font-medium"
+              style={{ fontSize: "var(--text-11)" }}
+            >
+              IS
+            </AvatarFallback>
+          </Avatar>
+          <div className="min-w-0 flex-1 group-data-[collapsible=icon]:hidden">
+            <div
+              className="truncate font-medium text-foreground"
+              style={{ fontSize: "var(--text-13)" }}
+            >
+              Ingrid Solberg
+            </div>
+            <div
+              className="truncate text-text-tertiary"
+              style={{ fontSize: "var(--text-11)" }}
+            >
+              Head of operations
+            </div>
+          </div>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent
+        side="top"
+        align="start"
+        className="w-56"
+        style={{
+          background: "var(--glass-bg)",
+          backdropFilter: "var(--glass-blur)",
+          WebkitBackdropFilter: "var(--glass-blur)",
+          border: "1px solid var(--glass-border)",
+          boxShadow: "var(--glass-shadow), var(--glass-inset)",
+        }}
+      >
+        <DropdownMenuLabel className="font-normal">
+          <div
+            className="font-medium text-foreground"
+            style={{ fontSize: "var(--text-13)" }}
+          >
+            Ingrid Solberg
+          </div>
+          <div
+            className="text-text-tertiary"
+            style={{ fontSize: "var(--text-11)" }}
+          >
+            ingrid@moritzlegal.com
+          </div>
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          onClick={() => setTheme(isDark ? "light" : "dark")}
+          aria-label={
+            isDark ? "Switch to light mode" : "Switch to dark mode"
+          }
+        >
+          {isDark ? <Sun /> : <Moon />}
+          <span>{isDark ? "Light mode" : "Dark mode"}</span>
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem disabled className="flex-col items-start gap-0.5">
+          <span>Sign out</span>
+          <span
+            className="font-normal text-text-tertiary"
+            style={{ fontSize: "var(--text-11)" }}
+          >
+            Authentication is out of scope for this concept.
+          </span>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
