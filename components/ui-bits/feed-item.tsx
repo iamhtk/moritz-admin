@@ -5,7 +5,9 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { LawyerAvatar } from "@/components/ui-bits/lawyer-avatar";
 import type { ActivityItem } from "@/lib/supabase";
+import { cn } from "cn";
 
 function shortName(name: string | null): string {
   if (!name) return "Someone";
@@ -123,16 +125,34 @@ function formatTime(iso: string) {
   return `${hours}:${minutes}`;
 }
 
+function isLawyerActor(actorId: string | null): actorId is string {
+  return !!actorId && /^l\d+$/.test(actorId);
+}
+
 export function FeedItem({ item }: { item: ActivityItem }) {
   const plain = sentencePlain(item);
+  const lawyerId = isLawyerActor(item.actor_id) ? item.actor_id : null;
 
   return (
     <li className="grid grid-cols-[auto_1fr_auto] items-start gap-2 py-2">
-      <span
-        className="mt-2 size-1.5 shrink-0 rounded-full"
-        style={{ background: dotColor(item.verb) }}
-        aria-hidden
-      />
+      {lawyerId && item.actorName ? (
+        <LawyerAvatar
+          lawyerId={lawyerId}
+          name={item.actorName}
+          initials={item.actorInitials}
+          size="sm"
+          className="mt-0.5 rounded-[7px] after:rounded-[7px]"
+        />
+      ) : (
+        <span
+          className={cn(
+            "mt-2 size-1.5 shrink-0 rounded-full",
+            item.verb === "escalated" && "pulse-dot"
+          )}
+          style={{ background: dotColor(item.verb) }}
+          aria-hidden
+        />
+      )}
       <Tooltip>
         <TooltipTrigger asChild>
           <p

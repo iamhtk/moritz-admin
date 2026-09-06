@@ -231,14 +231,17 @@
   --capacity-track-h: 6px;
   --capacity-fill-ok: var(--status-ok-fill);
   --capacity-fill-watch: var(--status-watch-fill);
-  --capacity-fill-over: var(--status-watch-fill);
+  --capacity-fill-over: var(--rowan-400);
   --capacity-threshold-watch: 80;
   --capacity-threshold-over: 100;
   --capacity-tick: var(--snow-500);
 
   /* Sparkline. Legible or absent. Never on the at-risk stat, which already carries red. */
   --spark-stroke: var(--fjord-300);
-  --spark-width: 1.75px;
+  --spark-width: 1.5px;
+  /* Terminal dot: one stop deeper than the line so it reads as the line's
+     anchor into the stat number, not just another segment of it. */
+  --spark-dot: var(--fjord-500);
 
   /* SLA clock */
   --sla-ok-fg: var(--text-secondary);
@@ -497,5 +500,53 @@
     display: none;
     width: 0;
     height: 0;
+  }
+}
+
+/* Live urgency pulse. Reserved for the At-risk stat and escalated Pulse feed
+   dots only — the sole two places a live blinking signal should draw the
+   eye. Everywhere else stays still, or the signal stops meaning anything.
+   The reduced-motion rule in @layer base above already collapses this to a
+   single 0.01ms frame, which lands on opacity: 1 — a plain solid dot. */
+@keyframes pulse-dot {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+@utility pulse-dot {
+  animation: pulse-dot 1.75s ease-in-out infinite;
+}
+
+/* Glass fallback. Every Sheet/Dialog/CommandDialog surface (New matter, Ask,
+   command palette, Assign, Quote, client update, the user menu) paints its
+   background with --glass-bg under a backdrop-filter blur. If a browser or
+   OS can't render that blur — no backdrop-filter support, or the user has
+   turned transparency down — the panel must not fall back to a barely-there
+   translucent pane with unreadable text over the page behind it. Make it a
+   fully opaque popover instead, same as every other floating surface. */
+@media (prefers-reduced-transparency: reduce) {
+  :root {
+    --glass-bg: var(--popover);
+    --glass-border: var(--border);
+  }
+  .dark {
+    --glass-bg: var(--popover);
+    --glass-border: var(--border);
+  }
+}
+
+@supports not (backdrop-filter: blur(1px)) {
+  :root {
+    --glass-bg: var(--popover);
+    --glass-border: var(--border);
+  }
+  .dark {
+    --glass-bg: var(--popover);
+    --glass-border: var(--border);
   }
 }

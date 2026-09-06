@@ -186,8 +186,10 @@ export default function MattersPage() {
   return (
     <AppShell>
       <AutoHideScroll className="min-h-0 flex-1">
-        <div className="px-8 pt-6 pb-12">
-          <div className="mx-auto w-full max-w-[1440px]">
+        <div className="min-w-0 px-4 pt-6 pb-12 md:px-8">
+          {/* Overview centres a 1440px column beside a 340px Pulse rail. No rail
+              here, so cap at 1440 + 340 to land on the same left edge. */}
+          <div className="mx-auto w-full min-w-0 max-w-[1780px]">
             <Suspense
               fallback={
                 <>

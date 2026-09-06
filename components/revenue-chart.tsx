@@ -59,7 +59,7 @@ export function RevenueChart({
   const running = data.at(-1)?.revenue ?? 0;
 
   return (
-    <Card className="gap-0 rounded-lg p-4 [--card-spacing:0px]">
+    <Card className="h-full flex flex-col gap-0 rounded-lg p-4 [--card-spacing:0px]">
       <ChartContainer
         config={chartConfig}
         className="aspect-auto h-40 w-full"
@@ -141,7 +141,7 @@ export function RevenueChart({
 
 export function RevenueChartSkeleton() {
   return (
-    <Card className="gap-0 rounded-lg p-4 [--card-spacing:0px]">
+    <Card className="h-full flex flex-col gap-0 rounded-lg p-4 [--card-spacing:0px]">
       <Skeleton className="h-40 w-full rounded-md" />
       <Skeleton className="mt-2.5 h-3 w-4/5 max-w-md" />
     </Card>

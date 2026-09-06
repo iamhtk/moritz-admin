@@ -17,7 +17,7 @@ const fillByState: Record<CapacityState, string> = {
 const toneByState: Record<CapacityState, StatusTone> = {
   room: "ok",
   high: "watch",
-  over: "watch",
+  over: "risk",
 };
 
 export function CapacityMeter({

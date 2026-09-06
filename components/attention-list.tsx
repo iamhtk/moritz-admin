@@ -64,10 +64,8 @@ function AttentionReason({ item }: { item: AttentionItem }) {
         {" · "}
         <Tooltip>
           <TooltipTrigger asChild>
-            <span className="inline-flex align-baseline">
-              <StatusBadge tone="info" className="h-4 px-2">
-                {item.triage.type} · {item.triage.serviceLine}
-              </StatusBadge>
+            <span className="cursor-default">
+              {item.triage.type} · {item.triage.serviceLine}
             </span>
           </TooltipTrigger>
           <TooltipContent side="bottom" className="max-w-xs">
@@ -143,7 +141,7 @@ function AttentionActions({
         <Button
           type="button"
           size="sm"
-          variant="ghost"
+          variant="outline"
           onClick={() => {
             const matter =
               data?.matters.find((m) => m.id === item.matterId) ??
@@ -175,7 +173,7 @@ function AttentionActions({
         <Button
           type="button"
           size="sm"
-          variant="ghost"
+          variant="outline"
           className="min-h-11 w-full"
           onClick={() => {
             const matter =

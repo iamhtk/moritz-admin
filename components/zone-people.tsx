@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import { AlertCircle } from "lucide-react";
 import {
   Alert,
@@ -28,6 +29,38 @@ export function ZonePeople({
   hideLabel?: boolean;
 }) {
   const { data, error, isPending, refetch, isFetching } = useOverview();
+  const gridRef = useRef<HTMLDivElement>(null);
+  const [autoRows, setAutoRows] = useState<number>();
+
+  // The lawyer table sits beside the deadline table in a stretched grid row.
+  // Its own row height is fixed, but the deadline table's rows aren't (some
+  // wrap to two lines), so a fixed preview count leaves a gap between the
+  // last lawyer row and the "Show more" footer once the card is stretched to
+  // match. Measure the deadline table's actual height and size the lawyer
+  // preview to fill it, instead of guessing a row count.
+  useEffect(() => {
+    const el = gridRef.current;
+    if (!el || !data) return;
+
+    const recompute = () => {
+      const [lawyerTable, deadlineTable] = el.querySelectorAll("table");
+      if (!lawyerTable || !deadlineTable) return;
+      const rowH =
+        lawyerTable.querySelector("tbody tr")?.getBoundingClientRect()
+          .height ?? 0;
+      if (!rowH) return;
+      const headerH =
+        lawyerTable.querySelector("thead")?.getBoundingClientRect().height ??
+        0;
+      const available = deadlineTable.getBoundingClientRect().height - headerH;
+      setAutoRows(Math.max(0, Math.ceil(available / rowH)));
+    };
+
+    recompute();
+    const ro = new ResizeObserver(recompute);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [data]);
 
   if (isPending) {
     return (
@@ -37,7 +70,7 @@ export function ZonePeople({
           meta={hideLabel ? undefined : "Loading…"}
           visuallyHidden={hideLabel}
         />
-        <div className="grid grid-cols-1 items-start gap-3 lg:grid-cols-[1.4fr_1fr]">
+        <div className="grid grid-cols-1 items-stretch gap-3 lg:grid-cols-[1.4fr_1fr]">
           <CapacityTableSkeleton />
           <DeadlineListSkeleton />
         </div>
@@ -92,8 +125,14 @@ export function ZonePeople({
           {meta}
         </p>
       ) : null}
-      <div className="grid grid-cols-1 items-start gap-3 lg:grid-cols-[1.4fr_1fr]">
-        <CapacityTable lawyers={data.lawyers} />
+      <div
+        ref={gridRef}
+        className="grid grid-cols-1 items-stretch gap-3 lg:grid-cols-[1.4fr_1fr]"
+      >
+        <CapacityTable
+          lawyers={data.lawyers}
+          minRows={autoRows ?? data.deadlines.length}
+        />
         <DeadlineList
           deadlines={data.deadlines}
           slaMinutes={data.config.slaMinutes}

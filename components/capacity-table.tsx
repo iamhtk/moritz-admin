@@ -19,6 +19,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { CapacityMeter } from "@/components/ui-bits/capacity-meter";
+import { LawyerAvatar } from "@/components/ui-bits/lawyer-avatar";
 import { StatusBadge } from "@/components/ui-bits/status-badge";
 import type { CapacityState, LawyerLoad } from "@/lib/supabase";
 import { useDashboardActions } from "@/components/actions-provider";
@@ -30,7 +31,7 @@ const PREVIEW_MOBILE = 5;
 const badgeTone: Record<CapacityState, "ok" | "watch" | "risk"> = {
   room: "ok",
   high: "watch",
-  over: "watch",
+  over: "risk",
 };
 
 function LawyerAction({
@@ -61,7 +62,7 @@ function LawyerAction({
     <Button
       type="button"
       size="sm"
-      variant="ghost"
+      variant="outline"
       className={mobile ? "min-h-11" : undefined}
       onClick={() =>
         router.push(`/lawyers?id=${encodeURIComponent(lawyer.id)}`)
@@ -77,18 +78,12 @@ function LawyerCard({ lawyer }: { lawyer: LawyerLoad }) {
     <Card className="flex flex-col gap-3 rounded-lg p-4 [--card-spacing:0px]">
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2.5">
-          <div
-            className="flex size-9 shrink-0 items-center justify-center font-semibold"
-            style={{
-              borderRadius: "9px",
-              background: "var(--accent)",
-              color: "var(--accent-foreground)",
-              fontSize: "var(--text-11)",
-            }}
-            aria-hidden
-          >
-            {lawyer.initials}
-          </div>
+          <LawyerAvatar
+            lawyerId={lawyer.id}
+            name={lawyer.name}
+            initials={lawyer.initials}
+            size="lg"
+          />
           <div className="min-w-0">
             <div
               className="truncate font-medium text-foreground"
@@ -121,7 +116,10 @@ function LawyerCard({ lawyer }: { lawyer: LawyerLoad }) {
           style={{ fontSize: "var(--text-11)" }}
         >
           <span>
-            Active <span className="num font-medium text-foreground">{lawyer.activeMatters}</span>
+            Active{" "}
+            <span className="num font-medium text-foreground">
+              {lawyer.activeMatters}
+            </span>
           </span>
           <span>
             This week{" "}
@@ -136,10 +134,26 @@ function LawyerCard({ lawyer }: { lawyer: LawyerLoad }) {
   );
 }
 
-export function CapacityTable({ lawyers }: { lawyers: LawyerLoad[] }) {
+export function CapacityTable({
+  lawyers,
+  minRows,
+}: {
+  lawyers: LawyerLoad[];
+  /**
+   * Desktop table sits beside the deadline list in a stretched grid row, so a
+   * short preview leaves blank space below the "Show more" footer once the
+   * card is forced up to the taller sibling's height. Pass the sibling's row
+   * count here so we show that many lawyers instead of leaving a gap.
+   */
+  minRows?: number;
+}) {
   const [expanded, setExpanded] = useState(false);
   const isMobile = useIsMobile();
-  const preview = isMobile ? PREVIEW_MOBILE : PREVIEW_DESKTOP;
+  const desktopPreview = Math.min(
+    lawyers.length,
+    Math.max(PREVIEW_DESKTOP, minRows ?? 0)
+  );
+  const preview = isMobile ? PREVIEW_MOBILE : desktopPreview;
   const remaining = lawyers.length - preview;
   const shouldCollapse = !expanded && remaining >= 3;
   const visible = shouldCollapse ? lawyers.slice(0, preview) : lawyers;
@@ -165,7 +179,7 @@ export function CapacityTable({ lawyers }: { lawyers: LawyerLoad[] }) {
         ) : null}
       </div>
 
-      <Card className="hidden gap-0 rounded-lg py-0 [--card-spacing:0px] md:block">
+      <Card className="hidden h-full flex-col gap-0 rounded-lg py-0 [--card-spacing:0px] md:flex">
         <Table>
           <TableHeader>
             <TableRow className="border-border hover:bg-transparent">
@@ -220,18 +234,12 @@ export function CapacityTable({ lawyers }: { lawyers: LawyerLoad[] }) {
               >
                 <TableCell className="px-4 py-0">
                   <div className="flex items-center gap-2.5">
-                    <div
-                      className="flex size-7 shrink-0 items-center justify-center font-semibold"
-                      style={{
-                        borderRadius: "9px",
-                        background: "var(--accent)",
-                        color: "var(--accent-foreground)",
-                        fontSize: "var(--text-11)",
-                      }}
-                      aria-hidden
-                    >
-                      {lawyer.initials}
-                    </div>
+                    <LawyerAvatar
+                      lawyerId={lawyer.id}
+                      name={lawyer.name}
+                      initials={lawyer.initials}
+                      size="md"
+                    />
                     <div className="min-w-0">
                       <div
                         className="truncate font-medium leading-tight text-foreground"
@@ -282,7 +290,7 @@ export function CapacityTable({ lawyers }: { lawyers: LawyerLoad[] }) {
         </Table>
         {showMore ? (
           <div
-            className="px-4 py-2"
+            className="mt-auto px-4 py-2"
             style={{ borderTop: "1px solid var(--border)" }}
           >
             <Button
@@ -314,7 +322,7 @@ export function CapacityTableSkeleton() {
           </Card>
         ))}
       </div>
-      <Card className="hidden gap-0 rounded-lg py-0 [--card-spacing:0px] md:block">
+      <Card className="hidden h-full flex-col gap-0 rounded-lg py-0 [--card-spacing:0px] md:flex">
         <div
           className="grid grid-cols-[1.4fr_auto_1.2fr_auto_auto] gap-4 px-4 py-2.5"
           style={{ borderBottom: "1px solid var(--border)" }}

@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/ui-bits/status-badge";
 import { CapacityMeter } from "@/components/ui-bits/capacity-meter";
+import { LawyerAvatar } from "@/components/ui-bits/lawyer-avatar";
 import { useAssign } from "@/lib/use-actions";
 import type { LawyerLoad, MatterStatus } from "@/lib/supabase";
 import { useSheetSide } from "@/hooks/use-sheet-side";
@@ -175,18 +176,12 @@ export function AssignSheet({
                           );
                         }}
                       >
-                        <div
-                          className="flex size-7 shrink-0 items-center justify-center font-semibold"
-                          style={{
-                            borderRadius: "9px",
-                            background: "var(--accent)",
-                            color: "var(--accent-foreground)",
-                            fontSize: "var(--text-11)",
-                          }}
-                          aria-hidden
-                        >
-                          {lawyer.initials}
-                        </div>
+                        <LawyerAvatar
+                          lawyerId={lawyer.id}
+                          name={lawyer.name}
+                          initials={lawyer.initials}
+                          size="md"
+                        />
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2">
                             <span

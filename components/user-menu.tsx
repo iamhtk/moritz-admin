@@ -2,7 +2,6 @@
 
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -12,6 +11,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { LawyerAvatar } from "@/components/ui-bits/lawyer-avatar";
+
+/** Stable seed for the ops user in the sidebar footer. */
+const INGRID_ID = "ingrid";
 
 export function UserMenu() {
   const { theme, setTheme } = useTheme();
@@ -25,14 +28,13 @@ export function UserMenu() {
           variant="ghost"
           className="h-auto w-full justify-start gap-2.5 rounded-md px-1 py-1.5 text-left hover:bg-surface-hover group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"
         >
-          <Avatar size="sm">
-            <AvatarFallback
-              className="font-medium"
-              style={{ fontSize: "var(--text-11)" }}
-            >
-              IS
-            </AvatarFallback>
-          </Avatar>
+          <LawyerAvatar
+            lawyerId={INGRID_ID}
+            name="Ingrid Solberg"
+            initials="IS"
+            size="sm"
+            className="rounded-full after:rounded-full"
+          />
           <div className="min-w-0 flex-1 group-data-[collapsible=icon]:hidden">
             <div
               className="truncate font-medium text-foreground"

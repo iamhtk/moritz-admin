@@ -74,7 +74,7 @@ export function kindToTone(kind: AttentionItem["kind"]): StatusTone {
     case "unassigned":
       return "info";
     case "overCapacity":
-      return "watch";
+      return "risk";
     case "unquoted":
       return "neutral";
   }

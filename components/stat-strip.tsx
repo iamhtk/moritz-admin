@@ -31,7 +31,7 @@ function StatValue({
         <motion.span
           key={value}
           data-stat
-          className="inline-block cursor-default"
+          className="inline-flex cursor-default items-center gap-1.5"
           style={
             risk && value > 0
               ? { color: "var(--status-risk-fg)" }
@@ -41,6 +41,13 @@ function StatValue({
           animate={{ opacity: 1 }}
           transition={{ duration: 0.15 }}
         >
+          {risk && value > 0 ? (
+            <span
+              aria-hidden
+              className="pulse-dot size-2 shrink-0 rounded-full"
+              style={{ background: "var(--status-risk-fill)" }}
+            />
+          ) : null}
           {value}
         </motion.span>
       </TooltipTrigger>
@@ -140,7 +147,7 @@ export function StatStrip({ stats }: { stats: Stats }) {
               >
                 {cell.label}
               </div>
-              <div className="flex items-baseline justify-start gap-4">
+              <div className="flex items-center justify-start gap-4">
                 <StatValue
                   value={cell.value}
                   tooltip={cell.tooltip}
@@ -197,7 +204,7 @@ export function StatStripSkeleton() {
               )}
             >
               <Skeleton className="h-3 w-20" />
-              <div className="flex items-baseline justify-start gap-4">
+              <div className="flex items-center justify-start gap-4">
                 <Skeleton className="h-[34px] w-14" />
                 <Skeleton className="h-6 w-[76px]" />
               </div>

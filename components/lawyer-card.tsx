@@ -11,6 +11,7 @@ import {
 import { CapacityMeter } from "@/components/ui-bits/capacity-meter";
 import { MinutesLeft } from "@/components/ui-bits/minutes-left";
 import { StatusBadge } from "@/components/ui-bits/status-badge";
+import { LawyerAvatar } from "@/components/ui-bits/lawyer-avatar";
 import { useDashboardActions } from "@/components/actions-provider";
 import type { LawyerLoad, MatterStatus } from "@/lib/supabase";
 import { cn } from "cn";
@@ -18,7 +19,7 @@ import { cn } from "cn";
 const capacityTone = {
   room: "ok" as const,
   high: "watch" as const,
-  over: "watch" as const,
+  over: "risk" as const,
 };
 
 export function LawyerCard({
@@ -56,18 +57,13 @@ export function LawyerCard({
       >
         <div className="flex items-start justify-between gap-3">
           <div className="flex min-w-0 items-center gap-2.5">
-            <div
-              className="flex size-9 shrink-0 items-center justify-center font-semibold"
-              style={{
-                borderRadius: 10,
-                background: "var(--accent)",
-                color: "var(--accent-foreground)",
-                fontSize: "var(--text-12)",
-              }}
-              aria-hidden
-            >
-              {lawyer.initials}
-            </div>
+            <LawyerAvatar
+              lawyerId={lawyer.id}
+              name={lawyer.name}
+              initials={lawyer.initials}
+              size="lg"
+              className="rounded-[10px] after:rounded-[10px]"
+            />
             <div className="min-w-0">
               <div
                 className="truncate font-semibold text-foreground"

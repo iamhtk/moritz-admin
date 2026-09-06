@@ -90,7 +90,7 @@ export function ZoneMoney({
           meta={hideLabel ? undefined : "Loading…"}
           visuallyHidden={hideLabel}
         />
-        <div className="hidden grid-cols-1 items-start gap-3 md:grid lg:grid-cols-2">
+        <div className="hidden grid-cols-1 items-stretch gap-3 md:grid lg:grid-cols-2">
           <RevenueChartSkeleton />
           <DeliveredChartSkeleton />
         </div>
@@ -188,7 +188,7 @@ export function ZoneMoney({
         />
       </div>
 
-      <div className="hidden grid-cols-1 items-start gap-3 md:grid lg:grid-cols-2">
+      <div className="hidden grid-cols-1 items-stretch gap-3 md:grid lg:grid-cols-2">
         <RevenueChart
           days={finance.days}
           target={finance.target}

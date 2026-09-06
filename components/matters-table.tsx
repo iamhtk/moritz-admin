@@ -36,6 +36,7 @@ import {
   stageTone,
 } from "@/components/ui-bits/status-badge";
 import { MinutesLeft } from "@/components/ui-bits/minutes-left";
+import { LawyerAvatar } from "@/components/ui-bits/lawyer-avatar";
 import { useDashboardActions } from "@/components/actions-provider";
 import type { LawyerLoad, MatterStatus } from "@/lib/supabase";
 import { cn } from "cn";
@@ -237,18 +238,13 @@ export function MattersTable({
           }
           return (
             <div className="flex items-center gap-2">
-              <div
-                className="flex size-6 shrink-0 items-center justify-center font-semibold"
-                style={{
-                  borderRadius: "7px",
-                  background: "var(--accent)",
-                  color: "var(--accent-foreground)",
-                  fontSize: "var(--text-11)",
-                }}
-                aria-hidden
-              >
-                {row.lawyer_initials}
-              </div>
+              <LawyerAvatar
+                lawyerId={row.lawyer_id}
+                name={row.lawyer_name ?? "Lawyer"}
+                initials={row.lawyer_initials}
+                size="sm"
+                className="rounded-[7px] after:rounded-[7px]"
+              />
               <span>{shortLawyerName(row.lawyer_name)}</span>
             </div>
           );
@@ -286,7 +282,7 @@ export function MattersTable({
               <Button
                 type="button"
                 size="sm"
-                variant="ghost"
+                variant="outline"
                 onClick={() => openClientUpdate(m, "delivered")}
               >
                 Update client

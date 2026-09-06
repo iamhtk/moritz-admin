@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/tooltip";
 import { StatusBadge } from "@/components/ui-bits/status-badge";
 import { MinutesLeft } from "@/components/ui-bits/minutes-left";
+import { LawyerAvatar } from "@/components/ui-bits/lawyer-avatar";
 import { useDashboardActions } from "@/components/actions-provider";
 import type { MatterStatus } from "@/lib/supabase";
 
@@ -60,7 +61,7 @@ export function DeadlineList({
 
   if (deadlines.length === 0) {
     return (
-      <Card className="gap-0 rounded-lg py-0 [--card-spacing:0px]">
+      <Card className="flex h-full flex-col gap-0 rounded-lg py-0 [--card-spacing:0px]">
         <p
           className="px-4 py-8 text-center text-text-secondary"
           style={{ fontSize: "var(--text-13)" }}
@@ -116,10 +117,21 @@ export function DeadlineList({
                           className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-1 text-text-secondary"
                           style={{ fontSize: "var(--text-12)" }}
                         >
-                          <span className="line-clamp-2">
-                            {matter.client_name} ·{" "}
-                            {shortLawyerName(matter.lawyer_name)}
-                            {slip ? " · likely to slip" : null}
+                          <span className="inline-flex min-w-0 items-center gap-1.5">
+                            {matter.lawyer_id && matter.lawyer_name ? (
+                              <LawyerAvatar
+                                lawyerId={matter.lawyer_id}
+                                name={matter.lawyer_name}
+                                initials={matter.lawyer_initials}
+                                size="sm"
+                                className="rounded-[7px] after:rounded-[7px]"
+                              />
+                            ) : null}
+                            <span className="line-clamp-2">
+                              {matter.client_name} ·{" "}
+                              {shortLawyerName(matter.lawyer_name)}
+                              {slip ? " · likely to slip" : null}
+                            </span>
                           </span>
                           {lowConfidence ? (
                             <Tooltip>
@@ -154,8 +166,8 @@ export function DeadlineList({
                     <Button
                       type="button"
                       size="sm"
-                      variant="ghost"
-                      className="min-h-11 w-full justify-start px-0"
+                      variant="outline"
+                      className="min-h-11 w-full"
                       disabled={nudging}
                       onClick={() => {
                         if (pastDue) {
@@ -188,7 +200,7 @@ export function DeadlineList({
         </ul>
       </div>
 
-      <Card className="hidden gap-0 rounded-lg py-0 [--card-spacing:0px] md:block">
+      <Card className="hidden h-full flex-col gap-0 rounded-lg py-0 [--card-spacing:0px] md:flex">
         <Table>
         <TableHeader>
           <TableRow className="border-border hover:bg-transparent">
@@ -254,29 +266,40 @@ export function DeadlineList({
                         className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-1 text-text-secondary"
                         style={{ fontSize: "var(--text-12)" }}
                       >
-                        <span className="min-w-0">
-                          {matter.client_name} ·{" "}
-                          {shortLawyerName(matter.lawyer_name)}
-                          {slip ? (
-                            <>
-                              {" · "}
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <span className="cursor-default underline decoration-dotted underline-offset-2">
-                                    likely to slip
-                                  </span>
-                                </TooltipTrigger>
-                                <TooltipContent
-                                  side="bottom"
-                                  className="max-w-xs"
-                                >
-                                  {firstName(matter.lawyer_name)}&apos;s last
-                                  three matters of this type ran past four
-                                  hours.
-                                </TooltipContent>
-                              </Tooltip>
-                            </>
+                        <span className="inline-flex min-w-0 items-center gap-1.5">
+                          {matter.lawyer_id && matter.lawyer_name ? (
+                            <LawyerAvatar
+                              lawyerId={matter.lawyer_id}
+                              name={matter.lawyer_name}
+                              initials={matter.lawyer_initials}
+                              size="sm"
+                              className="rounded-[7px] after:rounded-[7px]"
+                            />
                           ) : null}
+                          <span className="min-w-0">
+                            {matter.client_name} ·{" "}
+                            {shortLawyerName(matter.lawyer_name)}
+                            {slip ? (
+                              <>
+                                {" · "}
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <span className="cursor-default underline decoration-dotted underline-offset-2">
+                                      likely to slip
+                                    </span>
+                                  </TooltipTrigger>
+                                  <TooltipContent
+                                    side="bottom"
+                                    className="max-w-xs"
+                                  >
+                                    {firstName(matter.lawyer_name)}&apos;s last
+                                    three matters of this type ran past four
+                                    hours.
+                                  </TooltipContent>
+                                </Tooltip>
+                              </>
+                            ) : null}
+                          </span>
                         </span>
                         {lowConfidence ? (
                           <Tooltip>
@@ -316,7 +339,7 @@ export function DeadlineList({
                     <Button
                       type="button"
                       size="sm"
-                      variant="ghost"
+                      variant="outline"
                       disabled={nudging}
                       onClick={() => {
                         if (pastDue) {
@@ -355,7 +378,7 @@ export function DeadlineList({
 
 export function DeadlineListSkeleton() {
   return (
-    <Card className="gap-0 rounded-lg py-0 [--card-spacing:0px]">
+    <Card className="flex h-full flex-col gap-0 rounded-lg py-0 [--card-spacing:0px]">
       <div
         className="flex items-center justify-between px-4 py-2.5"
         style={{ borderBottom: "1px solid var(--border)" }}

@@ -59,7 +59,7 @@ export function DeliveredChart({
   });
 
   return (
-    <Card className="gap-0 rounded-lg p-4 [--card-spacing:0px]">
+    <Card className="h-full flex flex-col gap-0 rounded-lg p-4 [--card-spacing:0px]">
       <ChartContainer
         config={chartConfig}
         className="aspect-auto h-40 w-full"
@@ -147,7 +147,7 @@ export function DeliveredChart({
 
 export function DeliveredChartSkeleton() {
   return (
-    <Card className="gap-0 rounded-lg p-4 [--card-spacing:0px]">
+    <Card className="h-full flex flex-col gap-0 rounded-lg p-4 [--card-spacing:0px]">
       <Skeleton className="h-40 w-full rounded-md" />
       <Skeleton className="mt-2.5 h-3 w-3/5 max-w-sm" />
     </Card>
