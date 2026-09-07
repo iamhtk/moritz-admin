@@ -494,6 +494,8 @@ export function MattersTable({
   }, [filter, search]);
 
   // Land on the page that holds the highlighted reference.
+  // Do not depend on `table`: TanStack's useTable returns a new wrapper each
+  // render, and an unconditional setPagination({...}) then re-fires forever.
   useEffect(() => {
     if (!highlightRef) return;
     const rows = table.getSortedRowModel().rows;
@@ -501,19 +503,27 @@ export function MattersTable({
       (r) => r.original.reference.toLowerCase() === highlightRef.toLowerCase()
     );
     if (idx < 0) return;
-    setPagination((prev) => ({
-      ...prev,
-      pageIndex: Math.floor(idx / PAGE_SIZE),
-    }));
-  }, [highlightRef, filtered, table]);
+    const nextPage = Math.floor(idx / PAGE_SIZE);
+    setPagination((prev) =>
+      prev.pageIndex === nextPage ? prev : { ...prev, pageIndex: nextPage }
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- table identity is unstable; filtered + sorting cover the inputs
+  }, [highlightRef, filtered, sorting]);
 
   const pageIndex = pagination.pageIndex;
 
+  // Scroll once the highlighted row is on the current page. Guard so refetch
+  // or unrelated filtered churn does not keep calling scrollIntoView.
+  const scrolledHighlight = useRef<string | null>(null);
   useEffect(() => {
-    if (!highlightRef) return;
-    const id = `matter-row-${highlightRef}`;
-    const el = document.getElementById(id);
+    if (!highlightRef) {
+      scrolledHighlight.current = null;
+      return;
+    }
+    if (scrolledHighlight.current === highlightRef) return;
+    const el = document.getElementById(`matter-row-${highlightRef}`);
     if (!el) return;
+    scrolledHighlight.current = highlightRef;
     el.scrollIntoView({ block: "center", behavior: "smooth" });
   }, [highlightRef, pageIndex, filtered]);
 

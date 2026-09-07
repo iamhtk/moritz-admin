@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useMemo } from "react";
+import { Suspense, useEffect, useMemo, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { AlertCircle } from "lucide-react";
 import {
@@ -65,10 +65,18 @@ function LawyersPageInner() {
 
   const overCount = lawyers.filter((l) => l.capacityState === "over").length;
 
+  // Scroll the highlighted lawyer into view once per id. Highlight itself is
+  // derived during render from the query param — no state, no loop risk.
+  const scrolledId = useRef<string | null>(null);
   useEffect(() => {
-    if (!highlightId || !data) return;
+    if (!highlightId) {
+      scrolledId.current = null;
+      return;
+    }
+    if (scrolledId.current === highlightId) return;
     const el = document.getElementById(`lawyer-card-${highlightId}`);
     if (!el) return;
+    scrolledId.current = highlightId;
     el.scrollIntoView({ block: "center", behavior: "smooth" });
   }, [highlightId, data]);
 
