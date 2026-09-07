@@ -1,3 +1,4 @@
+import { formatDuration } from "@/lib/format";
 import type { OverviewPayload } from "@/lib/supabase";
 
 /**
@@ -18,6 +19,24 @@ export function buildChatContext(payload: OverviewPayload): string {
         : ""
     }; service lines ${stats.serviceLines}.`,
   ];
+
+  if (finance.turnaroundThisWeek) {
+    lines.push(
+      `Turnaround this week: average ${formatDuration(finance.turnaroundThisWeek.avgMinutes)} across ${finance.turnaroundThisWeek.count} delivered (draft + review minutes when known, else submitted-to-delivered).`
+    );
+  } else {
+    lines.push(
+      "Turnaround this week: no delivered matters with timing data in the last 7 days."
+    );
+  }
+  if (finance.turnaroundLastWeek) {
+    lines.push(
+      `Turnaround last week: average ${formatDuration(finance.turnaroundLastWeek.avgMinutes)} across ${finance.turnaroundLastWeek.count} delivered.`
+    );
+  }
+  lines.push(
+    `Firm-wide averages (all delivered with timing): draft ${finance.avgDraftMinutes}m, review ${finance.avgReviewMinutes}m, combined ${finance.avgDraftMinutes + finance.avgReviewMinutes}m.`
+  );
 
   if (attention.length) {
     lines.push("Attention:");

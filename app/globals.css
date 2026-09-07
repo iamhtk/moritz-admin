@@ -64,6 +64,8 @@
 
   /* Typography */
   --font-ui: "Manrope", ui-sans-serif, system-ui, sans-serif;
+  /* Editorial serif — page titles / major section headings only. */
+  --font-display: "Cormorant Garamond", "Times New Roman", ui-serif, Georgia, serif;
   --text-11: 0.6875rem;
   --text-12: 0.75rem;
   --text-13: 0.8125rem;
@@ -97,15 +99,27 @@
   /* Radius. One base, derived scale. */
   --radius-base: 0.5rem;
 
+  /* Motion · Tier 1. Restrained; no bounce. */
+  --motion-duration-fast: 150ms;
+  --motion-duration: 180ms;
+  --motion-duration-deliberate: 280ms;
+  --motion-duration-settle: 1400ms;
+  --motion-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --motion-ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --motion-ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+
   /* Alpha stops · snow. Used to compose glass and elevation without
      re-stating oklch outside Tier 1. */
   --snow-0-66: oklch(1 0 0 / 0.66);
   --snow-0-75: oklch(1 0 0 / 0.75);
   --snow-0-90: oklch(1 0 0 / 0.9);
+  /* Overlay glass fill: high enough that type stays readable over busy pages. */
+  --snow-0-92: oklch(1 0 0 / 0.92);
   --snow-0-12: oklch(1 0 0 / 0.12);
   /* Dark glass: keep enough tint to read type, low enough to show the page through. */
   --snow-800-48: oklch(0.29 0.02 250 / 0.48);
   --snow-800-72: oklch(0.29 0.02 250 / 0.72);
+  --snow-800-90: oklch(0.29 0.02 250 / 0.9);
   --snow-900-06: oklch(0.22 0.02 250 / 0.06);
   --snow-900-08: oklch(0.22 0.02 250 / 0.08);
   --snow-900-13: oklch(0.22 0.02 250 / 0.13);
@@ -121,6 +135,8 @@
   /* Layout */
   --sidebar-w: 15rem;
   --topbar-h: 3.5rem;
+  --bottom-nav-h: 3.75rem;
+  --overview-tabs-h: 2.75rem;
   --content-max: 90rem;
 }
 
@@ -140,18 +156,26 @@
   --primary-foreground: var(--snow-0);
   --secondary: var(--snow-100);
   --secondary-foreground: var(--snow-800);
-  --muted: var(--snow-100);
-  --muted-foreground: var(--snow-500);
-  --accent: var(--fjord-100);
-  --accent-foreground: var(--fjord-700);
+  /*
+   * --muted is a light wash for selected/hover fills behind dark text (must
+   * clear ~4.5:1 with --foreground). Do not use it as a high-contrast border;
+   * --input covers that. --muted-foreground stays mid gray for secondary copy
+   * on --card / --background.
+   */
+  --muted: var(--snow-200);
+  --muted-foreground: var(--snow-600);
+  /* Interactive accent: near-black. Pastel fjord reserved for status / brand mark. */
+  --accent: var(--snow-900);
+  --accent-foreground: var(--snow-0);
   --brand: var(--fjord-500);
   --brand-strong: var(--fjord-700);
   --destructive: var(--rowan-500);
   --destructive-foreground: var(--snow-0);
 
+  /* Dividers stay light; form controls need a stronger boundary (≥3:1 on card). */
   --border: var(--snow-200);
-  --input: var(--snow-200);
-  --ring: var(--fjord-300);
+  --input: var(--snow-500);
+  --ring: var(--snow-700);
 
   --chart-1: var(--fjord-500);
   --chart-2: var(--fjord-300);
@@ -163,10 +187,11 @@
   --sidebar-foreground: var(--snow-700);
   --sidebar-primary: var(--snow-900);
   --sidebar-primary-foreground: var(--snow-0);
-  --sidebar-accent: var(--fjord-100);
-  --sidebar-accent-foreground: var(--fjord-700);
+  /* Active nav: near-black fill (actions), not pastel accent. */
+  --sidebar-accent: var(--snow-900);
+  --sidebar-accent-foreground: var(--snow-0);
   --sidebar-border: var(--snow-200);
-  --sidebar-ring: var(--fjord-300);
+  --sidebar-ring: var(--snow-700);
 
   /* Status. The only place color carries meaning. */
   --status-ok-bg: var(--fjord-50);
@@ -201,7 +226,8 @@
   /* Body / meta copy. Must stay ≥ 4.5:1 on --card and --background. */
   --text-tertiary: var(--snow-500);
   --surface-hover: var(--snow-100);
-  --surface-selected: var(--fjord-100);
+  /* Row/matter highlight: light tint, keep dark body text. */
+  --surface-selected: var(--snow-200);
   --hairline: var(--border);
 }
 
@@ -302,11 +328,12 @@
   /* Command palette and sheets. Glass lives here and nowhere else. */
   --overlay-bg: var(--snow-900-32);
   --float-shadow: var(--shadow-float);
-  --glass-bg: var(--snow-0-66);
+  /* ~0.92 alpha + stronger blur: frosted glass that still keeps text contrast. */
+  --glass-bg: var(--snow-0-92);
   --glass-border: var(--snow-0-75);
-  --glass-blur: blur(18px) saturate(160%);
+  --glass-blur: blur(28px) saturate(160%);
   --glass-inset: inset 0 1px 0 var(--snow-0-90);
-  --glass-shadow: 0 12px 32px var(--snow-900-13);
+  --glass-shadow: 0 16px 40px var(--snow-900-13), 0 2px 8px var(--snow-900-08);
 
   /* Charts */
   --chart-revenue-line: var(--chart-1);
@@ -325,28 +352,33 @@
   --primary-foreground: var(--snow-900);
   --secondary: var(--snow-800);
   --secondary-foreground: var(--snow-100);
-  --muted: var(--snow-800);
+  /* Highlight on dark card: soft fill behind light text (≥4.5:1 with --foreground). */
+  --muted: var(--snow-700);
   --muted-foreground: var(--snow-400);
-  --accent: var(--fjord-700);
-  --accent-foreground: var(--fjord-100);
+  /* Near-white fill on dark for active actions / nav. */
+  --accent: var(--snow-50);
+  --accent-foreground: var(--snow-900);
   --brand: var(--fjord-400);
   --brand-strong: var(--fjord-200);
-  --glass-bg: var(--snow-800-48);
+  --glass-bg: var(--snow-800-90);
   --glass-border: var(--snow-0-12);
-  --border: var(--snow-700);
-  --input: var(--snow-700);
-  --ring: var(--fjord-500);
+  /* Lifted for ~3:1 UI edge contrast on dark surfaces. */
+  --border: var(--snow-500);
+  /* Split from --border: form fields need a clearer edge on dark panels. */
+  --input: var(--snow-400);
+  --ring: var(--snow-400);
   --sidebar: var(--snow-900);
   --sidebar-foreground: var(--snow-300);
-  --sidebar-accent: var(--fjord-700);
-  --sidebar-accent-foreground: var(--fjord-100);
-  --sidebar-border: var(--snow-700);
+  --sidebar-accent: var(--snow-50);
+  --sidebar-accent-foreground: var(--snow-900);
+  --sidebar-border: var(--snow-500);
   --text-secondary: var(--snow-400);
-  /* Same stop as secondary: tertiary hierarchy is size/weight, not a lighter grey. */
-  --text-tertiary: var(--snow-400);
+  /* Distinct from secondary, still ≥4.5:1 on dark backgrounds. */
+  --text-tertiary: oklch(0.64 0.013 250);
   /* One step above --card (snow-800) so row hover is visible. */
   --surface-hover: var(--snow-700);
-  --surface-selected: var(--fjord-700);
+  /* Dark mode: soft neutral wash; body text stays --foreground (light). */
+  --surface-selected: color-mix(in oklch, var(--snow-50) 12%, var(--snow-800));
   --status-ok-bg: var(--fjord-800);   --status-ok-fg: var(--fjord-100);   --status-ok-border: var(--fjord-300);
   --status-watch-bg: var(--ember-700); --status-watch-fg: var(--ember-100); --status-watch-border: var(--ember-300);
   --status-risk-bg: var(--rowan-700);  --status-risk-fg: var(--rowan-100);  --status-risk-border: var(--rowan-300);
@@ -367,6 +399,7 @@
 /* ---------- TAILWIND v4 THEME BRIDGE ----------------------------------- */
 @theme inline {
   --font-sans: var(--font-ui);
+  --font-heading: var(--font-display);
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -450,6 +483,7 @@
   }
   html {
     font-size: 16px;
+    scroll-behavior: smooth;
   }
   body {
     @apply bg-background text-foreground;
@@ -459,6 +493,14 @@
     letter-spacing: var(--tracking-tight);
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
+  }
+  /* Editorial serif — titles and major section headings only. */
+  h1,
+  h2,
+  .font-heading {
+    font-family: var(--font-display);
+    font-weight: 500;
+    letter-spacing: -0.01em;
   }
   /* Every number in the product is tabular. Money, minutes, counts. */
   .num,
@@ -480,6 +522,15 @@
     outline-offset: 2px;
   }
 
+  /* Interactive affordance: native controls and shadcn Button (data-slot="button")
+     should show the pointer cursor. Disabled stays default / non-interactive. */
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]):not(:disabled),
+  a[href],
+  [data-slot="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
       animation-duration: 0.01ms !important;
@@ -490,36 +541,172 @@
   }
 }
 
-/* Hide native scrollbars so content uses the full width; AutoHideScroll
-   draws a floating thumb that only appears while scrolling. */
+/* Hide native scrollbars by default. `.is-scrolling` (set while the user
+   scrolls) reveals a thin overlay thumb; AutoHideScroll uses `no-scrollbar`
+   plus its own floating thumb and stays permanently bar-free. */
+* {
+  scrollbar-width: none;
+}
+
+*::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  background: transparent;
+}
+
+*.is-scrolling {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in oklch, var(--foreground) 28%, transparent)
+    transparent;
+}
+
+*.is-scrolling::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+*.is-scrolling::-webkit-scrollbar-thumb {
+  background: color-mix(in oklch, var(--foreground) 28%, transparent);
+  border-radius: 999px;
+}
+
+*.is-scrolling::-webkit-scrollbar-track {
+  background: transparent;
+}
+
 @utility no-scrollbar {
   -ms-overflow-style: none;
-  scrollbar-width: none;
+  scrollbar-width: none !important;
 
   &::-webkit-scrollbar {
-    display: none;
-    width: 0;
-    height: 0;
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+
+  &.is-scrolling {
+    scrollbar-width: none !important;
+  }
+
+  &.is-scrolling::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
   }
 }
 
-/* Live urgency pulse. Reserved for the At-risk stat and escalated Pulse feed
-   dots only — the sole two places a live blinking signal should draw the
-   eye. Everywhere else stays still, or the signal stops meaning anything.
-   The reduced-motion rule in @layer base above already collapses this to a
-   single 0.01ms frame, which lands on opacity: 1 — a plain solid dot. */
+/* Live urgency pulse. Quiet persistence (100% ↔ 60%), not a blink alarm.
+   Reserved for At-risk stat and escalated Pulse feed dots. */
 @keyframes pulse-dot {
   0%,
   100% {
     opacity: 1;
   }
   50% {
-    opacity: 0.4;
+    opacity: 0.6;
   }
 }
 
 @utility pulse-dot {
-  animation: pulse-dot 1.75s ease-in-out infinite;
+  animation: pulse-dot 2.8s var(--motion-ease-in-out) infinite;
+}
+
+/* Slow, low-contrast skeleton shimmer. */
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+@utility skeleton-shimmer {
+  background-image: linear-gradient(
+    90deg,
+    var(--muted) 0%,
+    color-mix(in oklch, var(--muted) 55%, var(--background)) 45%,
+    var(--muted) 100%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 2.4s var(--motion-ease-in-out) infinite;
+}
+
+/* Underline grows from center on hover (nav / text links). */
+@utility underline-grow {
+  background-image: linear-gradient(currentColor, currentColor);
+  background-position: 50% 100%;
+  background-repeat: no-repeat;
+  background-size: 0% 1px;
+  transition: background-size var(--motion-duration) var(--motion-ease-out);
+}
+@utility underline-grow-hover {
+  &:hover {
+    background-size: 100% 1px;
+  }
+}
+
+/* Brief tint after realtime/data refresh. */
+@keyframes flash-tint {
+  0% {
+    background-color: color-mix(in oklch, var(--surface-selected) 70%, transparent);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+@utility flash-tint {
+  animation: flash-tint var(--motion-duration-settle) var(--motion-ease-out) 1;
+}
+
+/* One-shot scale pop for status badge on change. */
+@keyframes status-badge-pop {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.04); }
+  100% { transform: scale(1); }
+}
+
+/* Typing indicator dots (chat thinking). */
+@keyframes typing-dot {
+  0%,
+  80%,
+  100% {
+    opacity: 0.35;
+    transform: translateY(0);
+  }
+  40% {
+    opacity: 1;
+    transform: translateY(-1px);
+  }
+}
+
+@utility typing-dot {
+  animation: typing-dot 1.2s var(--motion-ease-in-out) infinite;
+}
+
+/* Sonner toast enter/exit timing aligned to motion tokens. */
+[data-sonner-toaster] [data-sonner-toast] {
+  transition:
+    transform var(--motion-duration-deliberate) var(--motion-ease-out),
+    opacity var(--motion-duration) var(--motion-ease-out) !important;
+}
+
+/* Shared material for Sheet, Dialog/Command, Select, and Dropdown overlays.
+   Pair with Tailwind `backdrop-blur-[28px] backdrop-saturate-150` — the CSS
+   pipeline drops raw backdrop-filter declarations from plain classes. */
+.overlay-surface {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow), var(--glass-inset);
+}
+
+/* KPI / hover tooltips must not float over an open modal. */
+body:has([data-slot="sheet-overlay"][data-state="open"]) [data-slot="tooltip-content"],
+body:has([data-slot="dialog-overlay"][data-state="open"]) [data-slot="tooltip-content"] {
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
 }
 
 /* Glass fallback. Every Sheet/Dialog/CommandDialog surface (New matter, Ask,

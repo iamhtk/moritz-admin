@@ -104,16 +104,27 @@ function LawyersPageInner() {
       ) : null}
 
       {data ? (
-        <ul className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-          {lawyers.map((lawyer) => (
-            <LawyerCard
-              key={lawyer.id}
-              lawyer={lawyer}
-              matters={data.matters}
-              highlighted={highlightId === lawyer.id}
-            />
-          ))}
-        </ul>
+        lawyers.length === 0 ? (
+          <Card className="gap-0 rounded-lg py-0 [--card-spacing:0px]">
+            <p
+              className="px-4 py-8 text-center text-text-secondary"
+              style={{ fontSize: "var(--text-13)" }}
+            >
+              No co-counsel to show yet.
+            </p>
+          </Card>
+        ) : (
+          <ul className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+            {lawyers.map((lawyer) => (
+              <LawyerCard
+                key={lawyer.id}
+                lawyer={lawyer}
+                matters={data.matters}
+                highlighted={highlightId === lawyer.id}
+              />
+            ))}
+          </ul>
+        )
       ) : null}
     </>
   );

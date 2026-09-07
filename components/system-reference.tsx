@@ -1504,6 +1504,11 @@ export function SystemReference() {
                 The nine feed event types are inferred from their published
                 matter flow.
               </li>
+              <li>
+                The AI actor across authored Pulse drafts, Ask, escalation
+                handoffs, and client-update drafts is named Nora. Ambient
+                forecasts and inline decision aids stay unattributed.
+              </li>
             </ul>
             <p
               className="mt-6 max-w-[65ch] text-text-secondary"

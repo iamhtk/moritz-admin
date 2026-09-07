@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ChevronDown, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -19,13 +19,15 @@ import { useDashboardActions } from "@/components/actions-provider";
 import { useOverview } from "@/hooks/use-overview";
 import { useIsMobile } from "@/hooks/use-mobile";
 import type { AttentionItem } from "@/lib/supabase";
+import { formatFeeDollars } from "@/lib/format";
+import { MatterReference } from "@/components/matter-reference";
 import { cn } from "cn";
 
 const PREVIEW_DESKTOP = 6;
 const PREVIEW_MOBILE = 4;
 
 function formatBand(low: number, high: number) {
-  return `$${low.toLocaleString("en-US")} to $${high.toLocaleString("en-US")}`;
+  return `${formatFeeDollars(low)} to ${formatFeeDollars(high)}`;
 }
 
 /** Same threshold and copy as the deadline list (review drafts under 0.72). */
@@ -57,7 +59,7 @@ function AttentionReason({ item }: { item: AttentionItem }) {
   if (item.kind === "unassigned" && item.triage) {
     return (
       <span
-        className="line-clamp-2 text-text-secondary"
+        className="line-clamp-3 text-text-secondary"
         style={{ fontSize: "var(--text-12)" }}
       >
         {item.reason}
@@ -94,6 +96,43 @@ function AttentionReason({ item }: { item: AttentionItem }) {
   );
 }
 
+function DuplicateNote({
+  item,
+}: {
+  item: AttentionItem;
+}) {
+  const [dismissed, setDismissed] = useState(false);
+  if (!item.duplicateOf || dismissed) return null;
+
+  return (
+    <div
+      className="flex items-start justify-between gap-2 rounded-md px-3 py-2 text-text-secondary"
+      style={{
+        fontSize: "var(--text-12)",
+        background: "var(--status-info-bg)",
+      }}
+    >
+      <p className="min-w-0">
+        Similar to{" "}
+        <MatterReference reference={item.duplicateOf.reference} />
+        , submitted{" "}
+        <span className="num">{item.duplicateOf.minutesAgo}</span> minutes
+        ago, possible duplicate
+      </p>
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        className="h-auto shrink-0 px-1.5 py-0.5 text-text-tertiary"
+        style={{ fontSize: "var(--text-11)" }}
+        onClick={() => setDismissed(true)}
+      >
+        Dismiss
+      </Button>
+    </div>
+  );
+}
+
 function AttentionActions({
   item,
   mobile,
@@ -124,7 +163,7 @@ function AttentionActions({
           type="button"
           variant="ghost"
           size="icon"
-          className="size-6 shrink-0"
+          className="size-8 shrink-0 max-md:size-11"
           aria-expanded={handoffOpen}
           aria-label="Show handoff context"
           onClick={() => setHandoffOpen((o) => !o)}
@@ -235,7 +274,9 @@ function HandoffPanel({
               background: "var(--status-info-bg)",
             }}
           >
+            <span className="font-medium text-text-tertiary">Nora&apos;s notes: </span>
             {item.handoff}
+            {item.handoffCause ? <> {item.handoffCause}</> : null}
           </p>
         </motion.div>
       ) : null}
@@ -259,18 +300,22 @@ function AttentionCard({ item }: { item: AttentionItem }) {
       transition={{ duration: 0.2, ease: "easeOut" }}
     >
       <Card className="flex flex-col gap-2 rounded-lg p-4 [--card-spacing:0px]">
-        <div className="grid grid-cols-[7.5rem_minmax(0,1fr)] items-start gap-x-3">
+        <div className="flex flex-col items-start gap-1.5">
           <div className="flex h-5 items-center">
             <StatusBadge tone={kindToTone(item.kind)}>{item.label}</StatusBadge>
           </div>
-          <div className="min-w-0">
+          <div className="min-w-0 w-full">
             <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
-              <span
-                className="font-semibold text-foreground"
-                style={{ fontSize: "var(--text-13)" }}
-              >
-                {item.title}
-              </span>
+                {/^MOR-\d+/i.test(item.title) ? (
+                  <MatterReference reference={item.title} className="font-semibold" />
+                ) : (
+                  <span
+                    className="font-semibold text-foreground"
+                    style={{ fontSize: "var(--text-13)" }}
+                  >
+                    {item.title}
+                  </span>
+                )}
               {item.lowConfidence ? (
                 <LowConfidenceBadge
                   confidence={item.lowConfidence.confidence}
@@ -281,6 +326,7 @@ function AttentionCard({ item }: { item: AttentionItem }) {
             <AttentionReason item={item} />
           </div>
         </div>
+        <DuplicateNote item={item} />
         <HandoffPanel item={item} open={handoffOpen} />
         <AttentionActions
           item={item}
@@ -306,8 +352,8 @@ function AttentionRow({ item }: { item: AttentionItem }) {
           ? undefined
           : { opacity: 0, height: 0, overflow: "hidden" }
       }
-      transition={{ duration: 0.2, ease: "easeOut" }}
-      className="px-4 py-2.5 hover:bg-surface-hover"
+      transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+      className="px-4 py-2.5 transition-colors duration-[var(--motion-duration)] ease-[var(--motion-ease-out)] hover:bg-surface-hover"
       style={{ borderBottom: "1px solid var(--border)" }}
     >
       <div className="grid grid-cols-[7.5rem_minmax(0,1fr)_auto] items-center gap-x-3">
@@ -316,12 +362,16 @@ function AttentionRow({ item }: { item: AttentionItem }) {
         </div>
         <div className="min-w-0">
           <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
-            <span
-              className="font-semibold text-foreground"
-              style={{ fontSize: "var(--text-13)" }}
-            >
-              {item.title}
-            </span>
+                {/^MOR-\d+/i.test(item.title) ? (
+                  <MatterReference reference={item.title} className="font-semibold" />
+                ) : (
+                  <span
+                    className="font-semibold text-foreground"
+                    style={{ fontSize: "var(--text-13)" }}
+                  >
+                    {item.title}
+                  </span>
+                )}
             {item.lowConfidence ? (
               <LowConfidenceBadge
                 confidence={item.lowConfidence.confidence}
@@ -330,6 +380,9 @@ function AttentionRow({ item }: { item: AttentionItem }) {
             ) : null}
           </div>
           <AttentionReason item={item} />
+          <div className="mt-1.5">
+            <DuplicateNote item={item} />
+          </div>
           <HandoffPanel item={item} open={handoffOpen} />
         </div>
         <AttentionActions
@@ -344,8 +397,21 @@ function AttentionRow({ item }: { item: AttentionItem }) {
 
 export function AttentionList({ items }: { items: AttentionItem[] }) {
   const [expanded, setExpanded] = useState(false);
+  const [flash, setFlash] = useState(false);
   const isMobile = useIsMobile();
   const preview = isMobile ? PREVIEW_MOBILE : PREVIEW_DESKTOP;
+  const { dataUpdatedAt } = useOverview();
+  const firstUpdated = useRef(true);
+
+  useEffect(() => {
+    if (firstUpdated.current) {
+      firstUpdated.current = false;
+      return;
+    }
+    setFlash(true);
+    const t = window.setTimeout(() => setFlash(false), 1500);
+    return () => window.clearTimeout(t);
+  }, [dataUpdatedAt]);
 
   if (items.length === 0) {
     return (
@@ -360,9 +426,9 @@ export function AttentionList({ items }: { items: AttentionItem[] }) {
     );
   }
 
-  const shouldCollapse = !expanded && items.length - preview >= 3;
-  let visible = shouldCollapse ? items.slice(0, preview) : items;
-  if (shouldCollapse) {
+  const shouldCollapse = items.length - preview >= 3;
+  let visible = expanded || !shouldCollapse ? items : items.slice(0, preview);
+  if (!expanded && shouldCollapse) {
     const shown = new Set(visible.map((i) => i.id));
     const pinned = items.filter(
       (i) => i.kind === "unassigned" && !shown.has(i.id)
@@ -370,17 +436,22 @@ export function AttentionList({ items }: { items: AttentionItem[] }) {
     if (pinned.length) visible = [...visible, ...pinned];
   }
   const remaining = items.length - visible.length;
-  const showMore = shouldCollapse && remaining > 0;
+  const showFooter = shouldCollapse;
 
   return (
     <>
-      <ul className="flex flex-col gap-3 md:hidden">
+      <ul
+        className={cn(
+          "flex flex-col gap-3 md:hidden",
+          flash && "flash-tint rounded-lg"
+        )}
+      >
         <AnimatePresence initial={false}>
           {visible.map((item) => (
             <AttentionCard key={item.id} item={item} />
           ))}
         </AnimatePresence>
-        {showMore ? (
+        {showFooter ? (
           <li>
             <Button
               type="button"
@@ -388,22 +459,33 @@ export function AttentionList({ items }: { items: AttentionItem[] }) {
               size="sm"
               className="min-h-11 w-full text-text-secondary"
               style={{ fontSize: "var(--text-12)" }}
-              onClick={() => setExpanded(true)}
+              onClick={() => setExpanded((v) => !v)}
             >
-              Show <span className="num">{remaining}</span> more
+              {expanded ? (
+                "Show less"
+              ) : (
+                <>
+                  Show <span className="num">{remaining}</span> more
+                </>
+              )}
             </Button>
           </li>
         ) : null}
       </ul>
 
-      <Card className="hidden gap-0 rounded-lg py-0 [--card-spacing:0px] md:block">
+      <Card
+        className={cn(
+          "hidden gap-0 rounded-lg py-0 [--card-spacing:0px] md:block",
+          flash && "flash-tint"
+        )}
+      >
         <ul>
           <AnimatePresence initial={false}>
             {visible.map((item) => (
               <AttentionRow key={item.id} item={item} />
             ))}
           </AnimatePresence>
-          {showMore ? (
+          {showFooter ? (
             <li
               className="px-4 py-2"
               style={{ borderTop: "1px solid var(--border)" }}
@@ -414,9 +496,15 @@ export function AttentionList({ items }: { items: AttentionItem[] }) {
                 size="sm"
                 className="w-full text-text-secondary"
                 style={{ fontSize: "var(--text-12)" }}
-                onClick={() => setExpanded(true)}
+                onClick={() => setExpanded((v) => !v)}
               >
-                Show <span className="num">{remaining}</span> more
+                {expanded ? (
+                  "Show less"
+                ) : (
+                  <>
+                    Show <span className="num">{remaining}</span> more
+                  </>
+                )}
               </Button>
             </li>
           ) : null}

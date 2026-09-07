@@ -42,3 +42,9 @@ yarn-error.log*
 next-env.d.ts
 
 scripts
+.dockerignore
+        Dockerfile
+        LEARNING.md
+        components/ui-bits/lawyer-avatar.tsx
+        supabase/01-schema.sql
+        supabase/02-relative-time.sql

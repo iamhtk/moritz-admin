@@ -31,8 +31,12 @@ const Toaster = ({ ...props }: ToasterProps) => {
       toastOptions={{
         classNames: {
           toast: "cn-toast",
+          title: "text-[var(--text-13)]",
+          description: "text-[var(--text-12)]",
         },
       }}
+      gap={8}
+      expand
       {...props}
     />
   )

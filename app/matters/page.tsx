@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { AlertCircle, Search } from "lucide-react";
 import {
   Alert,
@@ -22,6 +22,8 @@ import {
 import { useMattersDirectory } from "@/hooks/use-matters-directory";
 import { useCallback, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+
+const SEARCH_DEBOUNCE_MS = 200;
 
 const TABS: { value: MattersFilter; label: string }[] = [
   { value: "all", label: "All" },
@@ -50,8 +52,24 @@ function MattersPageInner() {
   const { data, error, isPending, refetch, isFetching } = useMattersDirectory();
 
   const filter = parseFilter(params.get("filter"));
-  const search = params.get("q") ?? "";
+  const urlSearch = params.get("q") ?? "";
   const highlightRef = params.get("ref") ?? params.get("highlight");
+
+  // Local controlled value so rapid keystrokes accumulate. Writing every
+  // keystroke straight to the URL made the input read a stale `q` between
+  // replaces, so only the last character survived.
+  const [searchInput, setSearchInput] = useState(urlSearch);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    setSearchInput(urlSearch);
+  }, [urlSearch]);
+
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, []);
 
   const setParams = useCallback(
     (next: { filter?: MattersFilter; q?: string; clearHighlight?: boolean }) => {
@@ -72,6 +90,17 @@ function MattersPageInner() {
       router.replace(qs ? `/matters?${qs}` : "/matters", { scroll: false });
     },
     [params, router]
+  );
+
+  const onSearchChange = useCallback(
+    (value: string) => {
+      setSearchInput(value);
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      debounceRef.current = setTimeout(() => {
+        setParams({ q: value, clearHighlight: true });
+      }, SEARCH_DEBOUNCE_MS);
+    },
+    [setParams]
   );
 
   const meta = useMemo(() => {
@@ -148,16 +177,11 @@ function MattersPageInner() {
               <Input
                 id="matters-search"
                 type="search"
-                value={search}
+                value={searchInput}
                 placeholder="Search reference, client, type"
                 className="pl-8"
                 style={{ fontSize: "var(--text-13)" }}
-                onChange={(e) =>
-                  setParams({
-                    q: e.target.value,
-                    clearHighlight: true,
-                  })
-                }
+                onChange={(e) => onSearchChange(e.target.value)}
               />
             </div>
           </div>
@@ -166,15 +190,17 @@ function MattersPageInner() {
             matters={data.matters}
             lawyers={data.lawyers}
             filter={filter}
-            search={search}
+            search={searchInput}
             highlightRef={highlightRef}
-            onShowAll={() =>
+            onShowAll={() => {
+              if (debounceRef.current) clearTimeout(debounceRef.current);
+              setSearchInput("");
               setParams({
                 filter: "all",
                 q: "",
                 clearHighlight: true,
-              })
-            }
+              });
+            }}
           />
         </div>
       ) : null}

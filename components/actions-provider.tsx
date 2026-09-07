@@ -15,8 +15,10 @@ import {
   type ClientUpdateSituation,
 } from "@/components/client-update-sheet";
 import { useNudge } from "@/lib/use-actions";
+import { formatDuration } from "@/lib/format";
 import type {
   AttentionItem,
+  LawyerLoad,
   MatterStatus,
   MattersDirectoryPayload,
   OverviewPayload,
@@ -24,13 +26,23 @@ import type {
 
 type AssignMode = "assign" | "reassign";
 
+type AssignOpts = {
+  preferredLawyerId?: string | null;
+  /** When opened from over-capacity Reassign, explains which matter was picked. */
+  contextNote?: string | null;
+};
+
 type QuoteOpts = {
   suggestedFee: number | null;
   comparableCount: number | null;
 };
 
 type ActionsContextValue = {
-  openAssign: (matterId: string, mode?: AssignMode) => void;
+  openAssign: (
+    matterId: string,
+    mode?: AssignMode,
+    opts?: AssignOpts
+  ) => void;
   openAssignForLawyer: (lawyerId: string) => void;
   openQuote: (matter: MatterStatus, opts: QuoteOpts) => void;
   openNewMatter: () => void;
@@ -44,6 +56,7 @@ type ActionsContextValue = {
   setCommandPaletteOpen: (open: boolean) => void;
   chatOpen: boolean;
   setChatOpen: (open: boolean) => void;
+  assignSheetOpen: boolean;
   newMatterOpen: boolean;
   setNewMatterOpen: (open: boolean) => void;
   handleAttentionAction: (item: AttentionItem) => void;
@@ -69,7 +82,7 @@ function soonestMatterForLawyer(
   lawyerId: string,
   overview: OverviewPayload | undefined,
   directory: MattersDirectoryPayload | undefined
-): string | null {
+): MatterStatus | null {
   const pool: MatterStatus[] = [];
   if (directory?.matters) pool.push(...directory.matters);
   else if (overview?.matters) pool.push(...overview.matters);
@@ -80,12 +93,29 @@ function soonestMatterForLawyer(
       (m) => m.lawyer_id === lawyerId && m.stage !== "delivered"
     )
     .sort((a, b) => a.minutes_remaining - b.minutes_remaining)[0];
-  if (soonest) return soonest.id;
+  if (soonest) return soonest;
 
   const fromAttention = overview?.attention.find(
     (a) => a.lawyerId === lawyerId && a.matterId
   );
-  return fromAttention?.matterId ?? null;
+  if (!fromAttention?.matterId) return null;
+  return (
+    pool.find((m) => m.id === fromAttention.matterId) ??
+    overview?.deadlines.find((m) => m.id === fromAttention.matterId) ??
+    null
+  );
+}
+
+function contextNoteForLawyerMatter(
+  lawyer: LawyerLoad | undefined,
+  matter: MatterStatus
+): string {
+  const lawyerName = lawyer?.name.split(" ")[0] ?? "This lawyer";
+  const ref = matter.reference;
+  if (matter.minutes_remaining < 0) {
+    return `${lawyerName}'s soonest matter — ${ref} is past due by ${formatDuration(Math.abs(matter.minutes_remaining))}.`;
+  }
+  return `${lawyerName}'s soonest matter — ${ref} has ${formatDuration(matter.minutes_remaining)} left on the clock.`;
 }
 
 export function ActionsProvider({ children }: { children: React.ReactNode }) {
@@ -94,6 +124,12 @@ export function ActionsProvider({ children }: { children: React.ReactNode }) {
 
   const [assignMatterId, setAssignMatterId] = useState<string | null>(null);
   const [assignMode, setAssignMode] = useState<AssignMode>("assign");
+  const [assignPreferredLawyerId, setAssignPreferredLawyerId] = useState<
+    string | null
+  >(null);
+  const [assignContextNote, setAssignContextNote] = useState<string | null>(
+    null
+  );
   const [assignOpen, setAssignOpen] = useState(false);
 
   const [quoteMatter, setQuoteMatter] = useState<MatterStatus | null>(null);
@@ -113,10 +149,13 @@ export function ActionsProvider({ children }: { children: React.ReactNode }) {
   const [clientUpdateOpen, setClientUpdateOpen] = useState(false);
 
   const openAssign = useCallback(
-    (matterId: string, mode: AssignMode = "assign") => {
+    (matterId: string, mode: AssignMode = "assign", opts?: AssignOpts) => {
       setAssignMatterId(matterId);
       setAssignMode(mode);
+      setAssignPreferredLawyerId(opts?.preferredLawyerId ?? null);
+      setAssignContextNote(opts?.contextNote ?? null);
       setAssignOpen(true);
+      // Keep Ask open underneath so the conversation survives the handoff.
     },
     []
   );
@@ -127,8 +166,12 @@ export function ActionsProvider({ children }: { children: React.ReactNode }) {
       const directory = qc.getQueryData<MattersDirectoryPayload>([
         "matters-all",
       ]);
-      const matterId = soonestMatterForLawyer(lawyerId, overview, directory);
-      if (matterId) openAssign(matterId, "reassign");
+      const matter = soonestMatterForLawyer(lawyerId, overview, directory);
+      if (!matter) return;
+      const lawyer = overview?.lawyers.find((l) => l.id === lawyerId);
+      openAssign(matter.id, "reassign", {
+        contextNote: contextNoteForLawyerMatter(lawyer, matter),
+      });
     },
     [qc, openAssign]
   );
@@ -141,7 +184,17 @@ export function ActionsProvider({ children }: { children: React.ReactNode }) {
 
   const openNewMatter = useCallback(() => setNewMatterOpen(true), []);
   const openCommandPalette = useCallback(() => setPaletteOpen(true), []);
-  const openChat = useCallback(() => setChatOpen(true), []);
+  const openChat = useCallback(() => {
+    // If the command palette is open, finish dismissing it before Ask mounts.
+    // Opening both Radix dialogs in the same tick remounts Ask and looks like
+    // a conversation reset.
+    if (paletteOpen) {
+      setPaletteOpen(false);
+      window.setTimeout(() => setChatOpen(true), 80);
+      return;
+    }
+    setChatOpen(true);
+  }, [paletteOpen]);
   const openClientUpdate = useCallback(
     (matter: MatterStatus, situation: ClientUpdateSituation) => {
       setClientUpdateMatter(matter);
@@ -170,7 +223,7 @@ export function ActionsProvider({ children }: { children: React.ReactNode }) {
           "the lawyer";
         nudgeMatter({
           matterId: item.matterId,
-          reference: item.title,
+          reference: matter?.reference ?? item.title,
           lawyerName,
         });
         return;
@@ -204,6 +257,7 @@ export function ActionsProvider({ children }: { children: React.ReactNode }) {
       setCommandPaletteOpen: setPaletteOpen,
       chatOpen,
       setChatOpen,
+      assignSheetOpen: assignOpen,
       newMatterOpen,
       setNewMatterOpen,
       handleAttentionAction,
@@ -223,6 +277,7 @@ export function ActionsProvider({ children }: { children: React.ReactNode }) {
       paletteOpen,
       chatOpen,
       newMatterOpen,
+      assignOpen,
       handleAttentionAction,
       nudgeMatter,
       nudge.isPending,
@@ -236,8 +291,16 @@ export function ActionsProvider({ children }: { children: React.ReactNode }) {
       <AssignSheet
         matterId={assignMatterId}
         mode={assignMode}
+        preferredLawyerId={assignPreferredLawyerId}
+        contextNote={assignContextNote}
         open={assignOpen}
-        onOpenChange={setAssignOpen}
+        onOpenChange={(next) => {
+          setAssignOpen(next);
+          if (!next) {
+            setAssignPreferredLawyerId(null);
+            setAssignContextNote(null);
+          }
+        }}
       />
       <QuoteSheet
         matter={quoteMatter}

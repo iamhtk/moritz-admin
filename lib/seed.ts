@@ -161,9 +161,9 @@ export const matters: Matter[] = [
     fee: 350, payout: 158, channel: "slack", draftConfidence: null, flaggedClauses: 0,
     draftMinutes: null, reviewMinutes: null },
 
-  { id: "m6", reference: "MOR-1055", clientId: "c5", serviceLine: "Commercial", type: "Procurement SOW",
+  { id: "m6", reference: "MOR-1055", clientId: "c4", serviceLine: "Commercial", type: "NDA",
     stage: "submitted", lawyerId: null, submittedAt: minsAgo(4), deliveredAt: null,
-    fee: 1100, payout: 495, channel: "email", draftConfidence: null, flaggedClauses: 0,
+    fee: 350, payout: 158, channel: "email", draftConfidence: null, flaggedClauses: 0,
     draftMinutes: null, reviewMinutes: null },
 
   // --- unquoted, blocks the money zone ---
@@ -300,7 +300,7 @@ export const activity: ActivityEvent[] = [
   { id: "e6",  at: minsAgo(154), actorId: "l2",     verb: "delivered", matterId: null,  clientId: "c6",  note: "term sheet for Oslo Grid" },
   { id: "e7",  at: minsAgo(197), actorId: "l3",     verb: "meeting",   matterId: null,  clientId: "c3",  note: "client meeting with Halden Labs" },
   { id: "e8",  at: minsAgo(268), actorId: "system", verb: "onboarded", matterId: null,  clientId: "c8",  note: "enterprise plan" },
-  { id: "e9",  at: minsAgo(28),  actorId: "system", verb: "submitted", matterId: "m6",  clientId: "c5",  note: "procurement SOW via email" },
+  { id: "e9",  at: minsAgo(28),  actorId: "system", verb: "submitted", matterId: "m6",  clientId: "c4",  note: "NDA via email" },
   { id: "e10", at: minsAgo(22),  actorId: "system", verb: "submitted", matterId: "m7",  clientId: "c8",  note: "term sheet via platform" },
   { id: "e11", at: minsAgo(63),  actorId: "l12",    verb: "quoted",    matterId: "m34", clientId: "c8",  note: "$1,200" },
   { id: "e12", at: minsAgo(94),  actorId: "ai",     verb: "drafted",   matterId: "m10", clientId: "c5",  note: "sublease, 2 clauses flagged" },

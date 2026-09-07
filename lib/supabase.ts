@@ -136,6 +136,10 @@ export interface AttentionItem {
   arrival?: string | null;
   /** Escalation handoff for breach rows. Quiet when empty. */
   handoff?: string | null;
+  /** Causal add-on for handoff, computed from type averages when possible. */
+  handoffCause?: string | null;
+  /** Possible duplicate of another recent matter from the same client. */
+  duplicateOf?: { reference: string; minutesAgo: number } | null;
   /** Same threshold as the deadline list: review drafts under 0.72. */
   lowConfidence?: { confidence: number; flaggedClauses: number } | null;
 }
@@ -164,6 +168,8 @@ export interface OverviewPayload {
     dueToday: number;
     atRisk: number;
     breached: number;
+    /** Sum of flat fees on currently at-risk matters (breach + watch ≤20m). */
+    atRiskFees: number;
     unassigned: number;
     serviceLines: number;
     oldestUnassignedMinutes: number | null;
@@ -176,6 +182,8 @@ export interface OverviewPayload {
   deadlines: MatterStatus[];
   finance: {
     days: FinanceDayRow[];
+    /** Month-to-date revenue series; aligns with revenueToDate and the chart. */
+    revenueDays: FinanceDayRow[];
     target: number;
     revenueToDate: number;
     pctOfTarget: number;
@@ -190,8 +198,14 @@ export interface OverviewPayload {
     plannedThisWeek: number;
     avgDraftMinutes: number;
     avgReviewMinutes: number;
+    /** Average end-to-end minutes for matters delivered in the last 7 days. */
+    turnaroundThisWeek: { avgMinutes: number; count: number } | null;
+    /** Average end-to-end minutes for matters delivered 8–14 days ago. */
+    turnaroundLastWeek: { avgMinutes: number; count: number } | null;
     anomaly: { serviceLine: ServiceLine; avg: number; firmAvg: number; count: number } | null;
     unquoted: UnquotedMatter[];
+    /** Top fee contributors among delivered matters this month (for explain). */
+    revenueDrivers: { reference: string; fee: number; clientName: string }[];
   };
   activity: ActivityItem[];
   activityCounts: Record<string, number>;
@@ -200,6 +214,14 @@ export interface OverviewPayload {
   ai: {
     brief: { headline: string; detail: string; action: AttentionItem | null } | null;
     capacityForecast: string | null;
+    /** Week-scoped capacity projection; always present when overview loads. */
+    weeklyCapacityForecast: string;
+    /** Forward intake estimate for the coming week. */
+    predictedVolume: {
+      estimate: number;
+      basis: string;
+      weeksUsed: number;
+    };
   };
 }
 

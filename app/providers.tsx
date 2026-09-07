@@ -7,6 +7,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { ActionsProvider } from "@/components/actions-provider";
 import { ThemeProvider } from "@/components/theme-provider";
 import { DashboardOverlays } from "@/components/dashboard-overlays";
+import { ScrollbarsAutoHide } from "@/components/scrollbars-auto-hide";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -26,6 +27,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <ActionsProvider>
+            <ScrollbarsAutoHide />
             {children}
             <DashboardOverlays />
             <Toaster richColors={false} position="bottom-right" />

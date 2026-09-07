@@ -1,7 +1,8 @@
 "use client";
 
-import { motion, useReducedMotion } from "framer-motion";
+import type { ReactNode } from "react";
 import { Card } from "@/components/ui/card";
+import { formatDuration, formatFeeDollars } from "@/lib/format";
 import {
   Tooltip,
   TooltipContent,
@@ -9,6 +10,7 @@ import {
 } from "@/components/ui/tooltip";
 import { Sparkline } from "@/components/ui-bits/sparkline";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AnimatedNumber } from "@/components/ui-bits/animated-number";
 import type { OverviewPayload } from "@/lib/supabase";
 import { cn } from "cn";
 
@@ -23,68 +25,103 @@ function StatValue({
   tooltip: string;
   risk?: boolean;
 }) {
-  const reduceMotion = useReducedMotion();
+  const inner = (
+    <span
+      data-stat
+      className="inline-flex cursor-default items-center gap-1.5"
+    >
+      {risk && value > 0 ? (
+        <span
+          aria-hidden
+          className="pulse-dot size-2 shrink-0 rounded-full"
+          style={{ background: "var(--status-risk-fill)" }}
+        />
+      ) : null}
+      <AnimatedNumber value={value} risk={risk} />
+    </span>
+  );
+
+  if (!tooltip) return inner;
 
   return (
     <Tooltip>
-      <TooltipTrigger asChild>
-        <motion.span
-          key={value}
-          data-stat
-          className="inline-flex cursor-default items-center gap-1.5"
-          style={
-            risk && value > 0
-              ? { color: "var(--status-risk-fg)" }
-              : undefined
-          }
-          initial={reduceMotion ? false : { opacity: 0.35 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.15 }}
-        >
-          {risk && value > 0 ? (
-            <span
-              aria-hidden
-              className="pulse-dot size-2 shrink-0 rounded-full"
-              style={{ background: "var(--status-risk-fill)" }}
-            />
-          ) : null}
-          {value}
-        </motion.span>
-      </TooltipTrigger>
+      <TooltipTrigger asChild>{inner}</TooltipTrigger>
       <TooltipContent side="bottom">{tooltip}</TooltipContent>
     </Tooltip>
   );
 }
 
 export function StatStrip({ stats }: { stats: Stats }) {
-  const cells = [
+  const cells: {
+    label: string;
+    value: number;
+    description: ReactNode;
+    trend: number[] | null;
+    tooltip: string;
+    risk?: boolean;
+  }[] = [
     {
       label: "In flight",
       value: stats.inFlight,
-      description: `across ${stats.serviceLines} service lines`,
+      description:
+        stats.inFlight === 0 ? (
+          <>no matters in flight</>
+        ) : (
+          <>
+            across <span className="num">{stats.serviceLines}</span> service
+            lines
+          </>
+        ),
       trend: stats.inFlightTrend,
       tooltip: "Matters not yet delivered, across every service line.",
     },
     {
       label: "Due next hour",
       value: stats.dueNextHour,
-      description: `of ${stats.dueToday} due today`,
+      description:
+        stats.dueNextHour === 0 ? (
+          <>nothing due in the next hour</>
+        ) : (
+          <>
+            of <span className="num">{stats.dueToday}</span> due today
+          </>
+        ),
       trend: stats.dueTrend,
       tooltip: "Matters with under 60 minutes left on the four hour clock.",
     },
     {
       label: "At risk",
       value: stats.atRisk,
-      description: `${stats.breached} past due, ${stats.atRisk - stats.breached} under 20 min`,
-      trend: null as number[] | null,
+      description:
+        stats.atRisk === 0 ? (
+          <>nothing past due or under 20 min</>
+        ) : (
+          <>
+            <span className="num">{stats.breached}</span> past due,{" "}
+            <span className="num">{stats.atRisk - stats.breached}</span> under
+            20 min.{" "}
+            <span className="num">{stats.atRisk}</span>{" "}
+            {stats.atRisk === 1 ? "matter" : "matters"} currently at risk
+            represent {formatFeeDollars(stats.atRiskFees)} in flat fees
+          </>
+        ),
+      trend: null,
       tooltip:
-        "Matters past due, or with under 20 minutes left on the four hour clock.",
+        "Matters past due, or with under 20 minutes left on the four hour clock. Fee total is the sum of those matters' quoted flat fees.",
       risk: true,
     },
     {
       label: "Unassigned",
       value: stats.unassigned,
-      description: `oldest arrived ${stats.oldestUnassignedMinutes ?? 0} min ago`,
+      description:
+        stats.unassigned === 0 ? (
+          <>no unassigned queue right now</>
+        ) : (
+          <>
+            oldest arrived{" "}
+            {formatDuration(stats.oldestUnassignedMinutes ?? 0)} ago
+          </>
+        ),
       trend: stats.unassignedTrend,
       tooltip: "Matters submitted with a fee but no lawyer yet.",
     },
@@ -103,7 +140,14 @@ export function StatStrip({ stats }: { stats: Stats }) {
               className="font-medium text-text-secondary"
               style={{ fontSize: "var(--text-11)" }}
             >
-              {cell.label}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="cursor-default underline decoration-dotted decoration-border underline-offset-2">
+                    {cell.label}
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">{cell.tooltip}</TooltipContent>
+              </Tooltip>
             </div>
             <div className="mt-2">
               <StatValue
@@ -116,15 +160,7 @@ export function StatStrip({ stats }: { stats: Stats }) {
               className="mt-2 text-text-tertiary"
               style={{ fontSize: "var(--text-11)" }}
             >
-              {cell.description.split(/(\d+)/).map((part, idx) =>
-                /^\d+$/.test(part) ? (
-                  <span key={idx} className="num">
-                    {part}
-                  </span>
-                ) : (
-                  <span key={idx}>{part}</span>
-                )
-              )}
+              {cell.description}
             </div>
           </Card>
         ))}
@@ -145,7 +181,14 @@ export function StatStrip({ stats }: { stats: Stats }) {
                 className="font-medium text-text-secondary"
                 style={{ fontSize: "var(--text-12)" }}
               >
-                {cell.label}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="cursor-default underline decoration-dotted decoration-border underline-offset-2">
+                      {cell.label}
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">{cell.tooltip}</TooltipContent>
+                </Tooltip>
               </div>
               <div className="flex items-center justify-start gap-4">
                 <StatValue
@@ -163,15 +206,7 @@ export function StatStrip({ stats }: { stats: Stats }) {
                 className="text-text-tertiary"
                 style={{ fontSize: "var(--text-11)" }}
               >
-                {cell.description.split(/(\d+)/).map((part, idx) =>
-                  /^\d+$/.test(part) ? (
-                    <span key={idx} className="num">
-                      {part}
-                    </span>
-                  ) : (
-                    <span key={idx}>{part}</span>
-                  )
-                )}
+                {cell.description}
               </div>
             </div>
           ))}

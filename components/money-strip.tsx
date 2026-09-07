@@ -4,13 +4,20 @@ import type { ReactNode } from "react";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Sparkline } from "@/components/ui-bits/sparkline";
+import { AnimatedNumber } from "@/components/ui-bits/animated-number";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { formatFeeDollars } from "@/lib/format";
 import { cn } from "cn";
 import type { OverviewPayload } from "@/lib/supabase";
 
 type Finance = OverviewPayload["finance"];
 
 function formatCurrency(n: number) {
-  return `$${n.toLocaleString("en-US")}`;
+  return formatFeeDollars(n);
 }
 
 export function MoneyStrip({
@@ -23,19 +30,64 @@ export function MoneyStrip({
   priorMonth: string;
 }) {
   const net = finance.openedThisMonth - finance.closedThisMonth;
-  const cells = [
+  const cells: {
+    label: string;
+    value: ReactNode;
+    sub: ReactNode;
+    fullWidthMobile?: boolean;
+  }[] = [
     {
       label: "Revenue to date",
-      value: formatCurrency(finance.revenueToDate),
+      value: (
+        <AnimatedNumber
+          value={finance.revenueToDate}
+          format={formatCurrency}
+          className="font-semibold text-foreground"
+        />
+      ),
       sub: (
-        <>
-          <span className="num">{finance.pctOfTarget}</span>% of target
-        </>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              className="cursor-help text-left underline decoration-dotted decoration-border underline-offset-2"
+            >
+              <span className="num">{finance.pctOfTarget}</span>% of target
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="bottom" className="max-w-xs">
+            {finance.revenueDrivers.length >= 1 ? (
+              <>
+                On pace mainly due to{" "}
+                {finance.revenueDrivers.length === 1
+                  ? "one large matter"
+                  : "two large matters"}{" "}
+                closing this month:{" "}
+                {finance.revenueDrivers
+                  .map((d) => `${d.reference} (${formatCurrency(d.fee)})`)
+                  .join(" and ")}
+                . Sum of delivered matter fees this month vs the monthly target.
+              </>
+            ) : (
+              <>
+                Sum of all delivered matter fees this month versus the monthly
+                target. No individual delivered matters this month to name as
+                drivers.
+              </>
+            )}
+          </TooltipContent>
+        </Tooltip>
       ),
     },
     {
       label: "Target",
-      value: formatCurrency(finance.target),
+      value: (
+        <AnimatedNumber
+          value={finance.target}
+          format={formatCurrency}
+          className="font-semibold text-foreground"
+        />
+      ),
       sub: (
         <>
           <span className="num">{daysLeft}</span> days left
@@ -44,7 +96,13 @@ export function MoneyStrip({
     },
     {
       label: "Average fee",
-      value: formatCurrency(finance.avgFee),
+      value: (
+        <AnimatedNumber
+          value={finance.avgFee}
+          format={formatCurrency}
+          className="font-semibold text-foreground"
+        />
+      ),
       sub: (
         <>
           up $<span className="num">{finance.avgFeeDelta}</span> vs {priorMonth}
@@ -53,7 +111,11 @@ export function MoneyStrip({
     },
     {
       label: "Margin per matter",
-      value: `${finance.marginPct}%`,
+      value: (
+        <span className="font-semibold text-foreground">
+          <AnimatedNumber value={finance.marginPct} />%
+        </span>
+      ),
       sub: (
         <>
           payout <span className="num">{finance.payoutPct}</span>%
@@ -62,7 +124,13 @@ export function MoneyStrip({
     },
     {
       label: "Opened vs closed",
-      value: `${finance.openedThisMonth} / ${finance.closedThisMonth}`,
+      value: (
+        <span className="font-semibold text-foreground">
+          <AnimatedNumber value={finance.openedThisMonth} />
+          {" / "}
+          <AnimatedNumber value={finance.closedThisMonth} />
+        </span>
+      ),
       sub: (
         <>
           net +<span className="num">{net}</span> in flight
@@ -90,7 +158,7 @@ export function MoneyStrip({
               {cell.label}
             </div>
             <div
-              className="num font-semibold text-foreground"
+              className="num"
               style={{ fontSize: "var(--text-20)", marginTop: "4px" }}
             >
               {cell.value}
@@ -122,7 +190,7 @@ export function MoneyStrip({
                 {cell.label}
               </div>
               <div
-                className="num font-semibold text-foreground"
+                className="num"
                 style={{
                   fontSize: "var(--text-20)",
                   marginTop: "4px",

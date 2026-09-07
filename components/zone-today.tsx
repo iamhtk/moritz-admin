@@ -18,6 +18,7 @@ import {
   AttentionList,
   AttentionListSkeleton,
 } from "@/components/attention-list";
+import { CrossfadeSwap } from "@/components/ui-bits/animated-number";
 import { useOverview } from "@/hooks/use-overview";
 
 function formatGeneratedAt(iso: string) {
@@ -33,19 +34,7 @@ function formatGeneratedAt(iso: string) {
 export function ZoneToday() {
   const { data, error, isPending, refetch, isFetching } = useOverview();
 
-  if (isPending) {
-    return (
-      <section aria-label="Today">
-        <ZoneLabel title="Today" meta="Loading…" />
-        <div className="space-y-3">
-          <StatStripSkeleton />
-          <AttentionListSkeleton />
-        </div>
-      </section>
-    );
-  }
-
-  if (error || !data) {
+  if (error || (!isPending && !data)) {
     return (
       <section aria-label="Today">
         <ZoneLabel title="Today" />
@@ -73,12 +62,29 @@ export function ZoneToday() {
 
   return (
     <section aria-label="Today">
-      <ZoneLabel title="Today" meta={formatGeneratedAt(data.generatedAt)} />
-      <MorningBrief brief={data.ai.brief} />
-      <div className="mb-3">
-        <StatStrip stats={data.stats} />
-      </div>
-      <AttentionList items={data.attention} />
+      <ZoneLabel
+        title="Today"
+        meta={data ? formatGeneratedAt(data.generatedAt) : "Loading…"}
+      />
+      <CrossfadeSwap
+        loading={isPending || !data}
+        skeleton={
+          <div className="space-y-3">
+            <StatStripSkeleton />
+            <AttentionListSkeleton />
+          </div>
+        }
+      >
+        {data ? (
+          <>
+            <MorningBrief brief={data.ai.brief} />
+            <div className="mb-3">
+              <StatStrip stats={data.stats} />
+            </div>
+            <AttentionList items={data.attention} />
+          </>
+        ) : null}
+      </CrossfadeSwap>
     </section>
   );
 }

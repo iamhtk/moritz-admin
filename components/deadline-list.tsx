@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/tooltip";
 import { StatusBadge } from "@/components/ui-bits/status-badge";
 import { MinutesLeft } from "@/components/ui-bits/minutes-left";
-import { LawyerAvatar } from "@/components/ui-bits/lawyer-avatar";
+import { MatterReference } from "@/components/matter-reference";
 import { useDashboardActions } from "@/components/actions-provider";
 import type { MatterStatus } from "@/lib/supabase";
 
@@ -61,7 +61,7 @@ export function DeadlineList({
 
   if (deadlines.length === 0) {
     return (
-      <Card className="flex h-full flex-col gap-0 rounded-lg py-0 [--card-spacing:0px]">
+      <Card className="flex h-full min-w-0 flex-col gap-0 rounded-lg py-0 [--card-spacing:0px]">
         <p
           className="px-4 py-8 text-center text-text-secondary"
           style={{ fontSize: "var(--text-13)" }}
@@ -111,27 +111,16 @@ export function DeadlineList({
                           className="font-semibold text-foreground"
                           style={{ fontSize: "var(--text-13)" }}
                         >
-                          {matter.reference}
+                          <MatterReference reference={matter.reference} className="font-semibold" />
                         </div>
                         <div
                           className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-1 text-text-secondary"
                           style={{ fontSize: "var(--text-12)" }}
                         >
-                          <span className="inline-flex min-w-0 items-center gap-1.5">
-                            {matter.lawyer_id && matter.lawyer_name ? (
-                              <LawyerAvatar
-                                lawyerId={matter.lawyer_id}
-                                name={matter.lawyer_name}
-                                initials={matter.lawyer_initials}
-                                size="sm"
-                                className="rounded-[7px] after:rounded-[7px]"
-                              />
-                            ) : null}
-                            <span className="line-clamp-2">
-                              {matter.client_name} ·{" "}
-                              {shortLawyerName(matter.lawyer_name)}
-                              {slip ? " · likely to slip" : null}
-                            </span>
+                          <span className="line-clamp-2">
+                            {matter.client_name} ·{" "}
+                            {shortLawyerName(matter.lawyer_name)}
+                            {slip ? " · likely to slip" : null}
                           </span>
                           {lowConfidence ? (
                             <Tooltip>
@@ -200,27 +189,28 @@ export function DeadlineList({
         </ul>
       </div>
 
-      <Card className="hidden h-full flex-col gap-0 rounded-lg py-0 [--card-spacing:0px] md:flex">
+      <Card className="hidden h-full min-w-0 flex-col gap-0 overflow-hidden rounded-lg py-0 [--card-spacing:0px] md:flex">
+        <div className="min-w-0 overflow-x-auto">
         <Table>
         <TableHeader>
           <TableRow className="border-border hover:bg-transparent">
             <TableHead
               scope="col"
-              className="h-auto px-4 py-2.5 font-medium text-text-tertiary"
+              className="h-auto px-4 py-2.5 font-medium whitespace-normal text-text-tertiary"
               style={{ fontSize: "var(--text-11)" }}
             >
               Due next 4 hours
             </TableHead>
             <TableHead
               scope="col"
-              className="h-auto w-[4.5rem] px-4 py-2.5 text-right font-medium text-text-tertiary"
+              className="hidden h-auto w-[4.5rem] px-4 py-2.5 text-right font-medium text-text-tertiary min-[1500px]:table-cell"
               style={{ fontSize: "var(--text-11)" }}
             >
               Left
             </TableHead>
             <TableHead
               scope="col"
-              className="h-auto px-4 py-2.5 text-right font-medium text-text-tertiary"
+              className="hidden h-auto px-4 py-2.5 text-right font-medium text-text-tertiary min-[1500px]:table-cell"
               style={{ fontSize: "var(--text-11)" }}
             >
               <span className="sr-only">Action</span>
@@ -238,6 +228,37 @@ export function DeadlineList({
                 matter.draft_confidence != null &&
                 matter.draft_confidence < 0.72;
 
+              const actionButton = (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  disabled={nudging}
+                  onClick={() => {
+                    if (pastDue) {
+                      openAssign(matter.id, "reassign");
+                    } else {
+                      nudgeMatter({
+                        matterId: matter.id,
+                        reference: matter.reference,
+                        lawyerName: matter.lawyer_name ?? "the lawyer",
+                      });
+                    }
+                  }}
+                >
+                  {nudging ? (
+                    <>
+                      <Loader2 className="size-3.5 animate-spin" />
+                      Nudge
+                    </>
+                  ) : pastDue ? (
+                    "Reassign"
+                  ) : (
+                    "Nudge"
+                  )}
+                </Button>
+              );
+
               return (
                 <MotionRow
                   key={matter.id}
@@ -254,52 +275,41 @@ export function DeadlineList({
                     borderBottom: "1px solid var(--table-inner-line)",
                   }}
                 >
-                  <TableCell className="px-4 py-2.5 align-middle">
+                  <TableCell className="px-4 py-2.5 align-middle whitespace-normal">
                     <div className="min-w-0">
                       <div
                         className="font-semibold text-foreground"
                         style={{ fontSize: "var(--text-13)" }}
                       >
-                        {matter.reference}
+                        <MatterReference reference={matter.reference} className="font-semibold" />
                       </div>
                       <div
                         className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-1 text-text-secondary"
                         style={{ fontSize: "var(--text-12)" }}
                       >
-                        <span className="inline-flex min-w-0 items-center gap-1.5">
-                          {matter.lawyer_id && matter.lawyer_name ? (
-                            <LawyerAvatar
-                              lawyerId={matter.lawyer_id}
-                              name={matter.lawyer_name}
-                              initials={matter.lawyer_initials}
-                              size="sm"
-                              className="rounded-[7px] after:rounded-[7px]"
-                            />
+                        <span className="min-w-0">
+                          {matter.client_name} ·{" "}
+                          {shortLawyerName(matter.lawyer_name)}
+                          {slip ? (
+                            <>
+                              {" · "}
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <span className="cursor-default underline decoration-dotted underline-offset-2">
+                                    likely to slip
+                                  </span>
+                                </TooltipTrigger>
+                                <TooltipContent
+                                  side="bottom"
+                                  className="max-w-xs"
+                                >
+                                  {firstName(matter.lawyer_name)}&apos;s last
+                                  three matters of this type ran past four
+                                  hours.
+                                </TooltipContent>
+                              </Tooltip>
+                            </>
                           ) : null}
-                          <span className="min-w-0">
-                            {matter.client_name} ·{" "}
-                            {shortLawyerName(matter.lawyer_name)}
-                            {slip ? (
-                              <>
-                                {" · "}
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <span className="cursor-default underline decoration-dotted underline-offset-2">
-                                      likely to slip
-                                    </span>
-                                  </TooltipTrigger>
-                                  <TooltipContent
-                                    side="bottom"
-                                    className="max-w-xs"
-                                  >
-                                    {firstName(matter.lawyer_name)}&apos;s last
-                                    three matters of this type ran past four
-                                    hours.
-                                  </TooltipContent>
-                                </Tooltip>
-                              </>
-                            ) : null}
-                          </span>
                         </span>
                         {lowConfidence ? (
                           <Tooltip>
@@ -328,42 +338,20 @@ export function DeadlineList({
                           </Tooltip>
                         ) : null}
                       </div>
+                      {/* Below ~1500px: fold Left + action under the matter line. */}
+                      <div className="mt-2 flex items-center justify-between gap-3 min-[1500px]:hidden">
+                        <MinutesLeft minutes={matter.minutes_remaining} />
+                        {actionButton}
+                      </div>
                     </div>
                   </TableCell>
-                  <TableCell className="w-[4.5rem] px-4 py-2.5 text-right align-middle">
+                  <TableCell className="hidden w-[4.5rem] px-4 py-2.5 text-right align-middle min-[1500px]:table-cell">
                     <div className="flex justify-end">
                       <MinutesLeft minutes={matter.minutes_remaining} />
                     </div>
                   </TableCell>
-                  <TableCell className="px-4 py-2.5 text-right align-middle">
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      disabled={nudging}
-                      onClick={() => {
-                        if (pastDue) {
-                          openAssign(matter.id, "reassign");
-                        } else {
-                          nudgeMatter({
-                            matterId: matter.id,
-                            reference: matter.reference,
-                            lawyerName: matter.lawyer_name ?? "the lawyer",
-                          });
-                        }
-                      }}
-                    >
-                      {nudging ? (
-                        <>
-                          <Loader2 className="size-3.5 animate-spin" />
-                          Nudge
-                        </>
-                      ) : pastDue ? (
-                        "Reassign"
-                      ) : (
-                        "Nudge"
-                      )}
-                    </Button>
+                  <TableCell className="hidden px-4 py-2.5 text-right align-middle min-[1500px]:table-cell">
+                    {actionButton}
                   </TableCell>
                 </MotionRow>
               );
@@ -371,6 +359,7 @@ export function DeadlineList({
           </AnimatePresence>
         </TableBody>
       </Table>
+        </div>
     </Card>
     </>
   );
@@ -378,7 +367,7 @@ export function DeadlineList({
 
 export function DeadlineListSkeleton() {
   return (
-    <Card className="flex h-full flex-col gap-0 rounded-lg py-0 [--card-spacing:0px]">
+    <Card className="flex h-full min-w-0 flex-col gap-0 rounded-lg py-0 [--card-spacing:0px]">
       <div
         className="flex items-center justify-between px-4 py-2.5"
         style={{ borderBottom: "1px solid var(--border)" }}

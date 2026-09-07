@@ -1,18 +1,32 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import type { OverviewPayload } from "@/lib/supabase";
 import { useDashboardActions } from "@/components/actions-provider";
+import {
+  briefFingerprint,
+  readBriefDismissed,
+  writeBriefDismissed,
+} from "@/lib/brief-dismiss";
 
 type Brief = NonNullable<OverviewPayload["ai"]["brief"]>;
 
 export function MorningBrief({ brief }: { brief: Brief | null }) {
-  const [dismissed, setDismissed] = useState(false);
+  const [dismissedFp, setDismissedFp] = useState<string | null>(null);
+  const [hydrated, setHydrated] = useState(false);
   const { handleAttentionAction } = useDashboardActions();
 
-  if (!brief || dismissed) return null;
+  useEffect(() => {
+    setDismissedFp(readBriefDismissed());
+    setHydrated(true);
+  }, []);
+
+  if (!brief || !hydrated) return null;
+
+  const fp = briefFingerprint(brief);
+  if (dismissedFp === fp) return null;
 
   return (
     <Card className="mb-3 flex flex-col gap-2 rounded-lg border border-border bg-card px-4 py-2.5 ring-0 [--card-spacing:0px] sm:flex-row sm:items-center">
@@ -35,7 +49,10 @@ export function MorningBrief({ brief }: { brief: Brief | null }) {
             size="sm"
             variant="ghost"
             className="min-h-11 sm:min-h-8"
-            onClick={() => setDismissed(true)}
+            onClick={() => {
+              writeBriefDismissed(fp);
+              setDismissedFp(fp);
+            }}
           >
             Dismiss
           </Button>

@@ -8,6 +8,7 @@ import {
   AlertTitle,
 } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { formatDuration, formatFeeDollars } from "@/lib/format";
 import { ZoneLabel } from "@/components/ui-bits/zone-label";
 import {
   RevenueChart,
@@ -50,18 +51,6 @@ function priorMonthName(days: FinanceDayRow[]) {
 function daysLeftInMonth(from: Date = new Date()) {
   const last = new Date(from.getFullYear(), from.getMonth() + 1, 0).getDate();
   return Math.max(0, last - from.getDate());
-}
-
-function formatDuration(minutes: number) {
-  const h = Math.floor(minutes / 60);
-  const m = minutes % 60;
-  if (h === 0) return `${m}m`;
-  if (m === 0) return `${h}h`;
-  return `${h}h ${String(m).padStart(2, "0")}m`;
-}
-
-function formatCurrency(n: number) {
-  return `$${n.toLocaleString("en-US")}`;
 }
 
 function cumulativeRevenue(days: FinanceDayRow[]) {
@@ -138,9 +127,18 @@ export function ZoneMoney({
   const draft = formatDuration(finance.avgDraftMinutes);
   const review = formatDuration(finance.avgReviewMinutes);
   const anomaly = finance.anomaly;
-  const revenueSpark = cumulativeRevenue(finance.days);
+  const revenueSpark = cumulativeRevenue(
+    finance.revenueDays?.length ? finance.revenueDays : finance.days
+  );
   const deliveredSpark = finance.days.slice(-7).map((d) => Number(d.delivered));
-  const meta = `${month} · flat fees per matter, not billable hours`;
+  const meta = (
+    <>
+      {month} · flat fees per matter, not billable hours
+      {" · "}
+      ≈{data.ai.predictedVolume.estimate} new matters next week.{" "}
+      {data.ai.predictedVolume.basis}.
+    </>
+  );
 
   return (
     <section aria-label="Money" className={cn("mt-6 md:mt-8", className)}>
@@ -190,8 +188,9 @@ export function ZoneMoney({
 
       <div className="hidden grid-cols-1 items-stretch gap-3 md:grid lg:grid-cols-2">
         <RevenueChart
-          days={finance.days}
+          days={finance.revenueDays?.length ? finance.revenueDays : finance.days}
           target={finance.target}
+          revenueToDate={finance.revenueToDate}
           pctOfTarget={finance.pctOfTarget}
           projectedPct={finance.projectedPct}
           daysLeft={daysLeft}
@@ -220,8 +219,8 @@ export function ZoneMoney({
           <>
             {" "}
             {anomaly.serviceLine} matters average{" "}
-            <span className="num">{formatCurrency(anomaly.avg)}</span> against{" "}
-            <span className="num">{formatCurrency(anomaly.firmAvg)}</span>{" "}
+            <span className="num">{formatFeeDollars(anomaly.avg)}</span> against{" "}
+            <span className="num">{formatFeeDollars(anomaly.firmAvg)}</span>{" "}
             firm-wide across <span className="num">{anomaly.count}</span>{" "}
             matters.
             <Button

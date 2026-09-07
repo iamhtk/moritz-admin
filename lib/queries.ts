@@ -12,12 +12,12 @@
  */
 
 import {
-    serverClient,
-    type ActivityItem,
-    type ActivityRow,
-    type AttentionItem,
-    type CapacityState,
-    type Config,
+  serverClient,
+  type ActivityItem,
+  type ActivityRow,
+  type AttentionItem,
+  type CapacityState,
+  type Config,
     type FinanceDayRow,
     type LawyerLoad,
     type LawyerRow,
@@ -27,10 +27,11 @@ import {
     type ServiceLine,
     type UnquotedMatter,
   } from "./supabase";
-  
-  /* ---------- config ------------------------------------------------------- */
-  
-  async function getConfig(db: ReturnType<typeof serverClient>): Promise<Config> {
+import { formatDuration, formatFeeDollars } from "./format";
+
+/* ---------- config ------------------------------------------------------- */
+
+async function getConfig(db: ReturnType<typeof serverClient>): Promise<Config> {
     const { data } = await db.from("app_config").select("key, value");
     const map = new Map((data ?? []).map((r) => [r.key as string, Number(r.value)]));
     return {
@@ -63,8 +64,7 @@ import {
   function nextDueLabel(minutes: number | null): string {
     if (minutes === null) return "-";
     if (minutes < 0) return "Past due";
-    if (minutes < 60) return `${minutes}m`;
-    return `${Math.floor(minutes / 60)}h ${minutes % 60}m`;
+    return formatDuration(minutes);
   }
 
   function roundToNearest50(n: number): number {
@@ -163,10 +163,6 @@ import {
     });
   }
 
-  function formatFeeDollars(n: number): string {
-    return `$${n.toLocaleString("en-US")}`;
-  }
-
   /**
    * Escalation handoff. Each sentence needs its fields; omit the clause
    * rather than printing nulls. C6: hand off with context, never an error.
@@ -176,7 +172,7 @@ import {
 
     if (m.draft_minutes != null && m.flagged_clauses != null) {
       parts.push(
-        `Drafted in ${m.draft_minutes} minutes with ${m.flagged_clauses} clauses flagged.`
+        `Drafted in ${formatDuration(m.draft_minutes)} with ${m.flagged_clauses} clauses flagged.`
       );
     }
 
@@ -196,6 +192,83 @@ import {
     }
 
     return parts.length > 0 ? parts.join(" ") : null;
+  }
+
+  /**
+   * Causal sentence for breach handoff. Compares this matter's draft time or
+   * flagged-clause count to the delivered average for the same type. Falls
+   * back to the service-line average when the type has too few peers, then
+   * to an honest "no comparable pattern" when nothing can be computed.
+   */
+  function buildHandoffCause(
+    m: MatterStatus,
+    delivered: MatterStatus[]
+  ): string {
+    function compare(
+      peers: MatterStatus[],
+      label: string
+    ): string | null {
+      const withDraft = peers.filter((d) => d.draft_minutes != null);
+      if (m.draft_minutes != null && withDraft.length >= 3) {
+        const avg =
+          withDraft.reduce((s, d) => s + (d.draft_minutes ?? 0), 0) /
+          withDraft.length;
+        if (avg > 0 && m.draft_minutes >= avg * 1.15) {
+          const pct = Math.round((m.draft_minutes / avg - 1) * 100);
+          return `Flagged because this matter took ${pct}% longer to draft than the average for ${label} (${formatDuration(m.draft_minutes)} vs ${formatDuration(Math.round(avg))} across ${withDraft.length} delivered).`;
+        }
+      }
+
+      if (peers.length >= 3 && m.flagged_clauses != null) {
+        const avgFlags =
+          peers.reduce((s, d) => s + (d.flagged_clauses ?? 0), 0) /
+          peers.length;
+        if (avgFlags > 0 && m.flagged_clauses >= avgFlags * 1.25) {
+          return `Flagged because this matter has ${m.flagged_clauses} clauses flagged versus an average of ${avgFlags.toFixed(1)} for ${label} (${peers.length} comparable).`;
+        }
+      }
+      return null;
+    }
+
+    const typePeers = delivered.filter((d) => d.type === m.type);
+    const fromType = compare(typePeers, `${m.type} matters`);
+    if (fromType) return fromType;
+
+    if (typePeers.length < 3) {
+      const linePeers = delivered.filter(
+        (d) => d.service_line === m.service_line
+      );
+      const fromLine = compare(linePeers, `${m.service_line} matters`);
+      if (fromLine) return fromLine;
+    }
+
+    return "No comparable pattern found for this matter type.";
+  }
+
+  /** Same client + same type within 60 minutes of each other → possible duplicate. */
+  function findDuplicateOf(
+    m: MatterStatus,
+    live: MatterStatus[],
+    cfg: Config
+  ): { reference: string; minutesAgo: number } | null {
+    const ageOf = (x: MatterStatus) => cfg.slaMinutes - x.minutes_remaining;
+    const myAge = ageOf(m);
+    let best: { reference: string; minutesAgo: number } | null = null;
+
+    for (const other of live) {
+      if (other.id === m.id) continue;
+      if (other.client_id !== m.client_id) continue;
+      if (other.type !== m.type) continue;
+      const otherAge = ageOf(other);
+      const delta = Math.abs(myAge - otherAge);
+      if (delta > 60) continue;
+      // Prefer the older sibling as the "original" (higher age = submitted earlier).
+      if (otherAge <= myAge) continue;
+      if (!best || delta < best.minutesAgo) {
+        best = { reference: other.reference, minutesAgo: Math.max(1, Math.round(delta)) };
+      }
+    }
+    return best;
   }
 
   function buildLawyerLoads(
@@ -274,7 +347,7 @@ import {
         items.push({
           kind: "breach",
           id: `breach-${m.id}`,
-          label: `Past due ${Math.abs(m.minutes_remaining)}m`,
+          label: `Past due ${formatDuration(Math.abs(m.minutes_remaining))}`,
           title: m.reference,
           reason: `${m.client_name} · ${m.type} · ${
             m.lawyer_name ? `with ${m.lawyer_name}` : "no lawyer assigned"
@@ -284,6 +357,7 @@ import {
           matterId: m.id,
           lawyerId: m.lawyer_id,
           handoff: buildHandoff(m),
+          handoffCause: buildHandoffCause(m, delivered),
           lowConfidence: lowConfidenceFor(m),
         });
       } else if (
@@ -295,7 +369,7 @@ import {
         items.push({
           kind: "watch",
           id: `watch-${m.id}`,
-          label: `${m.minutes_remaining}m left`,
+          label: `${formatDuration(m.minutes_remaining)} left`,
           title: m.reference,
           reason: `${m.client_name} · ${m.type} · ${m.stage}${
             slip ? " · likely to slip" : ""
@@ -318,7 +392,7 @@ import {
         } catch {
           band = null;
         }
-        const arrival = `arrived ${age} min ago via ${channelLabel(m.channel)}`;
+        const arrival = `arrived ${formatDuration(age)} ago via ${channelLabel(m.channel)}`;
         items.push({
           kind: "unassigned",
           id: `unassigned-${m.id}`,
@@ -332,6 +406,7 @@ import {
           triage: { type: m.type, serviceLine: m.service_line },
           feeBand: band,
           arrival,
+          duplicateOf: findDuplicateOf(m, live, cfg),
           lowConfidence: lowConfidenceFor(m),
         });
       }
@@ -451,6 +526,32 @@ import {
     const avgReviewMinutes = withDraft.length
       ? Math.round(withDraft.reduce((s, m) => s + (m.review_minutes ?? 0), 0) / withDraft.length)
       : 0;
+
+    const weekMs = 7 * 24 * 60 * 60 * 1000;
+    const nowMs = Date.now();
+    const turnaroundWindow = (fromMs: number, toMs: number) => {
+      const rows = delivered.filter((m) => {
+        if (!m.delivered_at) return false;
+        const t = new Date(m.delivered_at).getTime();
+        if (t < fromMs || t >= toMs) return false;
+        return (
+          (m.draft_minutes != null && m.review_minutes != null) ||
+          !!m.submitted_at
+        );
+      });
+      if (rows.length === 0) return null;
+      const total = rows.reduce((sum, m) => {
+        if (m.draft_minutes != null && m.review_minutes != null) {
+          return sum + m.draft_minutes + m.review_minutes;
+        }
+        const start = new Date(m.submitted_at).getTime();
+        const end = new Date(m.delivered_at!).getTime();
+        return sum + Math.max(0, (end - start) / 60_000);
+      }, 0);
+      return { avgMinutes: Math.round(total / rows.length), count: rows.length };
+    };
+    const turnaroundThisWeek = turnaroundWindow(nowMs - weekMs, nowMs);
+    const turnaroundLastWeek = turnaroundWindow(nowMs - 2 * weekMs, nowMs - weekMs);
   
     // Anomaly: a service line pricing well below the firm average.
     const byLine = new Map<ServiceLine, number[]>();
@@ -483,8 +584,24 @@ import {
       };
     });
 
+    // Top fee contributors among matters delivered this calendar month.
+    const monthDelivered = delivered
+      .filter((m) => {
+        if (!m.delivered_at) return false;
+        return String(m.delivered_at).slice(0, 7) === monthPrefix;
+      })
+      .slice()
+      .sort((a, b) => Number(b.fee) - Number(a.fee));
+    const revenueDrivers = monthDelivered.slice(0, 2).map((m) => ({
+      reference: m.reference,
+      fee: Number(m.fee),
+      clientName: m.client_name,
+    }));
+
     return {
       days,
+      /** Month-to-date series — matches the Revenue to date tile and chart. */
+      revenueDays: monthDays,
       target: cfg.monthlyTarget,
       revenueToDate,
       pctOfTarget,
@@ -499,8 +616,11 @@ import {
       plannedThisWeek,
       avgDraftMinutes,
       avgReviewMinutes,
+      turnaroundThisWeek,
+      turnaroundLastWeek,
       anomaly,
       unquoted,
+      revenueDrivers,
     };
   }
   
@@ -542,14 +662,22 @@ import {
             .filter((l) => l.practice_areas.includes(matter.service_line))
             .sort((a, b) => a.utilizationPct - b.utilizationPct)[0]
         : undefined;
-      const freest = fit ?? withRoom[0];
+      const breachOnBusiest =
+        matter?.lawyer_id != null && matter.lawyer_id === busiest.id;
+      const busiestFirst = busiest.name.split(" ")[0];
+      let detail: string;
+      if (fit && breachOnBusiest) {
+        detail = `Reassigning ${worst.title} to ${fit.name.split(" ")[0]} clears the past-due matter and eases load on ${busiestFirst}.`;
+      } else if (fit) {
+        detail = `Reassign ${worst.title} to ${fit.name.split(" ")[0]} to clear the oldest past-due matter. ${busiestFirst} still needs work moved off them separately.`;
+      } else if (breachOnBusiest) {
+        detail = `Reassigning ${worst.title} off ${busiestFirst} clears the past-due matter and is the first step to easing their load.`;
+      } else {
+        detail = `Reassign ${worst.title} to clear the oldest past-due matter. ${busiestFirst} still needs work moved off them separately.`;
+      }
       return {
         headline: `${breaches.length === 1 ? "One matter is" : `${breaches.length} matters are`} past due and ${busiest.name} is at ${busiest.utilizationPct} percent.`,
-        detail: fit
-          ? `Reassigning ${worst.title} to ${fit.name} clears both.`
-          : freest
-            ? `Reassigning ${worst.title} clears both.`
-            : `Reassigning ${worst.title} clears the worst of it.`,
+        detail,
         action: worst,
       };
     }
@@ -557,7 +685,7 @@ import {
     if (breaches.length) {
       return {
         headline: `${breaches.length === 1 ? "One matter is" : `${breaches.length} matters are`} past due.`,
-        detail: `${breaches[0].title} is the oldest at ${Math.abs(breaches[0].minutesRemaining ?? 0)} minutes over.`,
+        detail: `${breaches[0].title} is the oldest at ${formatDuration(Math.abs(breaches[0].minutesRemaining ?? 0))} over.`,
         action: breaches[0],
       };
     }
@@ -565,7 +693,7 @@ import {
     if (unassigned.length) {
       return {
         headline: `${unassigned.length} ${unassigned.length === 1 ? "matter has" : "matters have"} no lawyer.`,
-        detail: `The oldest arrived ${240 - (unassigned[0].minutesRemaining ?? 240)} minutes ago.`,
+        detail: `The oldest arrived ${formatDuration(240 - (unassigned[0].minutesRemaining ?? 240))} ago.`,
         action: unassigned[0],
       };
     }
@@ -603,6 +731,99 @@ import {
       room.length ? `${room.map((l) => l.name.split(" ")[0]).join(" and ")} have room.` : ""
     }`.trim();
   }
+
+  /**
+   * Week-scoped capacity projection using the same intake-rate basis as the
+   * daily forecast: matters arrived in the last hour (or last 24h / 24 when
+   * the last hour is empty), times hours left in the calendar week, compared
+   * to remaining concurrent capacity slots (sum of lawyer weekly_capacity
+   * minus live matters).
+   */
+  function buildWeeklyForecast(
+    live: MatterStatus[],
+    loads: LawyerLoad[],
+    cfg: Config
+  ): string {
+    const totalCapacity = loads.reduce((s, l) => s + l.weekly_capacity, 0);
+    const active = live.length;
+    const room = Math.max(0, totalCapacity - active);
+
+    const lastHour = live.filter(
+      (m) => cfg.slaMinutes - m.minutes_remaining <= 60
+    ).length;
+    const lastDay = live.filter(
+      (m) => cfg.slaMinutes - m.minutes_remaining <= 24 * 60
+    ).length;
+    const ratePerHour = lastHour > 0 ? lastHour : lastDay / 24;
+
+    const now = new Date();
+    const day = now.getDay(); // 0 = Sun
+    const daysAfterToday = day === 0 ? 0 : 7 - day;
+    const hoursLeftToday =
+      (23 - now.getHours()) + (60 - now.getMinutes()) / 60;
+    const hoursLeft = Math.max(0, hoursLeftToday + daysAfterToday * 24);
+    const projectedAdd = Math.round(ratePerHour * hoursLeft);
+
+    if (projectedAdd <= room) {
+      return "This week: On pace to stay within capacity this week";
+    }
+    const over = projectedAdd - room;
+    return `This week: on pace to exceed capacity by ${over} ${
+      over === 1 ? "matter" : "matters"
+    } (≈${ratePerHour.toFixed(1)}/hr × ${Math.round(hoursLeft)}h left; ${active} active against ${totalCapacity} slots)`;
+  }
+
+  /**
+   * Forward intake estimate: average new matters per ISO week over the past
+   * complete weeks in seed history (submitted_at). Caveats when history is thin.
+   */
+  function buildPredictedVolume(
+    all: MatterStatus[]
+  ): OverviewPayload["ai"]["predictedVolume"] {
+    const weekKey = (iso: string) => {
+      const d = new Date(iso);
+      const tmp = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+      const dayNum = tmp.getUTCDay() || 7;
+      tmp.setUTCDate(tmp.getUTCDate() + 4 - dayNum);
+      const yearStart = new Date(Date.UTC(tmp.getUTCFullYear(), 0, 1));
+      const week = Math.ceil(
+        ((tmp.getTime() - yearStart.getTime()) / 86_400_000 + 1) / 7
+      );
+      return `${tmp.getUTCFullYear()}-W${String(week).padStart(2, "0")}`;
+    };
+
+    const counts = new Map<string, number>();
+    for (const m of all) {
+      if (!m.submitted_at) continue;
+      const k = weekKey(m.submitted_at);
+      counts.set(k, (counts.get(k) ?? 0) + 1);
+    }
+
+    const nowKey = weekKey(new Date().toISOString());
+    const prior = [...counts.entries()]
+      .filter(([k]) => k !== nowKey)
+      .sort(([a], [b]) => (a < b ? 1 : -1));
+
+    const window = prior.slice(0, 4);
+    if (window.length === 0) {
+      return {
+        estimate: 0,
+        basis: "Insufficient intake history to estimate next week's volume",
+        weeksUsed: 0,
+      };
+    }
+
+    const sum = window.reduce((s, [, n]) => s + n, 0);
+    const estimate = Math.round(sum / window.length);
+    const limited = window.length < 4;
+    return {
+      estimate,
+      basis: limited
+        ? `Based on the average of the past ${window.length} weeks (limited history)`
+        : `Based on the average of the past ${window.length} weeks`,
+      weeksUsed: window.length,
+    };
+  }
   
   /* ---------- activity ----------------------------------------------------- */
   
@@ -617,8 +838,15 @@ import {
       const actor = r.actor_id ? byId.get(r.actor_id) : undefined;
       return {
         ...r,
-        actorName: actor?.name ?? (r.actor_id === "ai" ? "Moritz AI" : null),
-        actorInitials: actor?.initials ?? null,
+        actorName:
+          actor?.name ??
+          (r.actor_id === "ai"
+            ? "Nora"
+            : r.actor_id === "system" || r.actor_id === "admin"
+              ? "Ops"
+              : null),
+        actorInitials:
+          actor?.initials ?? (r.actor_id === "ai" ? "N" : null),
         clientName: r.client_id ? clientNames.get(r.client_id) ?? null : null,
         reference: r.matter_id ? refs.get(r.matter_id) ?? null : null,
       };
@@ -696,7 +924,13 @@ import {
       (m) => m.minutes_remaining > 0 && m.minutes_remaining <= 60
     ).length;
     const breached = live.filter((m) => m.risk === "breach").length;
-    const atRisk = breached + live.filter((m) => m.risk === "watch" && m.minutes_remaining <= 20).length;
+    const atRiskMatters = live.filter(
+      (m) =>
+        m.risk === "breach" ||
+        (m.risk === "watch" && m.minutes_remaining <= 20)
+    );
+    const atRisk = atRiskMatters.length;
+    const atRiskFees = atRiskMatters.reduce((s, m) => s + Number(m.fee), 0);
     const unassignedList = live.filter((m) => !m.lawyer_id && m.fee > 0);
     const oldestUnassigned = unassignedList.length
       ? Math.max(...unassignedList.map((m) => cfg.slaMinutes - m.minutes_remaining))
@@ -723,6 +957,7 @@ import {
         dueToday: live.filter((m) => m.minutes_remaining <= cfg.slaMinutes).length,
         atRisk,
         breached,
+        atRiskFees,
         unassigned: unassignedList.length,
         serviceLines: new Set(live.map((m) => m.service_line)).size,
         oldestUnassignedMinutes: oldestUnassigned,
@@ -749,6 +984,8 @@ import {
       ai: {
         brief: buildBrief(attention, loads, live),
         capacityForecast: buildForecast(live, loads, cfg),
+        weeklyCapacityForecast: buildWeeklyForecast(live, loads, cfg),
+        predictedVolume: buildPredictedVolume(all),
       },
     };
   }
@@ -791,9 +1028,10 @@ import {
       ]);
   
     const cfg = await getConfig(db);
+    const live = (mattersData ?? []) as MatterStatus[];
     const loads = buildLawyerLoads(
       (lawyerRows ?? []) as LawyerRow[],
-      (mattersData ?? []) as MatterStatus[],
+      live,
       cfg
     );
     const matter = m as MatterStatus;
@@ -806,6 +1044,7 @@ import {
       }));
 
     // If everyone is over, still return the full list so the admin can choose.
+    const everyoneOver = available.length === 0;
     const pool =
       available.length > 0
         ? available
@@ -822,13 +1061,52 @@ import {
     });
   
     const top = ranked[0];
-    const reason = top
+    let reason: string | null = top
       ? [
           top.practiceMatch ? `${matter.service_line} match` : "available",
           `${top.utilizationPct} percent load`,
           `${Math.round(top.on_time_rate * 100)} percent on time`,
         ].join(" · ")
       : null;
+    let suggestedId = top?.id ?? null;
+
+    // When nobody has room, prefer the lawyer whose next due matter clears soonest
+    // (positive minutes_remaining), practice match first — else keep least-loaded.
+    if (everyoneOver && top) {
+      type Slot = {
+        lawyer: (typeof ranked)[number];
+        clearing: MatterStatus;
+      };
+      const slots: Slot[] = [];
+      for (const lawyer of ranked) {
+        const clearing = live
+          .filter(
+            (x) =>
+              x.lawyer_id === lawyer.id &&
+              x.minutes_remaining > 0 &&
+              x.id !== matter.id
+          )
+          .sort((a, b) => a.minutes_remaining - b.minutes_remaining)[0];
+        if (clearing) slots.push({ lawyer, clearing });
+      }
+      slots.sort((a, b) => {
+        if (a.lawyer.practiceMatch !== b.lawyer.practiceMatch) {
+          return a.lawyer.practiceMatch ? -1 : 1;
+        }
+        return a.clearing.minutes_remaining - b.clearing.minutes_remaining;
+      });
+      const soonest = slots[0];
+      if (soonest) {
+        suggestedId = soonest.lawyer.id;
+        const when = new Date(
+          Date.now() + soonest.clearing.minutes_remaining * 60_000
+        );
+        const hh = when.getHours().toString().padStart(2, "0");
+        const mm = when.getMinutes().toString().padStart(2, "0");
+        const first = soonest.lawyer.name.split(" ")[0];
+        reason = `No one has room right now. ${first} clears ${soonest.clearing.reference} at ${hh}:${mm} and would be your best fit after that`;
+      }
+    }
   
-    return { matter, candidates: ranked, suggestedId: top?.id ?? null, reason };
+    return { matter, candidates: ranked, suggestedId, reason };
   }

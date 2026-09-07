@@ -7,6 +7,7 @@ import {
   Cell,
   ReferenceLine,
   XAxis,
+  YAxis,
 } from "recharts";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -81,6 +82,30 @@ export function DeliveredChart({
             tick={{
               fill: "var(--chart-axis-text)",
               fontSize: 11,
+            }}
+            label={{
+              value: "Day",
+              position: "insideBottomRight",
+              offset: -2,
+              fill: "var(--chart-axis-text)",
+              fontSize: 10,
+            }}
+          />
+          <YAxis
+            tickLine={false}
+            axisLine={false}
+            width={28}
+            allowDecimals={false}
+            tick={{
+              fill: "var(--chart-axis-text)",
+              fontSize: 10,
+            }}
+            label={{
+              value: "Matters",
+              angle: -90,
+              position: "insideLeft",
+              fill: "var(--chart-axis-text)",
+              fontSize: 10,
             }}
           />
           <ChartTooltip

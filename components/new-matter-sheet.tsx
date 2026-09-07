@@ -51,15 +51,15 @@ const TYPE_PLACEHOLDERS: Record<ServiceLine, string> = {
   Litigation: "Discovery request",
 };
 
-const glassStyle: React.CSSProperties = {
-  background: "var(--glass-bg)",
-  backdropFilter: "var(--glass-blur)",
-  WebkitBackdropFilter: "var(--glass-blur)",
-  border: "1px solid var(--glass-border)",
-  boxShadow: "var(--glass-shadow), var(--glass-inset)",
-};
-
 const NEW_CLIENT = "__new__";
+
+function RequiredMark() {
+  return (
+    <span className="text-destructive" aria-hidden>
+      *
+    </span>
+  );
+}
 
 export function NewMatterSheet({
   open,
@@ -79,6 +79,7 @@ export function NewMatterSheet({
   const [channel, setChannel] = useState<Channel>("platform");
   const [fee, setFee] = useState("");
   const [pending, setPending] = useState(false);
+  const [attempted, setAttempted] = useState(false);
   const formKey = open ? "open" : "closed";
   const [prevFormKey, setPrevFormKey] = useState(formKey);
   if (formKey !== prevFormKey) {
@@ -91,17 +92,22 @@ export function NewMatterSheet({
       setChannel("platform");
       setFee("");
       setPending(false);
+      setAttempted(false);
     }
   }
 
-  const canSubmit =
-    (clientId === NEW_CLIENT ? newClientName.trim().length > 0 : !!clientId) &&
-    !!serviceLine &&
-    type.trim().length > 0 &&
-    !!channel;
+  const clientOk =
+    clientId === NEW_CLIENT ? newClientName.trim().length > 0 : !!clientId;
+  const typeOk = type.trim().length > 0;
+  const canSubmit = clientOk && !!serviceLine && typeOk && !!channel;
   const side = useSheetSide();
 
+  const missing: string[] = [];
+  if (!clientOk) missing.push("client");
+  if (!typeOk) missing.push("matter type");
+
   async function createMatter() {
+    setAttempted(true);
     if (!canSubmit || pending) return;
     setPending(true);
     try {
@@ -134,16 +140,17 @@ export function NewMatterSheet({
     }
   }
 
+  const fieldClass = "h-9 data-[size=default]:h-9";
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side={side}
         className={cn(
-          "gap-0 border-0 bg-transparent p-0",
+          "gap-0 p-0",
           side === "right" && "h-full w-full sm:max-w-[420px]",
           side === "bottom" && "h-[85vh] max-h-[85vh] w-full"
         )}
-        style={glassStyle}
       >
         <SheetHandle visible={side === "bottom"} />
         <SheetHeader className="border-b border-border px-5 py-4">
@@ -154,7 +161,7 @@ export function NewMatterSheet({
             className="text-text-secondary"
             style={{ fontSize: "var(--text-12)" }}
           >
-            Intake a matter. Leave the fee blank to quote later.
+            Intake a matter. Required fields are marked.
           </SheetDescription>
         </SheetHeader>
 
@@ -165,10 +172,14 @@ export function NewMatterSheet({
               className="font-medium text-foreground"
               style={{ fontSize: "var(--text-12)" }}
             >
-              Client
+              Client <RequiredMark />
             </label>
             <Select value={clientId} onValueChange={setClientId}>
-              <SelectTrigger id="matter-client" className="w-full">
+              <SelectTrigger
+                id="matter-client"
+                className={cn("w-full", fieldClass)}
+                aria-required
+              >
                 <SelectValue placeholder="Select a client" />
               </SelectTrigger>
               <SelectContent>
@@ -186,6 +197,8 @@ export function NewMatterSheet({
                 onChange={(e) => setNewClientName(e.target.value)}
                 placeholder="Company name"
                 aria-label="New client name"
+                aria-required
+                className={fieldClass}
               />
             ) : null}
           </div>
@@ -196,13 +209,17 @@ export function NewMatterSheet({
               className="font-medium text-foreground"
               style={{ fontSize: "var(--text-12)" }}
             >
-              Service line
+              Service line <RequiredMark />
             </label>
             <Select
               value={serviceLine}
               onValueChange={(v) => setServiceLine(v as ServiceLine)}
             >
-              <SelectTrigger id="matter-line" className="w-full">
+              <SelectTrigger
+                id="matter-line"
+                className={cn("w-full", fieldClass)}
+                aria-required
+              >
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -221,13 +238,15 @@ export function NewMatterSheet({
               className="font-medium text-foreground"
               style={{ fontSize: "var(--text-12)" }}
             >
-              Matter type
+              Matter type <RequiredMark />
             </label>
             <Input
               id="matter-type"
               value={type}
               onChange={(e) => setType(e.target.value)}
               placeholder={TYPE_PLACEHOLDERS[serviceLine]}
+              aria-required
+              className={fieldClass}
             />
           </div>
 
@@ -237,13 +256,17 @@ export function NewMatterSheet({
               className="font-medium text-foreground"
               style={{ fontSize: "var(--text-12)" }}
             >
-              Channel
+              Channel <RequiredMark />
             </label>
             <Select
               value={channel}
               onValueChange={(v) => setChannel(v as Channel)}
             >
-              <SelectTrigger id="matter-channel" className="w-full">
+              <SelectTrigger
+                id="matter-channel"
+                className={cn("w-full", fieldClass)}
+                aria-required
+              >
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -264,10 +287,11 @@ export function NewMatterSheet({
             >
               Fee
             </label>
-            <div className="relative">
+            <div className="flex h-9 items-stretch overflow-hidden rounded-lg border border-input focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50">
               <span
-                className="pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2 text-text-tertiary"
+                className="flex items-center border-r border-input bg-muted/50 px-3 font-medium text-foreground"
                 style={{ fontSize: "var(--text-13)" }}
+                aria-hidden
               >
                 $
               </span>
@@ -278,12 +302,12 @@ export function NewMatterSheet({
                 step={1}
                 value={fee}
                 onChange={(e) => setFee(e.target.value)}
-                className="num pl-6"
+                className="num h-full min-h-0 flex-1 rounded-none border-0 shadow-none focus-visible:ring-0"
                 placeholder="Optional"
               />
             </div>
             <p
-              className="text-text-tertiary"
+              className="text-text-secondary"
               style={{ fontSize: "var(--text-11)" }}
             >
               Leave blank to quote later. Unquoted matters cannot start.
@@ -291,11 +315,27 @@ export function NewMatterSheet({
           </div>
         </div>
 
-        <SheetFooter className="flex-row gap-2 border-t border-border px-5 py-3">
+        <SheetFooter className="flex-col-reverse gap-2 border-t border-border px-5 py-3 sm:flex-row sm:justify-end">
+          {!canSubmit && attempted ? (
+            <p
+              className="w-full text-text-secondary sm:order-first sm:mr-auto sm:w-auto"
+              style={{ fontSize: "var(--text-11)" }}
+              role="status"
+            >
+              Add {missing.join(" and ")} to continue.
+            </p>
+          ) : !canSubmit ? (
+            <p
+              className="w-full text-text-tertiary sm:order-first sm:mr-auto sm:w-auto"
+              style={{ fontSize: "var(--text-11)" }}
+            >
+              Client and matter type required.
+            </p>
+          ) : null}
           <Button
             type="button"
             variant="ghost"
-            size="sm"
+            className="h-11 w-full sm:h-9 sm:w-auto"
             disabled={pending}
             onClick={() => onOpenChange(false)}
           >
@@ -303,8 +343,8 @@ export function NewMatterSheet({
           </Button>
           <Button
             type="button"
-            size="sm"
-            disabled={!canSubmit || pending}
+            className="h-11 w-full sm:h-9 sm:w-auto"
+            disabled={pending}
             onClick={() => createMatter()}
           >
             {pending ? (

@@ -43,8 +43,28 @@ export function ZonePeople({
     if (!el || !data) return;
 
     const recompute = () => {
-      const [lawyerTable, deadlineTable] = el.querySelectorAll("table");
-      if (!lawyerTable || !deadlineTable) return;
+      const tables = el.querySelectorAll("table");
+      const stackedHost = el.querySelector("[data-capacity-layout=stacked]");
+      const deadlineTable = stackedHost
+        ? tables[0]
+        : tables.length > 1
+          ? tables[1]
+          : tables[0];
+      if (!deadlineTable) return;
+      const deadlineH = deadlineTable.getBoundingClientRect().height;
+
+      if (stackedHost) {
+        const rowH =
+          stackedHost.firstElementChild?.getBoundingClientRect().height ?? 0;
+        if (!rowH) return;
+        setAutoRows(Math.max(0, Math.ceil(deadlineH / rowH)));
+        return;
+      }
+
+      const lawyerTable = el.querySelector(
+        "[data-capacity-layout=table] table"
+      );
+      if (!lawyerTable) return;
       const rowH =
         lawyerTable.querySelector("tbody tr")?.getBoundingClientRect()
           .height ?? 0;
@@ -52,8 +72,7 @@ export function ZonePeople({
       const headerH =
         lawyerTable.querySelector("thead")?.getBoundingClientRect().height ??
         0;
-      const available = deadlineTable.getBoundingClientRect().height - headerH;
-      setAutoRows(Math.max(0, Math.ceil(available / rowH)));
+      setAutoRows(Math.max(0, Math.ceil((deadlineH - headerH) / rowH)));
     };
 
     recompute();
@@ -70,7 +89,7 @@ export function ZonePeople({
           meta={hideLabel ? undefined : "Loading…"}
           visuallyHidden={hideLabel}
         />
-        <div className="grid grid-cols-1 items-stretch gap-3 lg:grid-cols-[1.4fr_1fr]">
+        <div className="grid grid-cols-1 items-stretch gap-3 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
           <CapacityTableSkeleton />
           <DeadlineListSkeleton />
         </div>
@@ -106,9 +125,16 @@ export function ZonePeople({
   }
 
   const forecast = data.ai.capacityForecast;
-  const meta = `${data.lawyers.length} co-counsel · sorted by load${
-    forecast ? ` · ${forecast}` : ""
-  }`;
+  const weekly = data.ai.weeklyCapacityForecast;
+  const meta = (
+    <span className="flex flex-col gap-0.5">
+      <span>
+        {data.lawyers.length} co-counsel · sorted by load
+        {forecast ? ` · ${forecast}` : ""}
+      </span>
+      <span>{weekly}</span>
+    </span>
+  );
 
   return (
     <section aria-label="People" className={cn("mt-6 md:mt-8", className)}>
@@ -127,7 +153,7 @@ export function ZonePeople({
       ) : null}
       <div
         ref={gridRef}
-        className="grid grid-cols-1 items-stretch gap-3 lg:grid-cols-[1.4fr_1fr]"
+        className="grid grid-cols-1 items-stretch gap-3 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]"
       >
         <CapacityTable
           lawyers={data.lawyers}

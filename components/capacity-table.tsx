@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -27,6 +27,13 @@ import { useIsMobile } from "@/hooks/use-mobile";
 
 const PREVIEW_DESKTOP = 5;
 const PREVIEW_MOBILE = 5;
+
+/**
+ * Full five-column row needs roughly this much content width (avatar + full
+ * name + Active + stacked meter + "7 of 8" + Reassign + padding). Below this,
+ * switch to a stacked row layout instead of compressing columns.
+ */
+const TABLE_MIN_WIDTH = 520;
 
 const badgeTone: Record<CapacityState, "ok" | "watch" | "risk"> = {
   room: "ok",
@@ -86,13 +93,13 @@ function LawyerCard({ lawyer }: { lawyer: LawyerLoad }) {
           />
           <div className="min-w-0">
             <div
-              className="truncate font-medium text-foreground"
+              className="font-medium text-pretty text-foreground"
               style={{ fontSize: "var(--text-13)" }}
             >
               {lawyer.name}
             </div>
             <div
-              className="truncate text-text-tertiary"
+              className="text-text-tertiary"
               style={{ fontSize: "var(--text-11)" }}
             >
               {lawyer.practice_areas[0]}
@@ -112,7 +119,7 @@ function LawyerCard({ lawyer }: { lawyer: LawyerLoad }) {
       />
       <div className="flex items-center justify-between gap-3">
         <div
-          className="flex gap-4 text-text-secondary"
+          className="flex flex-wrap gap-x-4 gap-y-1 text-text-secondary"
           style={{ fontSize: "var(--text-11)" }}
         >
           <span>
@@ -134,6 +141,90 @@ function LawyerCard({ lawyer }: { lawyer: LawyerLoad }) {
   );
 }
 
+/** Compact stacked row for narrow desktop containers (same fields, no table). */
+function LawyerStackedRow({
+  lawyer,
+  showDivider,
+}: {
+  lawyer: LawyerLoad;
+  showDivider: boolean;
+}) {
+  return (
+    <div
+      className="flex flex-col gap-2 px-4 py-3"
+      style={{
+        borderBottom: showDivider
+          ? "1px solid var(--table-inner-line)"
+          : undefined,
+      }}
+    >
+      <div className="flex min-w-0 items-center gap-2.5">
+        <LawyerAvatar
+          lawyerId={lawyer.id}
+          name={lawyer.name}
+          initials={lawyer.initials}
+          size="md"
+        />
+        <div className="min-w-0 flex-1">
+          <div
+            className="font-medium text-pretty leading-tight text-foreground"
+            style={{ fontSize: "var(--text-13)" }}
+          >
+            {lawyer.name}
+          </div>
+          <div
+            className="text-text-tertiary"
+            style={{ fontSize: "var(--text-11)" }}
+          >
+            {lawyer.practice_areas[0]}
+          </div>
+        </div>
+        <StatusBadge tone={badgeTone[lawyer.capacityState]}>
+          {lawyer.capacityLabel}
+        </StatusBadge>
+      </div>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div className="min-w-0 flex-1 space-y-1.5">
+          <CapacityMeter
+            pct={lawyer.utilizationPct}
+            state={lawyer.capacityState}
+            label={lawyer.capacityLabel}
+            name={lawyer.name}
+            layout="stacked"
+          />
+          <div
+            className="flex flex-wrap gap-x-4 gap-y-0.5 text-text-secondary"
+            style={{ fontSize: "var(--text-11)" }}
+          >
+            <span>
+              Active{" "}
+              <span className="num font-medium text-foreground">
+                {lawyer.activeMatters}
+              </span>
+            </span>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="cursor-default">
+                  This week{" "}
+                  <span className="num font-medium text-foreground">
+                    {lawyer.delivered_this_week} of {lawyer.weekly_target}
+                  </span>
+                </span>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="max-w-xs">
+                Matters delivered this week against their weekly target.
+                Moritz bills flat fees per matter, so the target is matters
+                delivered, not billable hours.
+              </TooltipContent>
+            </Tooltip>
+          </div>
+        </div>
+        <LawyerAction lawyer={lawyer} />
+      </div>
+    </div>
+  );
+}
+
 export function CapacityTable({
   lawyers,
   minRows,
@@ -148,16 +239,43 @@ export function CapacityTable({
   minRows?: number;
 }) {
   const [expanded, setExpanded] = useState(false);
+  const [stacked, setStacked] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
   const desktopPreview = Math.min(
     lawyers.length,
     Math.max(PREVIEW_DESKTOP, minRows ?? 0)
   );
   const preview = isMobile ? PREVIEW_MOBILE : desktopPreview;
+  const hasMore = lawyers.length > preview && lawyers.length - preview >= 3;
+  const visible = expanded || !hasMore ? lawyers : lawyers.slice(0, preview);
   const remaining = lawyers.length - preview;
-  const shouldCollapse = !expanded && remaining >= 3;
-  const visible = shouldCollapse ? lawyers.slice(0, preview) : lawyers;
-  const showMore = shouldCollapse;
+  const showFooter = hasMore;
+
+  useEffect(() => {
+    const el = cardRef.current;
+    if (!el) return;
+    const measure = () => {
+      setStacked(el.clientWidth > 0 && el.clientWidth < TABLE_MIN_WIDTH);
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [lawyers.length]);
+
+  if (lawyers.length === 0) {
+    return (
+      <Card className="gap-0 rounded-lg py-8 [--card-spacing:0px]">
+        <p
+          className="px-4 text-center text-text-secondary"
+          style={{ fontSize: "var(--text-13)" }}
+        >
+          No co-counsel to show yet.
+        </p>
+      </Card>
+    );
+  }
 
   return (
     <>
@@ -165,147 +283,182 @@ export function CapacityTable({
         {visible.map((lawyer) => (
           <LawyerCard key={lawyer.id} lawyer={lawyer} />
         ))}
-        {showMore ? (
+        {showFooter ? (
           <Button
             type="button"
             variant="ghost"
             size="sm"
             className="min-h-11 w-full text-text-secondary"
             style={{ fontSize: "var(--text-12)" }}
-            onClick={() => setExpanded(true)}
+            onClick={() => setExpanded((v) => !v)}
           >
-            Show <span className="num">{remaining}</span> more
+            {expanded ? (
+              "Show less"
+            ) : (
+              <>
+                Show <span className="num">{remaining}</span> more
+              </>
+            )}
           </Button>
         ) : null}
       </div>
 
-      <Card className="hidden h-full flex-col gap-0 rounded-lg py-0 [--card-spacing:0px] md:flex">
-        <Table>
-          <TableHeader>
-            <TableRow className="border-border hover:bg-transparent">
-              <TableHead
-                scope="col"
-                className="h-auto px-4 py-2.5 font-medium text-text-tertiary"
-                style={{ fontSize: "var(--text-11)" }}
-              >
-                Lawyer
-              </TableHead>
-              <TableHead
-                scope="col"
-                className="h-auto px-4 py-2.5 text-right font-medium text-text-tertiary"
-                style={{ fontSize: "var(--text-11)" }}
-              >
-                Active
-              </TableHead>
-              <TableHead
-                scope="col"
-                className="h-auto px-4 py-2.5 font-medium text-text-tertiary"
-                style={{ fontSize: "var(--text-11)" }}
-              >
-                Capacity
-              </TableHead>
-              <TableHead
-                scope="col"
-                className="h-auto px-4 py-2.5 text-right font-medium text-text-tertiary"
-                style={{ fontSize: "var(--text-11)" }}
-              >
-                This week
-              </TableHead>
-              <TableHead
-                scope="col"
-                className="h-auto px-4 py-2.5 text-right font-medium text-text-tertiary"
-                style={{ fontSize: "var(--text-11)" }}
-              >
-                <span className="sr-only">Action</span>
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {visible.map((lawyer, index) => (
-              <TableRow
-                key={lawyer.id}
-                className="h-12 border-0 hover:bg-surface-hover"
-                style={{
-                  borderBottom:
-                    index < visible.length - 1
-                      ? "1px solid var(--table-inner-line)"
-                      : undefined,
-                }}
-              >
-                <TableCell className="px-4 py-0">
-                  <div className="flex items-center gap-2.5">
-                    <LawyerAvatar
-                      lawyerId={lawyer.id}
-                      name={lawyer.name}
-                      initials={lawyer.initials}
-                      size="md"
-                    />
-                    <div className="min-w-0">
-                      <div
-                        className="truncate font-medium leading-tight text-foreground"
-                        style={{ fontSize: "var(--text-13)" }}
-                      >
-                        {lawyer.name}
-                      </div>
-                      <div
-                        className="truncate text-text-tertiary"
-                        style={{ fontSize: "var(--text-11)" }}
-                      >
-                        {lawyer.practice_areas[0]}
-                      </div>
-                    </div>
-                  </div>
-                </TableCell>
-                <TableCell className="px-4 py-0 text-right">
-                  <span className="num">{lawyer.activeMatters}</span>
-                </TableCell>
-                <TableCell className="px-4 py-0">
-                  <CapacityMeter
-                    pct={lawyer.utilizationPct}
-                    state={lawyer.capacityState}
-                    label={lawyer.capacityLabel}
-                    name={lawyer.name}
-                  />
-                </TableCell>
-                <TableCell className="px-4 py-0 text-right">
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <span className="num cursor-default">
-                        {lawyer.delivered_this_week} of {lawyer.weekly_target}
-                      </span>
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom" className="max-w-xs">
-                      Matters delivered this week against their weekly target.
-                      Moritz bills flat fees per matter, so the target is matters
-                      delivered, not billable hours.
-                    </TooltipContent>
-                  </Tooltip>
-                </TableCell>
-                <TableCell className="px-4 py-0 text-right">
-                  <LawyerAction lawyer={lawyer} />
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-        {showMore ? (
-          <div
-            className="mt-auto px-4 py-2"
-            style={{ borderTop: "1px solid var(--border)" }}
-          >
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="w-full text-text-secondary"
-              style={{ fontSize: "var(--text-12)" }}
-              onClick={() => setExpanded(true)}
+      {/* Outer wrapper owns the width measure — Card is not forwardRef. */}
+      <div
+        ref={cardRef}
+        className="hidden h-full min-w-0 md:block"
+        data-capacity-host=""
+      >
+        <Card className="flex h-full min-w-0 flex-col gap-0 overflow-hidden rounded-lg py-0 [--card-spacing:0px]">
+          {stacked ? (
+            <div className="min-w-0 flex-1" data-capacity-layout="stacked">
+              {visible.map((lawyer, index) => (
+                <LawyerStackedRow
+                  key={lawyer.id}
+                  lawyer={lawyer}
+                  showDivider={index < visible.length - 1}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="min-w-0 flex-1" data-capacity-layout="table">
+              <Table className="min-w-0 w-full table-fixed [&_td]:whitespace-normal [&_th]:whitespace-normal">
+                <TableHeader>
+                  <TableRow className="border-border hover:bg-transparent">
+                    <TableHead
+                      scope="col"
+                      className="h-auto w-[32%] px-3 py-2.5 font-medium text-text-tertiary"
+                      style={{ fontSize: "var(--text-11)" }}
+                    >
+                      Lawyer
+                    </TableHead>
+                    <TableHead
+                      scope="col"
+                      className="h-auto w-[10%] px-2 py-2.5 text-right font-medium text-text-tertiary"
+                      style={{ fontSize: "var(--text-11)" }}
+                    >
+                      Active
+                    </TableHead>
+                    <TableHead
+                      scope="col"
+                      className="h-auto w-[26%] px-2 py-2.5 font-medium text-text-tertiary"
+                      style={{ fontSize: "var(--text-11)" }}
+                    >
+                      Capacity
+                    </TableHead>
+                    <TableHead
+                      scope="col"
+                      className="h-auto w-[16%] px-2 py-2.5 text-right font-medium text-text-tertiary"
+                      style={{ fontSize: "var(--text-11)" }}
+                    >
+                      This week
+                    </TableHead>
+                    <TableHead
+                      scope="col"
+                      className="h-auto w-[16%] px-2 py-2.5 text-right font-medium text-text-tertiary"
+                      style={{ fontSize: "var(--text-11)" }}
+                    >
+                      <span className="sr-only">Action</span>
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {visible.map((lawyer, index) => (
+                    <TableRow
+                      key={lawyer.id}
+                      className="group/row h-12 border-0 hover:bg-surface-hover"
+                      style={{
+                        borderBottom:
+                          index < visible.length - 1
+                            ? "1px solid var(--table-inner-line)"
+                            : undefined,
+                      }}
+                    >
+                      <TableCell className="px-3 py-0">
+                        <div className="flex min-w-0 items-center gap-2.5">
+                          <LawyerAvatar
+                            lawyerId={lawyer.id}
+                            name={lawyer.name}
+                            initials={lawyer.initials}
+                            size="md"
+                          />
+                          <div className="min-w-0">
+                            <div
+                              className="font-medium leading-tight text-pretty text-foreground"
+                              style={{ fontSize: "var(--text-13)" }}
+                            >
+                              {lawyer.name}
+                            </div>
+                            <div
+                              className="text-text-tertiary"
+                              style={{ fontSize: "var(--text-11)" }}
+                            >
+                              {lawyer.practice_areas[0]}
+                            </div>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="px-2 py-0 text-right">
+                        <span className="num">{lawyer.activeMatters}</span>
+                      </TableCell>
+                      <TableCell className="min-w-0 px-2 py-0">
+                        <CapacityMeter
+                          pct={lawyer.utilizationPct}
+                          state={lawyer.capacityState}
+                          label={lawyer.capacityLabel}
+                          name={lawyer.name}
+                          layout="stacked"
+                        />
+                      </TableCell>
+                      <TableCell className="px-2 py-0 text-right">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="num cursor-default whitespace-nowrap">
+                              {lawyer.delivered_this_week} of{" "}
+                              {lawyer.weekly_target}
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent side="bottom" className="max-w-xs">
+                            Matters delivered this week against their weekly
+                            target. Moritz bills flat fees per matter, so the
+                            target is matters delivered, not billable hours.
+                          </TooltipContent>
+                        </Tooltip>
+                      </TableCell>
+                      <TableCell className="px-2 py-0 text-right">
+                        <LawyerAction lawyer={lawyer} />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+          {showFooter ? (
+            <div
+              className="mt-auto px-4 py-2"
+              style={{ borderTop: "1px solid var(--border)" }}
             >
-              Show <span className="num">{remaining}</span> more
-            </Button>
-          </div>
-        ) : null}
-      </Card>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="w-full text-text-secondary"
+                style={{ fontSize: "var(--text-12)" }}
+                onClick={() => setExpanded((v) => !v)}
+              >
+                {expanded ? (
+                  "Show less"
+                ) : (
+                  <>
+                    Show <span className="num">{remaining}</span> more
+                  </>
+                )}
+              </Button>
+            </div>
+          ) : null}
+        </Card>
+      </div>
     </>
   );
 }
@@ -322,7 +475,7 @@ export function CapacityTableSkeleton() {
           </Card>
         ))}
       </div>
-      <Card className="hidden h-full flex-col gap-0 rounded-lg py-0 [--card-spacing:0px] md:flex">
+      <Card className="hidden h-full min-w-0 flex-col gap-0 rounded-lg py-0 [--card-spacing:0px] md:flex">
         <div
           className="grid grid-cols-[1.4fr_auto_1.2fr_auto_auto] gap-4 px-4 py-2.5"
           style={{ borderBottom: "1px solid var(--border)" }}

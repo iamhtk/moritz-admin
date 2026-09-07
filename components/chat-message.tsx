@@ -1,7 +1,9 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { MatterReference } from "@/components/matter-reference";
 import { useDashboardActions } from "@/components/actions-provider";
 import type { LawyerLoad, MatterStatus, OverviewPayload } from "@/lib/supabase";
 import { cn } from "cn";
@@ -9,7 +11,12 @@ import { cn } from "cn";
 export type ChatRole = "user" | "assistant";
 
 export type ChatAction =
-  | { kind: "assign"; label: string; matterId: string }
+  | {
+      kind: "assign";
+      label: string;
+      matterId: string;
+      lawyerId?: string;
+    }
   | { kind: "nudge"; label: string; matterId: string; lawyerName: string }
   | { kind: "reassign"; label: string; lawyerId: string };
 
@@ -19,7 +26,21 @@ export type ChatMessageData = {
   content: string;
   actions?: ChatAction[];
   error?: boolean;
+  /** General legal-information answers are isolated from firm-grounded ones. */
+  mode?: "firm" | "legal";
 };
+
+/** Turn MOR-#### mentions in assistant copy into Matters links. */
+function linkMatterRefs(text: string): ReactNode {
+  const parts = text.split(/(MOR-\d+)/gi);
+  return parts.map((part, i) =>
+    /^MOR-\d+$/i.test(part) ? (
+      <MatterReference key={`${part}-${i}`} reference={part.toUpperCase()} />
+    ) : (
+      <span key={i}>{part}</span>
+    )
+  );
+}
 
 function isAtRisk(m: MatterStatus): boolean {
   if (m.stage === "delivered") return false;
@@ -83,6 +104,7 @@ export function extractChatActions(
         kind: "assign",
         label: lawyer.name,
         matterId,
+        lawyerId: lawyer.id,
       });
     }
   }
@@ -117,42 +139,99 @@ export function ChatMessage({
 
   if (message.role === "user") {
     return (
-      <div className="flex justify-end">
-        <div
-          className="max-w-[85%] rounded-xl bg-secondary px-3 py-2 text-secondary-foreground"
+      <div className="space-y-1.5">
+        <p
+          className="font-medium text-text-tertiary"
+          style={{ fontSize: "var(--text-11)" }}
+        >
+          You
+        </p>
+        <p
+          className="leading-relaxed text-foreground"
           style={{ fontSize: "var(--text-13)" }}
         >
           {message.content}
-        </div>
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-2">
-      {streaming && !message.content ? (
-        <div className="flex items-center gap-1 py-1" aria-hidden>
-          <span className="size-1.5 animate-pulse rounded-full bg-text-tertiary" />
+    <div className="space-y-3">
+      <div className="space-y-1.5">
+        <div className="flex items-center gap-2">
           <span
-            className="size-1.5 animate-pulse rounded-full bg-text-tertiary"
-            style={{ animationDelay: "120ms" }}
-          />
-          <span
-            className="size-1.5 animate-pulse rounded-full bg-text-tertiary"
-            style={{ animationDelay: "240ms" }}
-          />
+            className="flex size-5 shrink-0 items-center justify-center rounded-[6px] bg-muted font-semibold text-muted-foreground"
+            style={{ fontSize: "var(--text-11)" }}
+            aria-hidden
+          >
+            N
+          </span>
+          <p
+            className="font-medium text-text-tertiary"
+            style={{ fontSize: "var(--text-11)" }}
+          >
+            Nora
+          </p>
+          {message.mode === "legal" ? (
+            <span
+              className="rounded-md px-1.5 py-0.5 font-medium text-text-tertiary"
+              style={{
+                fontSize: "var(--text-11)",
+                background: "var(--status-info-bg)",
+              }}
+            >
+              General information
+            </span>
+          ) : null}
         </div>
-      ) : (
-        <p
-          className={cn(
-            "leading-relaxed text-foreground",
-            message.error && "text-text-secondary"
-          )}
-          style={{ fontSize: "var(--text-13)" }}
-        >
-          {message.content}
-        </p>
-      )}
+        {message.mode === "legal" ? (
+          <p
+            className="text-text-tertiary"
+            style={{ fontSize: "var(--text-11)" }}
+            role="note"
+          >
+            General legal information, not legal advice. Not a substitute for
+            advice from a qualified attorney.
+          </p>
+        ) : null}
+        {streaming && !message.content ? (
+          <div className="flex items-center gap-1 py-1" aria-hidden>
+            <span className="typing-dot size-1.5 rounded-full bg-text-tertiary" />
+            <span
+              className="typing-dot size-1.5 rounded-full bg-text-tertiary"
+              style={{ animationDelay: "160ms" }}
+            />
+            <span
+              className="typing-dot size-1.5 rounded-full bg-text-tertiary"
+              style={{ animationDelay: "320ms" }}
+            />
+          </div>
+        ) : (
+          <p
+            className={cn(
+              "whitespace-pre-wrap leading-relaxed text-foreground",
+              message.error && "text-text-secondary"
+            )}
+            style={{ fontSize: "var(--text-13)" }}
+          >
+            {message.mode === "legal"
+              ? message.content
+              : linkMatterRefs(message.content)}
+            {streaming && (
+              <span
+                aria-hidden
+                className="ml-px inline-block h-[1em] w-px align-text-bottom text-text-tertiary opacity-70"
+                style={{
+                  background: "currentColor",
+                  animation: "typing-dot 1.2s var(--motion-ease-in-out) infinite",
+                  animationDelay: "0ms",
+                }}
+              />
+            )}
+          </p>
+        )}
+      </div>
 
       {message.error && onRetry ? (
         <Button type="button" size="sm" variant="outline" onClick={onRetry}>
@@ -160,12 +239,17 @@ export function ChatMessage({
         </Button>
       ) : null}
 
-      {message.actions && message.actions.length > 0 ? (
-        <ul className="space-y-2">
-          {message.actions.map((action) => (
+      {message.mode !== "legal" &&
+      message.actions &&
+      message.actions.length > 0 ? (
+        <ul className="space-y-0 overflow-hidden rounded-lg border border-border">
+          {message.actions.map((action, i) => (
             <li
               key={`${action.kind}-${action.label}`}
-              className="flex items-center justify-between gap-3"
+              className={cn(
+                "flex items-center justify-between gap-3 px-3 py-2.5",
+                i > 0 && "border-t border-border"
+              )}
             >
               <span
                 className="truncate font-medium text-foreground"
@@ -178,7 +262,11 @@ export function ChatMessage({
                   type="button"
                   size="sm"
                   variant="outline"
-                  onClick={() => openAssign(action.matterId, "assign")}
+                  onClick={() =>
+                    openAssign(action.matterId, "assign", {
+                      preferredLawyerId: action.lawyerId,
+                    })
+                  }
                 >
                   Assign
                 </Button>

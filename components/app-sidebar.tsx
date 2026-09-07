@@ -1,8 +1,10 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useSyncExternalStore } from "react";
+import { motion, LayoutGroup } from "framer-motion";
+import { transitionStandard } from "@/lib/motion";
 import {
   Building2,
   FileText,
@@ -23,14 +25,15 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { UserMenu } from "@/components/user-menu";
+import { cn } from "cn";
 
 const navItems = [
-  { title: "Overview", href: "/", icon: LayoutDashboard },
-  { title: "Matters", href: "/matters", icon: FileText },
-  { title: "Lawyers", href: "/lawyers", icon: Users },
-  { title: "Clients", href: "/clients", icon: Building2 },
-  { title: "Finance", href: "/finance", icon: TrendingUp },
-  { title: "Settings", href: "/settings", icon: Settings },
+  { title: "Overview", href: "/", icon: LayoutDashboard, soon: false },
+  { title: "Matters", href: "/matters", icon: FileText, soon: false },
+  { title: "Lawyers", href: "/lawyers", icon: Users, soon: false },
+  { title: "Clients", href: "/clients", icon: Building2, soon: true },
+  { title: "Finance", href: "/finance", icon: TrendingUp, soon: true },
+  { title: "Settings", href: "/settings", icon: Settings, soon: true },
 ] as const;
 
 const emptySubscribe = () => () => {};
@@ -71,37 +74,69 @@ export function AppSidebar({
       </SidebarHeader>
 
       <SidebarContent>
-        <SidebarGroup>
+          <SidebarGroup>
           <SidebarGroupContent>
             <nav aria-label="Primary">
-              <SidebarMenu>
-                {navItems.map((item) => {
-                  const active =
-                    mounted &&
-                    (item.href === "/"
-                      ? pathname === "/"
-                      : pathname.startsWith(item.href));
-                  return (
-                    <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton
-                        asChild
-                        isActive={active}
-                        tooltip={item.title}
-                        className={
-                          active
-                            ? "h-[34px] rounded-md bg-sidebar-accent text-sidebar-accent-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                            : "h-[34px] rounded-md text-sidebar-foreground hover:bg-surface-hover hover:text-sidebar-foreground"
-                        }
-                      >
-                        <Link href={item.href}>
-                          <item.icon />
-                          <span>{item.title}</span>
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  );
-                })}
-              </SidebarMenu>
+              <LayoutGroup>
+                <SidebarMenu>
+                  {navItems.map((item) => {
+                    const active =
+                      mounted &&
+                      (item.href === "/"
+                        ? pathname === "/"
+                        : pathname.startsWith(item.href));
+                    return (
+                      <SidebarMenuItem key={item.title} className="relative">
+                        {active && (
+                          <motion.div
+                            layoutId="sidebar-active"
+                            className="pointer-events-none absolute inset-0 rounded-md bg-sidebar-accent"
+                            transition={transitionStandard}
+                          />
+                        )}
+                        <SidebarMenuButton
+                          asChild
+                          isActive={active}
+                          tooltip={
+                            item.soon ? `${item.title} (Soon)` : item.title
+                          }
+                          className={cn(
+                            "relative z-[1] h-[34px] rounded-md",
+                            active
+                              ? "bg-transparent text-sidebar-accent-foreground hover:bg-transparent hover:text-sidebar-accent-foreground"
+                              : item.soon
+                                ? "text-sidebar-foreground/55 hover:bg-surface-hover hover:text-sidebar-foreground/70"
+                                : "text-sidebar-foreground hover:bg-surface-hover hover:text-sidebar-foreground"
+                          )}
+                        >
+                          <Link
+                            href={item.href}
+                            aria-current={mounted && active ? "page" : undefined}
+                          >
+                            <item.icon />
+                            <span className="flex min-w-0 flex-1 items-center gap-2">
+                              <span className="truncate">{item.title}</span>
+                              {item.soon ? (
+                                <span
+                                  className="ml-auto shrink-0 rounded-md border border-sidebar-border px-1.5 py-0.5 font-medium text-sidebar-foreground/70 group-data-[collapsible=icon]:hidden"
+                                  style={{
+                                    fontSize: "var(--text-11)",
+                                    lineHeight: 1.2,
+                                    background:
+                                      "color-mix(in oklch, var(--sidebar-foreground) 10%, transparent)",
+                                  }}
+                                >
+                                  Soon
+                                </span>
+                              ) : null}
+                            </span>
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    );
+                  })}
+                </SidebarMenu>
+              </LayoutGroup>
             </nav>
           </SidebarGroupContent>
         </SidebarGroup>

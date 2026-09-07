@@ -18,14 +18,6 @@ import { useSheetSide } from "@/hooks/use-sheet-side";
 import { SheetHandle } from "@/components/sheet-handle";
 import { cn } from "cn";
 
-const glassStyle: React.CSSProperties = {
-  background: "var(--glass-bg)",
-  backdropFilter: "var(--glass-blur)",
-  WebkitBackdropFilter: "var(--glass-blur)",
-  border: "1px solid var(--glass-border)",
-  boxShadow: "var(--glass-shadow), var(--glass-inset)",
-};
-
 export function QuoteSheet({
   matter,
   suggestedFee,
@@ -60,11 +52,10 @@ export function QuoteSheet({
       <SheetContent
         side={side}
         className={cn(
-          "gap-0 border-0 bg-transparent p-0",
+          "gap-0 p-0",
           side === "right" && "h-full w-full sm:max-w-[360px]",
           side === "bottom" && "h-[85vh] max-h-[85vh] w-full"
         )}
-        style={glassStyle}
       >
         <SheetHandle visible={side === "bottom"} />
         <SheetHeader className="border-b border-border px-5 py-4">

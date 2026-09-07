@@ -1,4 +1,5 @@
 import { cn } from "cn";
+import type { ReactNode } from "react";
 
 export function ZoneLabel({
   title,
@@ -7,7 +8,7 @@ export function ZoneLabel({
   visuallyHidden = false,
 }: {
   title: string;
-  meta?: string;
+  meta?: ReactNode;
   className?: string;
   /** Keep an h2 for outline order while the tab label is visible. */
   visuallyHidden?: boolean;
@@ -17,17 +18,17 @@ export function ZoneLabel({
   }
 
   return (
-    <div className={cn("mb-3 flex items-baseline gap-2", className)}>
+    <div className={cn("mb-3 flex flex-col gap-0.5 sm:flex-row sm:items-baseline sm:gap-2", className)}>
       <h2
-        className="font-semibold text-foreground"
-        style={{ fontSize: "var(--text-14)" }}
+        className="font-heading shrink-0 font-medium text-foreground"
+        style={{ fontSize: "var(--text-24)" }}
       >
         {title}
       </h2>
       {meta ? (
         <span
-          className="text-text-tertiary"
-          style={{ fontSize: "var(--text-12)" }}
+          className="min-w-0 text-text-tertiary"
+          style={{ fontSize: "var(--text-14)" }}
         >
           {meta}
         </span>

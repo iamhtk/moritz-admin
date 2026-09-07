@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import {
@@ -15,6 +16,7 @@ import { StatusBadge } from "@/components/ui-bits/status-badge";
 import { CapacityMeter } from "@/components/ui-bits/capacity-meter";
 import { LawyerAvatar } from "@/components/ui-bits/lawyer-avatar";
 import { useAssign } from "@/lib/use-actions";
+import { formatDuration } from "@/lib/format";
 import type { LawyerLoad, MatterStatus } from "@/lib/supabase";
 import { useSheetSide } from "@/hooks/use-sheet-side";
 import { SheetHandle } from "@/components/sheet-handle";
@@ -31,33 +33,29 @@ function minutesLabel(minutes: number) {
   if (minutes < 0) {
     return (
       <>
-        past due by <span className="num">{Math.abs(minutes)}</span> min
+        past due by <span className="num">{formatDuration(Math.abs(minutes))}</span>
       </>
     );
   }
   return (
     <>
-      <span className="num">{minutes}</span> min left
+      <span className="num">{formatDuration(minutes)}</span> left
     </>
   );
 }
 
-const glassStyle: React.CSSProperties = {
-  background: "var(--glass-bg)",
-  backdropFilter: "var(--glass-blur)",
-  WebkitBackdropFilter: "var(--glass-blur)",
-  border: "1px solid var(--glass-border)",
-  boxShadow: "var(--glass-shadow), var(--glass-inset)",
-};
-
 export function AssignSheet({
   matterId,
   mode,
+  preferredLawyerId = null,
+  contextNote = null,
   open,
   onOpenChange,
 }: {
   matterId: string | null;
   mode: "assign" | "reassign";
+  preferredLawyerId?: string | null;
+  contextNote?: string | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
@@ -73,22 +71,43 @@ export function AssignSheet({
     enabled: open && !!matterId,
   });
 
+  const suggestedId =
+    preferredLawyerId &&
+    data?.candidates.some((c) => c.id === preferredLawyerId)
+      ? preferredLawyerId
+      : (data?.suggestedId ?? null);
+
+  const preferredLawyer = data?.candidates.find((c) => c.id === preferredLawyerId);
+  const reason =
+    preferredLawyerId && preferredLawyer
+      ? `You chose ${preferredLawyer.name.split(" ")[0]} from Nora's answer`
+      : data?.reason;
+
+  const candidates = useMemo(() => {
+    if (!data) return [];
+    if (!suggestedId) return data.candidates;
+    const preferred = data.candidates.find((c) => c.id === suggestedId);
+    if (!preferred) return data.candidates;
+    return [
+      preferred,
+      ...data.candidates.filter((c) => c.id !== suggestedId),
+    ];
+  }, [data, suggestedId]);
+
   const allOver =
-    !!data &&
-    data.candidates.length > 0 &&
-    data.candidates.every((c) => c.capacityState === "over");
+    candidates.length > 0 &&
+    candidates.every((c) => c.capacityState === "over");
   const side = useSheetSide();
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
+    <Sheet open={open} onOpenChange={onOpenChange} modal>
       <SheetContent
         side={side}
         className={cn(
-          "gap-0 border-0 bg-transparent p-0",
-          side === "right" && "h-full w-full sm:max-w-[400px]",
+          "z-[60] gap-0 p-0",
+          side === "right" && "h-full w-full sm:max-w-[440px]",
           side === "bottom" && "h-[85vh] max-h-[85vh] w-full"
         )}
-        style={glassStyle}
       >
         <SheetHandle visible={side === "bottom"} />
         <SheetHeader className="border-b border-border px-5 py-4">
@@ -97,15 +116,18 @@ export function AssignSheet({
             {data?.matter.reference ?? "matter"}
           </SheetTitle>
           <SheetDescription
-            className="text-text-secondary"
+            className="space-y-1 text-text-secondary"
             style={{ fontSize: "var(--text-12)" }}
           >
+            {contextNote ? (
+              <span className="block text-pretty text-foreground">{contextNote}</span>
+            ) : null}
             {data ? (
-              <>
+              <span className="block">
                 {data.matter.client_name} · {data.matter.type} ·{" "}
                 {data.matter.service_line} ·{" "}
                 {minutesLabel(data.matter.minutes_remaining)}
-              </>
+              </span>
             ) : (
               "Loading candidates…"
             )}
@@ -143,12 +165,14 @@ export function AssignSheet({
                   className="px-3 py-4 text-center text-text-secondary"
                   style={{ fontSize: "var(--text-13)" }}
                 >
-                  Everyone is at capacity. Assigning here will put someone over.
+                  {reason?.startsWith("No one has room")
+                    ? reason
+                    : "Everyone is at capacity. Assigning here will put someone over."}
                 </p>
               ) : null}
               <ul className="space-y-1">
-                {data.candidates.map((lawyer) => {
-                  const suggested = lawyer.id === data.suggestedId;
+                {candidates.map((lawyer) => {
+                  const suggested = lawyer.id === suggestedId;
                   const pending =
                     assign.isPending &&
                     assign.variables?.lawyerId === lawyer.id;
@@ -160,7 +184,12 @@ export function AssignSheet({
                         variant="ghost"
                         disabled={assign.isPending}
                         aria-label={`Assign ${data.matter.reference} to ${lawyer.name}, ${lawyer.utilizationPct} percent capacity`}
-                        className="h-auto w-full items-start justify-start gap-3 rounded-lg px-3 py-2.5 text-left hover:bg-surface-hover"
+                        className={cn(
+                          "h-auto w-full items-start justify-start gap-3 rounded-lg px-3 py-2.5 text-left transition-[opacity,border-color] duration-[var(--motion-duration)] ease-[var(--motion-ease-out)]",
+                          suggested && !assign.isPending
+                            ? "border border-dashed border-border opacity-80 hover:opacity-100 hover:border-solid"
+                            : "hover:bg-surface-hover"
+                        )}
                         onClick={() => {
                           assign.mutate(
                             {
@@ -183,14 +212,14 @@ export function AssignSheet({
                           size="md"
                         />
                         <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-2">
+                          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                             <span
-                              className="truncate font-medium text-foreground"
+                              className="font-medium break-words text-foreground"
                               style={{ fontSize: "var(--text-13)" }}
                             >
                               {lawyer.name}
                             </span>
-                            {suggested && data.reason ? (
+                            {suggested && reason ? (
                               <StatusBadge tone="info">Suggested</StatusBadge>
                             ) : null}
                             {pending ? (
@@ -198,17 +227,17 @@ export function AssignSheet({
                             ) : null}
                           </div>
                           <div
-                            className="truncate text-text-tertiary"
+                            className="text-text-tertiary"
                             style={{ fontSize: "var(--text-11)" }}
                           >
                             {lawyer.practice_areas.join(" · ")}
                           </div>
-                          {suggested && data.reason ? (
+                          {suggested && reason ? (
                             <div
-                              className="mt-1 text-text-tertiary"
+                              className="mt-1 text-pretty text-text-tertiary"
                               style={{ fontSize: "var(--text-11)" }}
                             >
-                              {data.reason}
+                              {reason}
                             </div>
                           ) : null}
                         </div>

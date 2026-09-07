@@ -7,7 +7,9 @@ import {
   useRef,
   useState,
 } from "react";
-import { Square } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
+import { ArrowUp, Square } from "lucide-react";
+import { transitionStandard } from "@/lib/motion";
 import {
   Sheet,
   SheetContent,
@@ -23,24 +25,19 @@ import {
   type ChatMessageData,
 } from "@/components/chat-message";
 import { useOverview } from "@/hooks/use-overview";
+import { useDashboardActions } from "@/components/actions-provider";
 import type { OverviewPayload, ServiceLine } from "@/lib/supabase";
 import { cn } from "cn";
 import { useSheetSide } from "@/hooks/use-sheet-side";
 import { SheetHandle } from "@/components/sheet-handle";
-
-const glassStyle: React.CSSProperties = {
-  background: "var(--glass-bg)",
-  backdropFilter: "var(--glass-blur)",
-  WebkitBackdropFilter: "var(--glass-blur)",
-  borderLeft: "1px solid var(--glass-border)",
-  boxShadow: "var(--glass-shadow), var(--glass-inset)",
-};
-
-const inputSurfaceStyle: React.CSSProperties = {
-  background: "var(--glass-bg)",
-  backdropFilter: "var(--glass-blur)",
-  WebkitBackdropFilter: "var(--glass-blur)",
-};
+import {
+  readAskMode,
+  readFirmMessages,
+  readLegalMessages,
+  writeAskMode,
+  writeFirmMessages,
+  writeLegalMessages,
+} from "@/lib/chat-session";
 
 type ApiMessage = { role: "user" | "assistant"; content: string };
 
@@ -71,30 +68,14 @@ function topServiceLine(payload: OverviewPayload): ServiceLine {
 }
 
 function turnaroundPrompt(payload: OverviewPayload): string {
-  const now = Date.now();
-  const weekMs = 7 * 24 * 60 * 60 * 1000;
-  const thisWeekStart = now - weekMs;
-  const lastWeekStart = now - 2 * weekMs;
+  const thisWeek = payload.finance.turnaroundThisWeek;
+  const lastWeek = payload.finance.turnaroundLastWeek;
 
-  const avg = (from: number, to: number) => {
-    const rows = payload.matters.filter((m) => {
-      if (!m.delivered_at || m.draft_minutes == null || m.review_minutes == null)
-        return false;
-      const t = new Date(m.delivered_at).getTime();
-      return t >= from && t < to;
-    });
-    if (rows.length < 3) return null;
-    const total = rows.reduce(
-      (s, m) => s + (m.draft_minutes ?? 0) + (m.review_minutes ?? 0),
-      0
-    );
-    return total / rows.length;
-  };
-
-  const thisWeek = avg(thisWeekStart, now);
-  const lastWeek = avg(lastWeekStart, thisWeekStart);
-
-  if (thisWeek != null && lastWeek != null && thisWeek > lastWeek) {
+  if (
+    thisWeek &&
+    lastWeek &&
+    thisWeek.avgMinutes > lastWeek.avgMinutes
+  ) {
     return "Why is turnaround slower this week?";
   }
   return "What is our average turnaround this week?";
@@ -119,25 +100,57 @@ export function ChatPanel({
   onOpenChange: (open: boolean) => void;
 }) {
   const { data } = useOverview();
+  const { assignSheetOpen } = useDashboardActions();
   const side = useSheetSide();
   const [input, setInput] = useState("");
-  const [messages, setMessages] = useState<ChatMessageData[]>([]);
+  const [askMode, setAskMode] = useState<"firm" | "legal">(() => readAskMode());
+  const [firmMessages, setFirmMessages] = useState<ChatMessageData[]>(() =>
+    readFirmMessages<ChatMessageData>()
+  );
+  const [legalMessages, setLegalMessages] = useState<ChatMessageData[]>(() =>
+    readLegalMessages<ChatMessageData>()
+  );
   const [streamingId, setStreamingId] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
-  const messagesRef = useRef(messages);
+  const askModeRef = useRef(askMode);
+  const firmMessagesRef = useRef(firmMessages);
+  const legalMessagesRef = useRef(legalMessages);
+
+  const messages = askMode === "firm" ? firmMessages : legalMessages;
+  const empty = messages.length === 0;
 
   useEffect(() => {
-    messagesRef.current = messages;
-  }, [messages]);
+    askModeRef.current = askMode;
+    writeAskMode(askMode);
+  }, [askMode]);
+
+  useEffect(() => {
+    firmMessagesRef.current = firmMessages;
+    writeFirmMessages(firmMessages);
+  }, [firmMessages]);
+
+  useEffect(() => {
+    legalMessagesRef.current = legalMessages;
+    writeLegalMessages(legalMessages);
+  }, [legalMessages]);
 
   useEffect(() => {
     const el = listRef.current;
-    if (!el) return;
+    if (!el || empty) return;
     el.scrollTop = el.scrollHeight;
-  }, [messages, streamingId]);
+  }, [messages, streamingId, empty, askMode]);
 
-  const suggestions = useMemo(() => buildSuggestions(data), [data]);
+  const suggestions = useMemo(() => {
+    if (askMode === "legal") {
+      return [
+        "What is a force majeure clause?",
+        "What does indemnification mean in a contract?",
+        "What is a data processing agreement?",
+      ];
+    }
+    return buildSuggestions(data);
+  }, [data, askMode]);
 
   const stop = useCallback(() => {
     abortRef.current?.abort();
@@ -145,30 +158,48 @@ export function ChatPanel({
     setStreamingId(null);
   }, []);
 
+  const setActiveMessages = useCallback(
+    (updater: (prev: ChatMessageData[]) => ChatMessageData[]) => {
+      if (askModeRef.current === "legal") {
+        setLegalMessages(updater);
+      } else {
+        setFirmMessages(updater);
+      }
+    },
+    []
+  );
+
   const send = useCallback(
     async (text: string) => {
       const trimmed = text.trim();
       if (!trimmed || abortRef.current) return;
 
+      const mode = askModeRef.current;
       setInput("");
 
       const userMsg: ChatMessageData = {
         id: `u-${Date.now()}`,
         role: "user",
         content: trimmed,
+        mode,
       };
       const assistantId = `a-${Date.now()}`;
       const assistantMsg: ChatMessageData = {
         id: assistantId,
         role: "assistant",
         content: "",
+        mode,
       };
 
-      const history: ApiMessage[] = [...messagesRef.current, userMsg]
-        .filter((m) => m.role === "user" || (m.role === "assistant" && m.content))
+      const prior =
+        mode === "legal" ? legalMessagesRef.current : firmMessagesRef.current;
+      const history: ApiMessage[] = [...prior, userMsg]
+        .filter(
+          (m) => m.role === "user" || (m.role === "assistant" && m.content)
+        )
         .map((m) => ({ role: m.role, content: m.content }));
 
-      setMessages((prev) => [...prev, userMsg, assistantMsg]);
+      setActiveMessages((prev) => [...prev, userMsg, assistantMsg]);
       setStreamingId(assistantId);
 
       const controller = new AbortController();
@@ -178,7 +209,7 @@ export function ChatPanel({
         const res = await fetch("/api/ask", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ messages: history }),
+          body: JSON.stringify({ messages: history, mode }),
           signal: controller.signal,
         });
 
@@ -186,10 +217,10 @@ export function ChatPanel({
           const errText =
             (await res.text().catch(() => "")) ||
             "Couldn't reach the assistant. Try again.";
-          setMessages((prev) =>
+          setActiveMessages((prev) =>
             prev.map((m) =>
               m.id === assistantId
-                ? { ...m, content: errText, error: true }
+                ? { ...m, content: errText, error: true, mode }
                 : m
             )
           );
@@ -205,30 +236,36 @@ export function ChatPanel({
           if (done) break;
           full += decoder.decode(value, { stream: true });
           const snapshot = full;
-          setMessages((prev) =>
+          setActiveMessages((prev) =>
             prev.map((m) =>
-              m.id === assistantId ? { ...m, content: snapshot } : m
+              m.id === assistantId
+                ? { ...m, content: snapshot, mode }
+                : m
             )
           );
         }
 
-        const actions = data ? extractChatActions(full, data) : [];
-        setMessages((prev) =>
+        const actions =
+          mode === "firm" && data ? extractChatActions(full, data) : [];
+        setActiveMessages((prev) =>
           prev.map((m) =>
-            m.id === assistantId ? { ...m, content: full, actions } : m
+            m.id === assistantId
+              ? { ...m, content: full, actions, mode }
+              : m
           )
         );
       } catch (e) {
         if ((e as Error).name === "AbortError") {
           // Keep partial text; append nothing.
         } else {
-          setMessages((prev) =>
+          setActiveMessages((prev) =>
             prev.map((m) =>
               m.id === assistantId
                 ? {
                     ...m,
                     content: "Couldn't reach the assistant. Try again.",
                     error: true,
+                    mode,
                   }
                 : m
             )
@@ -239,11 +276,13 @@ export function ChatPanel({
         setStreamingId(null);
       }
     },
-    [data]
+    [data, setActiveMessages]
   );
 
   const retryLast = useCallback(() => {
-    const prev = messagesRef.current;
+    const mode = askModeRef.current;
+    const prev =
+      mode === "legal" ? legalMessagesRef.current : firmMessagesRef.current;
     let lastUser = "";
     const next = [...prev];
     if (next.at(-1)?.role === "assistant") next.pop();
@@ -252,7 +291,8 @@ export function ChatPanel({
       lastUser = user.content;
       next.pop();
     }
-    setMessages(next);
+    if (mode === "legal") setLegalMessages(next);
+    else setFirmMessages(next);
     if (lastUser) void send(lastUser);
   }, [send]);
 
@@ -263,125 +303,250 @@ export function ChatPanel({
     }
   };
 
+  const switchMode = (next: "firm" | "legal") => {
+    if (next === askMode) return;
+    stop();
+    setAskMode(next);
+  };
+
+  const composer = (
+    <div className="shrink-0 border-t border-border px-5 py-3">
+      {askMode === "legal" ? (
+        <p
+          className="mb-2 text-text-tertiary"
+          style={{ fontSize: "var(--text-11)" }}
+          role="note"
+        >
+          General legal information, not legal advice. Not a substitute for
+          advice from a qualified attorney.
+        </p>
+      ) : null}
+      <div
+        className={cn(
+          "flex min-w-0 items-end gap-1.5 rounded-xl border border-input bg-card/40 p-1.5",
+          "transition-[border-color,box-shadow] duration-150 ease-out",
+          "focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50"
+        )}
+      >
+        <div className="min-w-0 flex-1">
+          <label htmlFor="chat-ask" className="sr-only">
+            {askMode === "legal"
+              ? "Ask a general legal information question"
+              : "Ask about the firm"}
+          </label>
+          <Textarea
+            id="chat-ask"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={onKeyDown}
+            placeholder={
+              askMode === "legal"
+                ? "Ask for a general legal definition…"
+                : "Ask about matters, lawyers, or the month."
+            }
+            rows={1}
+            className="max-h-[4.5rem] min-h-8 w-full resize-none overflow-y-auto border-0 bg-transparent px-1.5 py-1.5 shadow-none focus-visible:border-transparent focus-visible:ring-0"
+            style={{ fontSize: "var(--text-13)" }}
+            aria-describedby="chat-ask-hint"
+          />
+          <p id="chat-ask-hint" className="sr-only">
+            Press Enter to send. Shift+Enter for a new line.
+          </p>
+        </div>
+        <AnimatePresence mode="wait" initial={false}>
+          {streamingId ? (
+            <motion.div
+              key="stop"
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              transition={transitionStandard}
+            >
+              <Button
+                type="button"
+                size="icon"
+                variant="outline"
+                className="mb-0.5 shrink-0 min-h-11 min-w-11 md:min-h-8 md:min-w-8"
+                aria-label="Stop generating"
+                onClick={stop}
+              >
+                <Square className="size-3.5 fill-current" aria-hidden />
+              </Button>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="send"
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              transition={transitionStandard}
+            >
+              <Button
+                type="button"
+                size="icon"
+                className="mb-0.5 shrink-0 min-h-11 min-w-11 md:min-h-8 md:min-w-8"
+                disabled={!input.trim()}
+                aria-label="Send message"
+                onClick={() => void send(input)}
+              >
+                <ArrowUp className="size-4" aria-hidden />
+              </Button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </div>
+  );
+
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
+    <Sheet
+      open={open}
+      onOpenChange={(next) => {
+        // Assign opens as a sibling sheet; Radix dismisses this one on the
+        // outside pointer. Keep Ask mounted so the conversation survives.
+        if (!next && assignSheetOpen) return;
+        onOpenChange(next);
+      }}
+    >
       <SheetContent
         side={side}
         className={cn(
-          "gap-0 border-0 bg-transparent p-0 shadow-none",
+          "gap-0 border-0 p-0",
           side === "right" &&
-            "h-full w-[400px] max-w-[400px] sm:max-w-[400px]",
-          side === "bottom" && "h-[85vh] max-h-[85vh] w-full"
+            "h-full w-[400px] max-w-[400px] border-l sm:max-w-[400px]",
+          side === "bottom" && "h-[85vh] max-h-[85vh] w-full border-t"
         )}
       >
-        <div
-          className="flex h-full min-h-0 w-full flex-col overflow-hidden"
-          style={
-            side === "bottom"
-              ? { ...glassStyle, borderLeft: "none", borderTop: "1px solid var(--glass-border)" }
-              : glassStyle
-          }
-        >
+        <div className="flex h-full min-h-0 w-full flex-col overflow-hidden">
           <SheetHandle visible={side === "bottom"} />
           <SheetHeader className="shrink-0 border-b border-border px-5 py-4 text-left">
             <SheetTitle style={{ fontSize: "var(--text-14)" }}>
-              Ask about the firm
+              {askMode === "legal"
+                ? "General legal information"
+                : "Ask about the firm"}
             </SheetTitle>
             <SheetDescription
               className="text-text-tertiary"
               style={{ fontSize: "var(--text-11)" }}
             >
-              Answers come from this firm&apos;s live data. Updated{" "}
-              {formatUpdatedAt(data?.generatedAt)}.
+              {askMode === "legal" ? (
+                <>
+                  General legal information, not legal advice. Not a substitute
+                  for advice from a qualified attorney.
+                </>
+              ) : (
+                <>
+                  Answers come from this firm&apos;s live data. Updated{" "}
+                  {formatUpdatedAt(data?.generatedAt)}.
+                </>
+              )}
             </SheetDescription>
+            <div
+              className="mt-3 flex gap-1 rounded-lg border border-border p-0.5"
+              role="tablist"
+              aria-label="Ask mode"
+            >
+              <button
+                type="button"
+                role="tab"
+                aria-selected={askMode === "firm"}
+                className={cn(
+                  "min-h-8 flex-1 rounded-md px-2 py-1.5 text-center transition-colors",
+                  askMode === "firm"
+                    ? "bg-muted font-medium text-foreground"
+                    : "text-text-tertiary hover:text-foreground"
+                )}
+                style={{ fontSize: "var(--text-11)" }}
+                onClick={() => switchMode("firm")}
+              >
+                Firm data
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={askMode === "legal"}
+                className={cn(
+                  "min-h-8 flex-1 rounded-md px-2 py-1.5 text-center transition-colors",
+                  askMode === "legal"
+                    ? "bg-muted font-medium text-foreground"
+                    : "text-text-tertiary hover:text-foreground"
+                )}
+                style={{ fontSize: "var(--text-11)" }}
+                onClick={() => switchMode("legal")}
+              >
+                General information
+              </button>
+            </div>
           </SheetHeader>
 
-          <div
-            ref={listRef}
-            className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-5 py-4"
-            aria-live="polite"
-            aria-relevant="additions text"
-          >
-            {messages.length === 0 ? (
-              <div className="flex flex-col gap-1.5">
-                <p
-                  className="text-text-tertiary"
-                  style={{ fontSize: "var(--text-11)" }}
-                >
-                  Try asking
-                </p>
-                {suggestions.map((prompt) => (
-                  <button
-                    key={prompt}
-                    type="button"
-                    className="w-full rounded-lg border border-border bg-card/60 px-3 py-2.5 text-left text-text-secondary hover:bg-surface-hover"
-                    style={{ fontSize: "var(--text-12)" }}
-                    onClick={() => void send(prompt)}
+          {empty ? (
+            <div className="flex min-h-0 flex-1 flex-col justify-center overflow-y-auto px-5 py-6">
+              <div className="mx-auto flex w-full max-w-sm flex-col gap-6">
+                <div className="space-y-1 text-center">
+                  <p
+                    className="font-medium text-foreground"
+                    style={{ fontSize: "var(--text-14)" }}
                   >
-                    {prompt}
-                  </button>
-                ))}
+                    {askMode === "legal"
+                      ? "Ask for general legal information"
+                      : "Ask about the firm"}
+                  </p>
+                  <p
+                    className="text-text-tertiary"
+                    style={{ fontSize: "var(--text-12)" }}
+                  >
+                    {askMode === "legal" ? (
+                      <>
+                        You&apos;re chatting with Nora in general-information
+                        mode. This is not legal advice.
+                      </>
+                    ) : (
+                      <>
+                        You&apos;re chatting with Nora, grounded in this
+                        firm&apos;s live data.
+                      </>
+                    )}
+                  </p>
+                </div>
+                <div className="flex flex-col gap-2">
+                  <p
+                    className="text-text-tertiary"
+                    style={{ fontSize: "var(--text-11)" }}
+                  >
+                    Try asking
+                  </p>
+                  {suggestions.map((prompt) => (
+                    <button
+                      key={prompt}
+                      type="button"
+                      className="flex min-h-14 w-full items-center rounded-lg border border-border bg-card/60 px-3 py-2.5 text-left text-text-secondary hover:bg-surface-hover"
+                      style={{ fontSize: "var(--text-12)" }}
+                      onClick={() => void send(prompt)}
+                    >
+                      <span className="line-clamp-2">{prompt}</span>
+                    </button>
+                  ))}
+                </div>
               </div>
-            ) : (
-              messages.map((m) => (
+            </div>
+          ) : (
+            <div
+              ref={listRef}
+              className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto px-5 py-4"
+              aria-live="polite"
+              aria-relevant="additions text"
+            >
+              {messages.map((m) => (
                 <ChatMessage
                   key={m.id}
                   message={m}
                   streaming={m.id === streamingId}
                   onRetry={m.error ? retryLast : undefined}
                 />
-              ))
-            )}
-          </div>
-
-          <div
-            className="sticky bottom-0 shrink-0 border-t border-border px-5 py-3"
-            style={inputSurfaceStyle}
-          >
-            <div className="flex min-w-0 items-end gap-2">
-              <div className="min-w-0 flex-1 space-y-1">
-                <label htmlFor="chat-ask" className="sr-only">
-                  Ask about the firm
-                </label>
-                <Textarea
-                  id="chat-ask"
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={onKeyDown}
-                  placeholder="Ask about matters, lawyers, or the month."
-                  rows={1}
-                  className="max-h-[4.5rem] min-h-9 w-full resize-none overflow-y-auto py-2"
-                  style={{ fontSize: "var(--text-13)" }}
-                  aria-describedby="chat-ask-hint"
-                />
-                <p id="chat-ask-hint" className="sr-only">
-                  Press Enter to send. Shift+Enter for a new line.
-                </p>
-              </div>
-              {streamingId ? (
-                <Button
-                  type="button"
-                  size="icon"
-                  variant="outline"
-                  className="shrink-0"
-                  aria-label="Stop generating"
-                  onClick={stop}
-                >
-                  <Square className="size-3.5 fill-current" />
-                </Button>
-              ) : (
-                <Button
-                  type="button"
-                  size="sm"
-                  className="shrink-0"
-                  disabled={!input.trim()}
-                  onClick={() => void send(input)}
-                >
-                  Send
-                </Button>
-              )}
+              ))}
             </div>
-          </div>
+          )}
+          {composer}
         </div>
       </SheetContent>
     </Sheet>

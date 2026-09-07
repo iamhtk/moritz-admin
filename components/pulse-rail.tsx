@@ -84,7 +84,7 @@ function PulseBody({
             )}
           >
             {Array.from({ length: 5 }).map((_, i) => (
-              <Skeleton key={i} className="h-11 w-16 shrink-0 rounded-md md:h-6" />
+              <Skeleton key={i} className="h-11 w-16 shrink-0 rounded-md md:h-8" />
             ))}
           </div>
           <ActivityFeedSkeleton />
@@ -114,7 +114,9 @@ function PulseBody({
           <div
             className={cn(
               "overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
-              embedded ? "mt-0" : "mt-3"
+              embedded
+                ? "sticky top-(--overview-tabs-h) z-10 -mx-4 border-b border-border bg-background px-4 py-2"
+                : "mt-3"
             )}
           >
             <ToggleGroup
@@ -132,7 +134,7 @@ function PulseBody({
                   value={chip.key}
                   aria-label={`${chip.label} ${chip.count}`}
                   className={cn(
-                    "h-11 min-h-11 shrink-0 rounded-md border border-border bg-card px-3 font-normal text-text-secondary shadow-none md:h-6 md:min-h-6 md:px-2.5",
+                    "h-11 min-h-11 shrink-0 rounded-md border border-border bg-card px-3 font-normal text-text-secondary shadow-none md:h-8 md:min-h-8 md:px-2.5",
                     "group-data-[spacing=0]/toggle-group:rounded-md",
                     "hover:bg-surface-hover hover:text-text-secondary",
                     "data-[state=on]:border-primary data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:hover:bg-primary data-[state=on]:hover:text-primary-foreground"

@@ -4,49 +4,11 @@ import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { FeedItem } from "@/components/ui-bits/feed-item";
+import { groupActivityByDay } from "@/lib/activity-copy";
+import { filterActivityToday } from "@/lib/activity-day";
 import type { ActivityItem } from "@/lib/supabase";
 
 const PREVIEW = 8;
-
-function dayKey(iso: string) {
-  const d = new Date(iso);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-}
-
-function dayLabel(iso: string, now = new Date()) {
-  const d = new Date(iso);
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const that = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-  const diffDays = Math.round(
-    (today.getTime() - that.getTime()) / (24 * 60 * 60 * 1000)
-  );
-
-  if (diffDays === 0) return "Today";
-  if (diffDays === 1) return "Yesterday";
-  return d.toLocaleDateString("en-GB", {
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-  });
-}
-
-function groupByDay(items: ActivityItem[]) {
-  const groups: { key: string; label: string; items: ActivityItem[] }[] = [];
-  const index = new Map<string, number>();
-
-  for (const item of items) {
-    const key = dayKey(item.at);
-    const existing = index.get(key);
-    if (existing === undefined) {
-      index.set(key, groups.length);
-      groups.push({ key, label: dayLabel(item.at), items: [item] });
-    } else {
-      groups[existing].items.push(item);
-    }
-  }
-
-  return groups;
-}
 
 export function ActivityFeed({
   activity,
@@ -62,14 +24,19 @@ export function ActivityFeed({
     setExpanded(false);
   }
 
+  const todayActivity = useMemo(
+    () => filterActivityToday(activity),
+    [activity]
+  );
+
   const filtered = useMemo(() => {
-    if (filter === "all") return activity;
-    return activity.filter((a) => a.verb === filter);
-  }, [activity, filter]);
+    if (filter === "all") return todayActivity;
+    return todayActivity.filter((a) => a.verb === filter);
+  }, [todayActivity, filter]);
 
   const visible = expanded ? filtered : filtered.slice(0, PREVIEW);
-  const groups = groupByDay(visible);
-  const canShowMore = !expanded && filtered.length > PREVIEW;
+  const groups = groupActivityByDay(visible);
+  const canToggle = filtered.length > PREVIEW;
 
   if (filtered.length === 0) {
     return (
@@ -103,15 +70,15 @@ export function ActivityFeed({
           </ul>
         </div>
       ))}
-      {canShowMore ? (
+      {canToggle ? (
         <Button
           type="button"
           variant="outline"
           size="sm"
           className="mt-3 w-full"
-          onClick={() => setExpanded(true)}
+          onClick={() => setExpanded((v) => !v)}
         >
-          Show more
+          {expanded ? "Show less" : "Show more"}
         </Button>
       ) : null}
     </div>

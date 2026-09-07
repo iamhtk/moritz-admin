@@ -3,9 +3,13 @@
 import {
   useEffect,
   useMemo,
+  useRef,
   useState,
   type CSSProperties,
 } from "react";
+import { motion } from "framer-motion";
+import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
+import { transitionStandard } from "@/lib/motion";
 import {
   createColumnHelper,
   createPaginatedRowModel,
@@ -38,6 +42,8 @@ import {
 import { MinutesLeft } from "@/components/ui-bits/minutes-left";
 import { LawyerAvatar } from "@/components/ui-bits/lawyer-avatar";
 import { useDashboardActions } from "@/components/actions-provider";
+import { MatterReference } from "@/components/matter-reference";
+import { formatMatterFee } from "@/lib/format";
 import type { LawyerLoad, MatterStatus } from "@/lib/supabase";
 import { cn } from "cn";
 
@@ -63,14 +69,6 @@ const features = tableFeatures({
 });
 
 const columnHelper = createColumnHelper<typeof features, MatterStatus>();
-
-function formatCurrency(n: number) {
-  return new Intl.NumberFormat("en-GB", {
-    style: "currency",
-    currency: "GBP",
-    maximumFractionDigits: 0,
-  }).format(n);
-}
 
 function shortLawyerName(name: string | null): string {
   if (!name) return "Unassigned";
@@ -153,6 +151,133 @@ function ariaSortValue(
   return "none";
 }
 
+function MatterCard({
+  matter,
+  highlight,
+  onAssign,
+  onNudge,
+  onClientUpdate,
+  nudging,
+  now,
+}: {
+  matter: MatterStatus;
+  highlight: boolean;
+  onAssign: (id: string, mode: "assign" | "reassign") => void;
+  onNudge: (vars: {
+    matterId: string;
+    reference: string;
+    lawyerName: string;
+  }) => void;
+  onClientUpdate: (matter: MatterStatus) => void;
+  nudging: boolean;
+  now: number;
+}) {
+  const recentlyDelivered =
+    matter.stage === "delivered" &&
+    matter.delivered_at != null &&
+    now - new Date(matter.delivered_at).getTime() <= 60 * 60 * 1000;
+
+  return (
+    <Card
+      id={`matter-row-${matter.reference}`}
+      className={cn(
+        "gap-3 rounded-lg p-4 [--card-spacing:0px]",
+        highlight && "bg-surface-selected ring-1 ring-border"
+      )}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <MatterReference reference={matter.reference} className="font-semibold" />
+          <p
+            className="mt-0.5 truncate text-text-secondary"
+            style={{ fontSize: "var(--text-12)" }}
+          >
+            {matter.client_name || "—"}
+          </p>
+        </div>
+        <StatusBadge tone={stageTone(matter.stage)}>
+          {stageLabel(matter.stage)}
+        </StatusBadge>
+      </div>
+      <div
+        className="grid grid-cols-2 gap-x-3 gap-y-1 text-text-secondary"
+        style={{ fontSize: "var(--text-11)" }}
+      >
+        <span>{matter.service_line || "—"}</span>
+        <span className="text-right">{matter.type || "—"}</span>
+        <span>
+          {matter.lawyer_id ? (
+            <span className="inline-flex items-center gap-1.5">
+              <LawyerAvatar
+                lawyerId={matter.lawyer_id}
+                name={matter.lawyer_name ?? "Lawyer"}
+                initials={matter.lawyer_initials}
+                size="sm"
+                className="rounded-[7px] after:rounded-[7px]"
+              />
+              {shortLawyerName(matter.lawyer_name)}
+            </span>
+          ) : (
+            <span className="text-text-tertiary">Unassigned</span>
+          )}
+        </span>
+        <span className="text-right">
+          <MinutesLeft
+            minutes={matter.minutes_remaining}
+            delivered={matter.stage === "delivered"}
+          />
+        </span>
+        <span
+          className={cn(
+            "col-span-2 num",
+            matter.fee > 0 ? "text-foreground" : "text-text-tertiary"
+          )}
+        >
+          {formatMatterFee(matter.fee)}
+        </span>
+      </div>
+      {recentlyDelivered ? (
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          className="min-h-11 w-full"
+          onClick={() => onClientUpdate(matter)}
+        >
+          Update client
+        </Button>
+      ) : !matter.lawyer_id ? (
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          className="min-h-11 w-full"
+          onClick={() => onAssign(matter.id, "assign")}
+        >
+          Assign
+        </Button>
+      ) : isAtRisk(matter) ? (
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          className="min-h-11 w-full"
+          disabled={nudging}
+          onClick={() =>
+            onNudge({
+              matterId: matter.id,
+              reference: matter.reference,
+              lawyerName: matter.lawyer_name ?? "the lawyer",
+            })
+          }
+        >
+          Nudge
+        </Button>
+      ) : null}
+    </Card>
+  );
+}
+
 export function MattersTable({
   matters,
   lawyers,
@@ -171,7 +296,12 @@ export function MattersTable({
   const { openAssign, nudgeMatter, nudgingMatterId, openClientUpdate } =
     useDashboardActions();
   const [sorting, setSorting] = useState<SortingState>([]);
+  const [pagination, setPagination] = useState({
+    pageIndex: 0,
+    pageSize: PAGE_SIZE,
+  });
   const [now] = useState(() => Date.now());
+  const hasAnimated = useRef(false);
 
   const filtered = useMemo(
     () => filterMatters(matters, filter, search, lawyers),
@@ -184,39 +314,45 @@ export function MattersTable({
       columnHelper.accessor("reference", {
         header: "Reference",
         cell: (info) => (
-          <span
-            className="font-medium text-foreground"
-            style={{ fontSize: "var(--text-13)" }}
-          >
-            {info.getValue()}
-          </span>
+          <MatterReference
+            reference={info.getValue()}
+            className="font-medium"
+          />
         ),
       }),
       columnHelper.accessor("client_name", {
         header: "Client",
+        cell: (info) => {
+          const v = info.getValue();
+          return v ? v : <span className="text-text-tertiary">—</span>;
+        },
       }),
       columnHelper.accessor("service_line", {
         header: "Service line",
-        cell: (info) => (
-          <span
-            className="text-text-secondary"
-            style={{ fontSize: "var(--text-12)" }}
-          >
-            {info.getValue()}
-          </span>
-        ),
+        cell: (info) => {
+          const v = info.getValue();
+          return v ? (
+            <span className="text-text-secondary" style={{ fontSize: "var(--text-12)" }}>
+              {v}
+            </span>
+          ) : (
+            <span className="text-text-tertiary">—</span>
+          );
+        },
       }),
       columnHelper.accessor("type", {
         header: "Type",
         enableSorting: false,
-        cell: (info) => (
-          <span
-            className="text-text-secondary"
-            style={{ fontSize: "var(--text-12)" }}
-          >
-            {info.getValue()}
-          </span>
-        ),
+        cell: (info) => {
+          const v = info.getValue();
+          return v ? (
+            <span className="text-text-secondary" style={{ fontSize: "var(--text-12)" }}>
+              {v}
+            </span>
+          ) : (
+            <span className="text-text-tertiary">—</span>
+          );
+        },
       }),
       columnHelper.accessor("stage", {
         header: "Stage",
@@ -262,8 +398,13 @@ export function MattersTable({
       columnHelper.accessor("fee", {
         header: "Fee",
         cell: (info) => (
-          <span className="num block text-right">
-            {formatCurrency(info.getValue())}
+          <span
+            className={cn(
+              "block text-right",
+              info.getValue() > 0 ? "num" : "text-text-tertiary"
+            )}
+          >
+            {formatMatterFee(info.getValue())}
           </span>
         ),
       }),
@@ -332,11 +473,12 @@ export function MattersTable({
       features,
       columns,
       data: filtered,
-      state: { sorting },
+      state: { sorting, pagination },
       onSortingChange: setSorting,
-      initialState: {
-        pagination: { pageIndex: 0, pageSize: PAGE_SIZE },
-      },
+      onPaginationChange: setPagination,
+      // Keep page index under our control — auto-reset fights Next clicks when
+      // the table wrapper identity changes every render.
+      autoResetPageIndex: false,
     },
     (state) => ({
       sorting: state.sorting,
@@ -346,8 +488,10 @@ export function MattersTable({
 
   // Reset page when the filter or search changes.
   useEffect(() => {
-    table.setPageIndex(0);
-  }, [filter, search, table]);
+    setPagination((prev) =>
+      prev.pageIndex === 0 ? prev : { ...prev, pageIndex: 0 }
+    );
+  }, [filter, search]);
 
   // Land on the page that holds the highlighted reference.
   useEffect(() => {
@@ -357,10 +501,13 @@ export function MattersTable({
       (r) => r.original.reference.toLowerCase() === highlightRef.toLowerCase()
     );
     if (idx < 0) return;
-    table.setPageIndex(Math.floor(idx / PAGE_SIZE));
+    setPagination((prev) => ({
+      ...prev,
+      pageIndex: Math.floor(idx / PAGE_SIZE),
+    }));
   }, [highlightRef, filtered, table]);
 
-  const pageIndex = table.state.pagination.pageIndex;
+  const pageIndex = pagination.pageIndex;
 
   useEffect(() => {
     if (!highlightRef) return;
@@ -398,9 +545,34 @@ export function MattersTable({
   const from = pageIndex * PAGE_SIZE + 1;
   const to = Math.min((pageIndex + 1) * PAGE_SIZE, total);
 
+  const shouldStagger = !hasAnimated.current;
+  if (!hasAnimated.current) hasAnimated.current = true;
+
   return (
     <div className="space-y-3">
-      <Card className="gap-0 rounded-lg py-0 [--card-spacing:0px]">
+      <ul className="flex flex-col gap-2 md:hidden">
+        {pageRows.map((row) => {
+          const m = row.original;
+          const isHL =
+            Boolean(highlightRef) &&
+            m.reference.toLowerCase() === highlightRef!.toLowerCase();
+          return (
+            <li key={row.id}>
+              <MatterCard
+                matter={m}
+                highlight={isHL}
+                now={now}
+                nudging={nudgingMatterId === m.id}
+                onAssign={openAssign}
+                onNudge={nudgeMatter}
+                onClientUpdate={(matter) => openClientUpdate(matter, "delivered")}
+              />
+            </li>
+          );
+        })}
+      </ul>
+
+      <Card className="hidden gap-0 rounded-lg py-0 [--card-spacing:0px] md:block">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((group) => (
@@ -430,12 +602,25 @@ export function MattersTable({
                           : undefined
                       }
                     >
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
+                      <span className="inline-flex items-center gap-1">
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext()
+                            )}
+                        {canSort ? (
+                          <span className="inline-flex text-text-tertiary" aria-hidden>
+                            {sorted === "asc" ? (
+                              <ArrowUp className="size-3.5 text-foreground" />
+                            ) : sorted === "desc" ? (
+                              <ArrowDown className="size-3.5 text-foreground" />
+                            ) : (
+                              <ArrowUpDown className="size-3.5 opacity-40" />
+                            )}
+                          </span>
+                        ) : null}
+                      </span>
                     </TableHead>
                   );
                 })}
@@ -449,11 +634,17 @@ export function MattersTable({
                 Boolean(highlightRef) &&
                 m.reference.toLowerCase() === highlightRef!.toLowerCase();
               return (
-                <TableRow
+                <motion.tr
                   key={row.id}
                   id={`matter-row-${m.reference}`}
+                  initial={shouldStagger ? { opacity: 0, y: 4 } : false}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{
+                    ...transitionStandard,
+                    delay: shouldStagger ? Math.min(index * 0.03, 0.3) : 0,
+                  }}
                   className={cn(
-                    "border-0 transition-colors duration-500 hover:bg-surface-hover",
+                    "border-0 transition-colors duration-[var(--motion-duration)] ease-[var(--motion-ease-out)] hover:bg-surface-hover",
                     isHL && "bg-surface-selected"
                   )}
                   style={
@@ -482,7 +673,7 @@ export function MattersTable({
                       )}
                     </TableCell>
                   ))}
-                </TableRow>
+                </motion.tr>
               );
             })}
           </TableBody>
@@ -529,7 +720,17 @@ export function MattersTable({
 
 export function MattersTableSkeleton() {
   return (
-    <Card className="gap-0 rounded-lg py-0 [--card-spacing:0px]">
+    <>
+      <ul className="flex flex-col gap-2 md:hidden">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Card key={i} className="gap-3 rounded-lg p-4 [--card-spacing:0px]">
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-3.5 w-full" />
+            <Skeleton className="h-11 w-full" />
+          </Card>
+        ))}
+      </ul>
+      <Card className="hidden gap-0 rounded-lg py-0 [--card-spacing:0px] md:block">
       <div className="space-y-0">
         {Array.from({ length: 8 }).map((_, i) => (
           <div
@@ -553,5 +754,6 @@ export function MattersTableSkeleton() {
         ))}
       </div>
     </Card>
+    </>
   );
 }

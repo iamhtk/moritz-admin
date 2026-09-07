@@ -7,7 +7,7 @@ import { ZoneMoney } from "@/components/zone-money";
 import { PulseRail, PulsePanel } from "@/components/pulse-rail";
 import { OverviewTabs } from "@/components/overview-tabs";
 
-const XL = "(min-width: 1280px)";
+const XL = "(min-width: 1200px)";
 const emptySubscribe = () => () => {};
 
 function subscribeXl(onStoreChange: () => void) {

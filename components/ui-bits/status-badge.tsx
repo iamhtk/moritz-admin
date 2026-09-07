@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "cn";
 import type { AttentionItem, Stage } from "@/lib/supabase";
@@ -90,12 +91,31 @@ export function StatusBadge({
   className?: string;
 }) {
   const vars = toneVars[tone];
+  const [pulsing, setPulsing] = useState(false);
+  const prevKey = useRef(`${tone}-${String(children)}`);
+  const isFirstRender = useRef(true);
+
+  useEffect(() => {
+    const key = `${tone}-${String(children)}`;
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      prevKey.current = key;
+      return;
+    }
+    if (key !== prevKey.current) {
+      prevKey.current = key;
+      setPulsing(true);
+      const t = setTimeout(() => setPulsing(false), 320);
+      return () => clearTimeout(t);
+    }
+  }, [tone, children]);
 
   return (
     <Badge
       variant="outline"
       className={cn(
-        "h-5 font-medium whitespace-nowrap",
+        "h-5 font-medium whitespace-nowrap transition-transform duration-[var(--motion-duration)]",
+        pulsing && "[animation:status-badge-pop_0.32s_var(--motion-ease-out)_1]",
         className
       )}
       style={{

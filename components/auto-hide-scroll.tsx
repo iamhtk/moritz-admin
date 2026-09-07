@@ -33,15 +33,16 @@ export function AutoHideScroll({
     const { scrollTop, scrollHeight, clientHeight } = el;
     if (scrollHeight <= clientHeight + 1) {
       setThumb((prev) =>
-        prev.visible || prev.height ? { top: 0, height: 0, visible: false } : prev
+        prev.visible || prev.height
+          ? { top: 0, height: 0, visible: false }
+          : prev
       );
       return;
     }
 
     const height = Math.max((clientHeight / scrollHeight) * clientHeight, 28);
     const maxTop = clientHeight - height;
-    const top =
-      (scrollTop / (scrollHeight - clientHeight)) * maxTop;
+    const top = (scrollTop / (scrollHeight - clientHeight)) * maxTop;
 
     setThumb({ top, height, visible: show });
 

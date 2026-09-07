@@ -1,4 +1,5 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { formatDuration } from "@/lib/format";
 import { serverClient, type MatterStatus } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
@@ -41,10 +42,7 @@ function formatTurnaround(submittedAt: string, deliveredAt: string): string {
         60_000
     )
   );
-  const h = Math.floor(mins / 60);
-  const m = mins % 60;
-  if (h === 0) return `${m}m`;
-  return `${h}h ${m}m`;
+  return formatDuration(mins);
 }
 
 function firstName(name: string | null): string {

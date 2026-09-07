@@ -26,14 +26,7 @@ import type { MatterStatus } from "@/lib/supabase";
 import { cn } from "cn";
 import { useSheetSide } from "@/hooks/use-sheet-side";
 import { SheetHandle } from "@/components/sheet-handle";
-
-const glassStyle: React.CSSProperties = {
-  background: "var(--glass-bg)",
-  backdropFilter: "var(--glass-blur)",
-  WebkitBackdropFilter: "var(--glass-blur)",
-  border: "1px solid var(--glass-border)",
-  boxShadow: "var(--glass-shadow), var(--glass-inset)",
-};
+import { formatDuration } from "@/lib/format";
 
 export type ClientUpdateSituation = "slipped" | "delivered";
 
@@ -45,10 +38,7 @@ function formatTurnaround(submittedAt: string, deliveredAt: string): string {
         60_000
     )
   );
-  const h = Math.floor(mins / 60);
-  const m = mins % 60;
-  if (h === 0) return `${m}m`;
-  return `${h}h ${m}m`;
+  return formatDuration(mins);
 }
 
 function situationLine(
@@ -57,7 +47,7 @@ function situationLine(
 ): string {
   if (situation === "slipped") {
     const past = Math.abs(Math.min(0, matter.minutes_remaining));
-    return `${past} minutes past due`;
+    return `${formatDuration(past)} past due`;
   }
   if (matter.delivered_at) {
     return `delivered in ${formatTurnaround(matter.submitted_at, matter.delivered_at)}`;
@@ -222,11 +212,10 @@ export function ClientUpdateSheet({
       <SheetContent
         side={side}
         className={cn(
-          "gap-0 border-0 bg-transparent p-0",
+          "gap-0 p-0",
           side === "right" && "h-full w-full sm:max-w-[460px]",
           side === "bottom" && "h-[85vh] max-h-[85vh] w-full"
         )}
-        style={glassStyle}
       >
         <SheetHandle visible={side === "bottom"} />
         <SheetHeader className="border-b border-border px-5 py-4 text-left">
@@ -249,6 +238,12 @@ export function ClientUpdateSheet({
         </SheetHeader>
 
         <div className="flex min-h-0 flex-1 flex-col gap-3 px-5 py-4">
+          <p
+            className="text-text-tertiary"
+            style={{ fontSize: "var(--text-11)" }}
+          >
+            Drafted by Nora
+          </p>
           <div className="relative">
             <TiptapEditor
               ref={editorRef}

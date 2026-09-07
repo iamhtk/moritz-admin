@@ -10,16 +10,14 @@ export async function POST(req: Request) {
   let clientId = body.clientId as string | null;
 
   if (!clientId && body.newClientName) {
-    const { data: lastClient } = await db
-      .from("clients")
-      .select("id")
-      .order("id", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    const lastNum = lastClient
-      ? Number(String(lastClient.id).replace(/^c/, "")) || 0
-      : 0;
-    clientId = `c${lastNum + 1}`;
+    // Numeric max — lexicographic order ranks "c9" above "c12".
+    const { data: clientIds } = await db.from("clients").select("id");
+    let maxClientNum = 0;
+    for (const row of clientIds ?? []) {
+      const n = Number(String(row.id).replace(/^c/i, ""));
+      if (Number.isFinite(n) && n > maxClientNum) maxClientNum = n;
+    }
+    clientId = `c${maxClientNum + 1}`;
     const { error: clientErr } = await db.from("clients").insert({
       id: clientId,
       company: String(body.newClientName).trim(),
@@ -42,16 +40,15 @@ export async function POST(req: Request) {
     );
   }
 
-  // Next reference in sequence.
-  const { data: last } = await db
-    .from("matters")
-    .select("reference")
-    .order("reference", { ascending: false })
-    .limit(1)
-    .single();
-  const nextNum = last
-    ? Number(String(last.reference).replace("MOR-", "")) + 1
-    : 1057;
+  // Next reference in sequence — compare numeric suffixes, not strings.
+  // Lexicographic order ranks "MOR-990" above "MOR-1056".
+  const { data: refs } = await db.from("matters").select("reference");
+  let maxNum = 1056;
+  for (const row of refs ?? []) {
+    const n = Number(String(row.reference).replace(/^MOR-/i, ""));
+    if (Number.isFinite(n) && n > maxNum) maxNum = n;
+  }
+  const nextNum = maxNum + 1;
   const reference = `MOR-${nextNum}`;
   const id = `m${nextNum}`;
 

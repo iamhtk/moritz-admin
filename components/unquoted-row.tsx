@@ -7,8 +7,11 @@ import { StatusBadge } from "@/components/ui-bits/status-badge";
 import { useDashboardActions } from "@/components/actions-provider";
 import type { UnquotedMatter } from "@/lib/supabase";
 
+import { formatFeeDollars } from "@/lib/format";
+import { MatterReference } from "@/components/matter-reference";
+
 function formatCurrency(n: number) {
-  return `$${n.toLocaleString("en-US")}`;
+  return formatFeeDollars(n);
 }
 
 export function UnquotedRow({ unquoted }: { unquoted: UnquotedMatter[] }) {
@@ -36,12 +39,10 @@ export function UnquotedRow({ unquoted }: { unquoted: UnquotedMatter[] }) {
               <Card className="flex flex-col gap-2 rounded-lg p-4 [--card-spacing:0px]">
                 <div className="flex flex-wrap items-center gap-2">
                   <StatusBadge tone="neutral">Unquoted</StatusBadge>
-                  <span
-                    className="font-semibold text-foreground"
-                    style={{ fontSize: "var(--text-13)" }}
-                  >
-                    {matter.reference}
-                  </span>
+                  <MatterReference
+                    reference={matter.reference}
+                    className="font-semibold"
+                  />
                 </div>
                 <p
                   className="line-clamp-2 text-text-secondary"
@@ -100,12 +101,10 @@ export function UnquotedRow({ unquoted }: { unquoted: UnquotedMatter[] }) {
               >
                 <div className="flex min-w-0 items-center gap-3">
                   <StatusBadge tone="neutral">Unquoted</StatusBadge>
-                  <span
-                    className="whitespace-nowrap font-semibold text-foreground"
-                    style={{ fontSize: "var(--text-13)" }}
-                  >
-                    {matter.reference}
-                  </span>
+                  <MatterReference
+                    reference={matter.reference}
+                    className="whitespace-nowrap font-semibold"
+                  />
                   <span
                     className="truncate text-text-secondary"
                     style={{ fontSize: "var(--text-12)" }}

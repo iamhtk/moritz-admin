@@ -12,6 +12,7 @@ import { CapacityMeter } from "@/components/ui-bits/capacity-meter";
 import { MinutesLeft } from "@/components/ui-bits/minutes-left";
 import { StatusBadge } from "@/components/ui-bits/status-badge";
 import { LawyerAvatar } from "@/components/ui-bits/lawyer-avatar";
+import { MatterReference } from "@/components/matter-reference";
 import { useDashboardActions } from "@/components/actions-provider";
 import type { LawyerLoad, MatterStatus } from "@/lib/supabase";
 import { cn } from "cn";
@@ -181,7 +182,7 @@ export function LawyerCard({
                       className="truncate font-medium text-foreground"
                       style={{ fontSize: "var(--text-13)" }}
                     >
-                      {m.reference}
+                      <MatterReference reference={m.reference} />
                     </div>
                     <div
                       className="truncate text-text-tertiary"
