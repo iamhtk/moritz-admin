@@ -449,7 +449,7 @@ In a real engagement these would be validated with the operations lead and two c
 ```bash
 git clone https://github.com/iamhtk/moritz-admin.git
 cd moritz-admin
-npm install
+bun install
 ```
 
 **2. Add `.env.local`**
@@ -464,7 +464,7 @@ GEMINI_API_KEY=your_key
 **3. Start the app**
 
 ```bash
-npm run dev
+bun run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000). Overview loads with the live command center.
