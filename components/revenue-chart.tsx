@@ -96,7 +96,7 @@ export function RevenueChart({
       >
         <AreaChart
           data={data}
-          margin={{ top: 8, right: 12, left: 4, bottom: 0 }}
+          margin={{ top: 8, right: 12, left: 28, bottom: 8 }}
         >
           <CartesianGrid
             vertical={false}
@@ -112,11 +112,12 @@ export function RevenueChart({
               fill: "var(--chart-axis-text)",
               fontSize: 10,
             }}
+            height={36}
             interval="preserveStartEnd"
             label={{
               value: "Day",
               position: "insideBottomRight",
-              offset: -2,
+              offset: 0,
               fill: "var(--chart-axis-text)",
               fontSize: 10,
             }}
@@ -134,7 +135,8 @@ export function RevenueChart({
             label={{
               value: "Revenue ($)",
               angle: -90,
-              position: "insideLeft",
+              position: "left",
+              offset: 16,
               fill: "var(--chart-axis-text)",
               fontSize: 10,
             }}

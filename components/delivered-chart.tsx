@@ -68,7 +68,7 @@ export function DeliveredChart({
       >
         <BarChart
           data={data}
-          margin={{ top: 8, right: 12, left: 0, bottom: 0 }}
+          margin={{ top: 8, right: 64, left: 0, bottom: 8 }}
         >
           <CartesianGrid
             vertical={false}
@@ -83,10 +83,11 @@ export function DeliveredChart({
               fill: "var(--chart-axis-text)",
               fontSize: 11,
             }}
+            height={36}
             label={{
               value: "Day",
               position: "insideBottomRight",
-              offset: -2,
+              offset: 0,
               fill: "var(--chart-axis-text)",
               fontSize: 10,
             }}
@@ -129,7 +130,8 @@ export function DeliveredChart({
             strokeDasharray="3 3"
             label={{
               value: `Plan ${dailyPlan} a day`,
-              position: "insideTopRight",
+              position: "right",
+              offset: 6,
               fill: "var(--chart-axis-text)",
               fontSize: 11,
             }}

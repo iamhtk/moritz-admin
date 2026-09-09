@@ -2,29 +2,26 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState, useSyncExternalStore } from "react";
+import { useState } from "react";
 import { motion, LayoutGroup } from "framer-motion";
 import { transitionStandard } from "@/lib/motion";
 import {
   Building2,
   FileText,
   LayoutDashboard,
-  Moon,
   MoreHorizontal,
   Settings,
-  Sun,
   TrendingUp,
   Users,
 } from "lucide-react";
-import { useTheme } from "next-themes";
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { LawyerAvatar } from "@/components/ui-bits/lawyer-avatar";
 import { SheetHandle } from "@/components/sheet-handle";
+import { UserMenu } from "@/components/user-menu";
 import { cn } from "cn";
 
 const primaryItems = [
@@ -39,9 +36,6 @@ const moreItems = [
   { title: "Settings", href: "/settings", icon: Settings, soon: true },
 ] as const;
 
-const INGRID_ID = "ingrid";
-const emptySubscribe = () => () => {};
-
 function isActivePath(pathname: string, href: string) {
   return href === "/" ? pathname === "/" : pathname.startsWith(href);
 }
@@ -53,14 +47,6 @@ function isActivePath(pathname: string, href: string) {
 export function MobileBottomNav() {
   const pathname = usePathname();
   const [moreOpen, setMoreOpen] = useState(false);
-  const { theme, setTheme } = useTheme();
-  // Theme only — avoid gating route active state (causes hydration mismatch).
-  const mounted = useSyncExternalStore(
-    emptySubscribe,
-    () => true,
-    () => false
-  );
-  const isDark = mounted && theme === "dark";
 
   const moreActive = moreItems.some((item) =>
     isActivePath(pathname, item.href)
@@ -195,13 +181,13 @@ export function MobileBottomNav() {
                           className={cn(
                             "shrink-0 rounded-md border px-1.5 py-0.5 font-medium",
                             active
-                              ? "border-sidebar-accent-foreground/30 text-sidebar-accent-foreground/80"
+                              ? "border-sidebar-accent-foreground/20 text-sidebar-accent-foreground/55"
                               : "border-border text-text-secondary"
                           )}
                           style={{
                             fontSize: "var(--text-11)",
                             background: active
-                              ? "transparent"
+                              ? "color-mix(in oklch, var(--sidebar-accent-foreground) 8%, transparent)"
                               : "color-mix(in oklch, var(--foreground) 6%, transparent)",
                           }}
                         >
@@ -216,47 +202,8 @@ export function MobileBottomNav() {
 
             <div className="my-2 border-t border-border" />
 
-            <button
-              type="button"
-              className="flex min-h-11 w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-foreground hover:bg-surface-hover"
-              onClick={() => setTheme(isDark ? "light" : "dark")}
-              aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
-            >
-              {isDark ? (
-                <Sun className="size-4 shrink-0" aria-hidden />
-              ) : (
-                <Moon className="size-4 shrink-0" aria-hidden />
-              )}
-              <span
-                className="font-medium"
-                style={{ fontSize: "var(--text-13)" }}
-              >
-                {isDark ? "Light mode" : "Dark mode"}
-              </span>
-            </button>
-
-            <div className="mt-1 flex items-center gap-3 rounded-lg px-3 py-2.5">
-              <LawyerAvatar
-                lawyerId={INGRID_ID}
-                name="Ingrid Solberg"
-                initials="IS"
-                size="sm"
-                className="rounded-full after:rounded-full"
-              />
-              <div className="min-w-0">
-                <div
-                  className="truncate font-medium text-foreground"
-                  style={{ fontSize: "var(--text-13)" }}
-                >
-                  Ingrid Solberg
-                </div>
-                <div
-                  className="truncate text-text-tertiary"
-                  style={{ fontSize: "var(--text-11)" }}
-                >
-                  Head of operations
-                </div>
-              </div>
+            <div className="px-2 py-1">
+              <UserMenu />
             </div>
           </div>
         </SheetContent>

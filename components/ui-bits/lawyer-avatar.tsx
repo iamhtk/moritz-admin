@@ -41,7 +41,7 @@ export function LawyerAvatar({
       aria-hidden
     >
       <AvatarImage
-        src={`https://i.pravatar.cc/64?u=${encodeURIComponent(lawyerId)}`}
+        src={`/lawyers/${encodeURIComponent(lawyerId)}.jpg`}
         alt=""
         aria-hidden="true"
         className="rounded-[inherit]"

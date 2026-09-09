@@ -28,90 +28,72 @@ export function UserMenu() {
   const isDark = mounted && theme === "dark";
 
   return (
-    <div className="flex w-full flex-col gap-1">
-      <Button
-        type="button"
-        variant="ghost"
-        size="sm"
-        className="h-8 w-full justify-start gap-2 px-1 text-sidebar-foreground group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"
-        onClick={() => setTheme(isDark ? "light" : "dark")}
-        aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
-      >
-        {isDark ? <Sun className="size-3.5" /> : <Moon className="size-3.5" />}
-        <span
-          className="group-data-[collapsible=icon]:hidden"
-          style={{ fontSize: "var(--text-12)" }}
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          type="button"
+          variant="ghost"
+          className="h-auto w-full justify-start gap-2.5 rounded-md px-1 py-1.5 text-left hover:bg-nav-item-hover-bg group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"
         >
-          {isDark ? "Light mode" : "Dark mode"}
-        </span>
-      </Button>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            type="button"
-            variant="ghost"
-            className="h-auto w-full justify-start gap-2.5 rounded-md px-1 py-1.5 text-left hover:bg-surface-hover group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"
-          >
-            <LawyerAvatar
-              lawyerId={INGRID_ID}
-              name="Ingrid Solberg"
-              initials="IS"
-              size="sm"
-              className="rounded-full after:rounded-full"
-            />
-            <div className="min-w-0 flex-1 group-data-[collapsible=icon]:hidden">
-              <div
-                className="truncate font-medium text-foreground"
-                style={{ fontSize: "var(--text-13)" }}
-              >
-                Ingrid Solberg
-              </div>
-              <div
-                className="truncate text-text-tertiary"
-                style={{ fontSize: "var(--text-11)" }}
-              >
-                Head of operations
-              </div>
-            </div>
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent side="top" align="start" className="w-56">
-          <DropdownMenuLabel className="font-normal">
+          <LawyerAvatar
+            lawyerId={INGRID_ID}
+            name="Ingrid Solberg"
+            initials="IS"
+            size="sm"
+            className="rounded-full after:rounded-full"
+          />
+          <div className="min-w-0 flex-1 group-data-[collapsible=icon]:hidden">
             <div
-              className="font-medium text-foreground"
+              className="truncate font-medium text-foreground"
               style={{ fontSize: "var(--text-13)" }}
             >
               Ingrid Solberg
             </div>
             <div
-              className="text-text-tertiary"
+              className="truncate text-text-tertiary"
               style={{ fontSize: "var(--text-11)" }}
             >
-              ingrid@moritzlegal.com
+              Head of operations
             </div>
-          </DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem
-            onClick={() => setTheme(isDark ? "light" : "dark")}
-            aria-label={
-              isDark ? "Switch to light mode" : "Switch to dark mode"
-            }
+          </div>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent side="top" align="start" className="w-56">
+        <DropdownMenuLabel className="font-normal">
+          <div
+            className="font-medium text-foreground"
+            style={{ fontSize: "var(--text-13)" }}
           >
-            {isDark ? <Sun /> : <Moon />}
-            <span>{isDark ? "Light mode" : "Dark mode"}</span>
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem disabled className="flex-col items-start gap-0.5">
-            <span>Sign out</span>
-            <span
-              className="font-normal text-text-tertiary"
-              style={{ fontSize: "var(--text-11)" }}
-            >
-              Authentication is out of scope for this concept.
-            </span>
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </div>
+            Ingrid Solberg
+          </div>
+          <div
+            className="text-text-tertiary"
+            style={{ fontSize: "var(--text-11)" }}
+          >
+            ingrid@moritzlegal.com
+          </div>
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          onClick={() => setTheme(isDark ? "light" : "dark")}
+          aria-label={
+            isDark ? "Switch to light mode" : "Switch to dark mode"
+          }
+        >
+          {isDark ? <Sun /> : <Moon />}
+          <span>{isDark ? "Light mode" : "Dark mode"}</span>
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem disabled className="flex-col items-start gap-0.5">
+          <span>Sign out</span>
+          <span
+            className="font-normal text-text-tertiary"
+            style={{ fontSize: "var(--text-11)" }}
+          >
+            Authentication is out of scope for this concept.
+          </span>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

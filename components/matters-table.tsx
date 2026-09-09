@@ -23,11 +23,11 @@ import {
   useTable,
   type SortingState,
 } from "@tanstack/react-table";
+import { AutoHideScroll } from "@/components/auto-hide-scroll";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  Table,
   TableBody,
   TableCell,
   TableHead,
@@ -559,138 +559,152 @@ export function MattersTable({
   if (!hasAnimated.current) hasAnimated.current = true;
 
   return (
-    <div className="space-y-3">
-      <ul className="flex flex-col gap-2 md:hidden">
-        {pageRows.map((row) => {
-          const m = row.original;
-          const isHL =
-            Boolean(highlightRef) &&
-            m.reference.toLowerCase() === highlightRef!.toLowerCase();
-          return (
-            <li key={row.id}>
-              <MatterCard
-                matter={m}
-                highlight={isHL}
-                now={now}
-                nudging={nudgingMatterId === m.id}
-                onAssign={openAssign}
-                onNudge={nudgeMatter}
-                onClientUpdate={(matter) => openClientUpdate(matter, "delivered")}
-              />
-            </li>
-          );
-        })}
-      </ul>
+    <div className="flex min-h-0 flex-1 flex-col gap-3">
+      <AutoHideScroll className="min-h-0 flex-1 md:hidden">
+        <ul className="flex flex-col gap-2 pb-1">
+          {pageRows.map((row) => {
+            const m = row.original;
+            const isHL =
+              Boolean(highlightRef) &&
+              m.reference.toLowerCase() === highlightRef!.toLowerCase();
+            return (
+              <li key={row.id}>
+                <MatterCard
+                  matter={m}
+                  highlight={isHL}
+                  now={now}
+                  nudging={nudgingMatterId === m.id}
+                  onAssign={openAssign}
+                  onNudge={nudgeMatter}
+                  onClientUpdate={(matter) =>
+                    openClientUpdate(matter, "delivered")
+                  }
+                />
+              </li>
+            );
+          })}
+        </ul>
+      </AutoHideScroll>
 
-      <Card className="hidden gap-0 rounded-lg py-0 [--card-spacing:0px] md:block">
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((group) => (
-              <TableRow
-                key={group.id}
-                className="border-border hover:bg-transparent"
-              >
-                {group.headers.map((header) => {
-                  const canSort = header.column.getCanSort();
-                  const sorted = header.column.getIsSorted();
+      {/* Card keeps overflow-visible so ring + hover shadow match the original. */}
+      <Card className="hidden min-h-0 flex-1 gap-0 rounded-lg py-0 [--card-spacing:0px] md:flex">
+        <div className="min-h-0 flex-1 overflow-hidden rounded-lg">
+          <AutoHideScroll className="h-full min-h-0">
+            {/* Plain <table> (not Table wrapper) so sticky header can pin to
+                this scroll parent — Table's overflow-x wrapper breaks sticky. */}
+            <table className="w-full caption-bottom text-sm">
+              <TableHeader>
+                {table.getHeaderGroups().map((group) => (
+                  <TableRow
+                    key={group.id}
+                    className="border-border hover:bg-transparent"
+                  >
+                    {group.headers.map((header) => {
+                      const canSort = header.column.getCanSort();
+                      const sorted = header.column.getIsSorted();
+                      return (
+                        <TableHead
+                          key={header.id}
+                          scope="col"
+                          aria-sort={
+                            canSort ? ariaSortValue(sorted) : undefined
+                          }
+                          className={cn(
+                            "sticky top-0 z-10 h-auto bg-card px-4 py-2.5 font-medium text-text-tertiary",
+                            header.column.id === "fee" && "text-right",
+                            canSort && "cursor-pointer select-none"
+                          )}
+                          style={{ fontSize: "var(--text-11)" }}
+                          onClick={
+                            canSort
+                              ? header.column.getToggleSortingHandler()
+                              : undefined
+                          }
+                        >
+                          <span className="inline-flex items-center gap-1">
+                            {header.isPlaceholder
+                              ? null
+                              : flexRender(
+                                  header.column.columnDef.header,
+                                  header.getContext()
+                                )}
+                            {canSort ? (
+                              <span
+                                className="inline-flex text-text-tertiary"
+                                aria-hidden
+                              >
+                                {sorted === "asc" ? (
+                                  <ArrowUp className="size-3.5 text-foreground" />
+                                ) : sorted === "desc" ? (
+                                  <ArrowDown className="size-3.5 text-foreground" />
+                                ) : (
+                                  <ArrowUpDown className="size-3.5 opacity-40" />
+                                )}
+                              </span>
+                            ) : null}
+                          </span>
+                        </TableHead>
+                      );
+                    })}
+                  </TableRow>
+                ))}
+              </TableHeader>
+              <TableBody>
+                {pageRows.map((row, index) => {
+                  const m = row.original;
+                  const isHL =
+                    Boolean(highlightRef) &&
+                    m.reference.toLowerCase() === highlightRef!.toLowerCase();
                   return (
-                    <TableHead
-                      key={header.id}
-                      scope="col"
-                      aria-sort={
-                        canSort ? ariaSortValue(sorted) : undefined
-                      }
+                    <motion.tr
+                      key={row.id}
+                      id={`matter-row-${m.reference}`}
+                      initial={shouldStagger ? { opacity: 0, y: 4 } : false}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{
+                        ...transitionStandard,
+                        delay: shouldStagger ? Math.min(index * 0.03, 0.3) : 0,
+                      }}
                       className={cn(
-                        "h-auto px-4 py-2.5 font-medium text-text-tertiary",
-                        header.column.id === "fee" && "text-right",
-                        canSort && "cursor-pointer select-none"
+                        "border-0 transition-colors duration-[var(--motion-duration)] ease-[var(--motion-ease-out)] hover:bg-surface-hover",
+                        isHL && "bg-surface-selected"
                       )}
-                      style={{ fontSize: "var(--text-11)" }}
-                      onClick={
-                        canSort
-                          ? header.column.getToggleSortingHandler()
-                          : undefined
+                      style={
+                        {
+                          height: 46,
+                          borderBottom:
+                            index < pageRows.length - 1
+                              ? "1px solid var(--table-inner-line)"
+                              : undefined,
+                        } as CSSProperties
                       }
                     >
-                      <span className="inline-flex items-center gap-1">
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext()
-                            )}
-                        {canSort ? (
-                          <span className="inline-flex text-text-tertiary" aria-hidden>
-                            {sorted === "asc" ? (
-                              <ArrowUp className="size-3.5 text-foreground" />
-                            ) : sorted === "desc" ? (
-                              <ArrowDown className="size-3.5 text-foreground" />
-                            ) : (
-                              <ArrowUpDown className="size-3.5 opacity-40" />
-                            )}
-                          </span>
-                        ) : null}
-                      </span>
-                    </TableHead>
+                      {row.getAllCells().map((cell) => (
+                        <TableCell
+                          key={cell.id}
+                          className={cn(
+                            "px-4 py-0",
+                            cell.column.id === "fee" && "text-right",
+                            cell.column.id === "action" && "text-right"
+                          )}
+                          style={{ fontSize: "var(--text-13)" }}
+                        >
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext()
+                          )}
+                        </TableCell>
+                      ))}
+                    </motion.tr>
                   );
                 })}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {pageRows.map((row, index) => {
-              const m = row.original;
-              const isHL =
-                Boolean(highlightRef) &&
-                m.reference.toLowerCase() === highlightRef!.toLowerCase();
-              return (
-                <motion.tr
-                  key={row.id}
-                  id={`matter-row-${m.reference}`}
-                  initial={shouldStagger ? { opacity: 0, y: 4 } : false}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{
-                    ...transitionStandard,
-                    delay: shouldStagger ? Math.min(index * 0.03, 0.3) : 0,
-                  }}
-                  className={cn(
-                    "border-0 transition-colors duration-[var(--motion-duration)] ease-[var(--motion-ease-out)] hover:bg-surface-hover",
-                    isHL && "bg-surface-selected"
-                  )}
-                  style={
-                    {
-                      height: 46,
-                      borderBottom:
-                        index < pageRows.length - 1
-                          ? "1px solid var(--table-inner-line)"
-                          : undefined,
-                    } as CSSProperties
-                  }
-                >
-                  {row.getAllCells().map((cell) => (
-                    <TableCell
-                      key={cell.id}
-                      className={cn(
-                        "px-4 py-0",
-                        cell.column.id === "fee" && "text-right",
-                        cell.column.id === "action" && "text-right"
-                      )}
-                      style={{ fontSize: "var(--text-13)" }}
-                    >
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
-                  ))}
-                </motion.tr>
-              );
-            })}
-          </TableBody>
-        </Table>
+              </TableBody>
+            </table>
+          </AutoHideScroll>
+        </div>
       </Card>
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex shrink-0 flex-wrap items-center justify-between gap-3">
         <p
           className="text-text-tertiary"
           style={{ fontSize: "var(--text-12)" }}
@@ -730,7 +744,7 @@ export function MattersTable({
 
 export function MattersTableSkeleton() {
   return (
-    <>
+    <div className="flex min-h-0 flex-1 flex-col gap-3">
       <ul className="flex flex-col gap-2 md:hidden">
         {Array.from({ length: 4 }).map((_, i) => (
           <Card key={i} className="gap-3 rounded-lg p-4 [--card-spacing:0px]">
@@ -740,30 +754,30 @@ export function MattersTableSkeleton() {
           </Card>
         ))}
       </ul>
-      <Card className="hidden gap-0 rounded-lg py-0 [--card-spacing:0px] md:block">
-      <div className="space-y-0">
-        {Array.from({ length: 8 }).map((_, i) => (
-          <div
-            key={i}
-            className="flex items-center gap-4 px-4"
-            style={{
-              height: 46,
-              borderBottom:
-                i < 7 ? "1px solid var(--table-inner-line)" : undefined,
-            }}
-          >
-            <Skeleton className="h-3.5 w-20" />
-            <Skeleton className="h-3.5 w-28" />
-            <Skeleton className="h-3.5 w-24" />
-            <Skeleton className="h-3.5 w-20" />
-            <Skeleton className="h-5 w-16 rounded-md" />
-            <Skeleton className="h-3.5 w-24" />
-            <Skeleton className="h-5 w-12 rounded-md" />
-            <Skeleton className="ml-auto h-3.5 w-14" />
-          </div>
-        ))}
-      </div>
-    </Card>
-    </>
+      <Card className="hidden min-h-0 flex-1 gap-0 rounded-lg py-0 [--card-spacing:0px] md:flex">
+        <div className="space-y-0">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div
+              key={i}
+              className="flex items-center gap-4 px-4"
+              style={{
+                height: 46,
+                borderBottom:
+                  i < 7 ? "1px solid var(--table-inner-line)" : undefined,
+              }}
+            >
+              <Skeleton className="h-3.5 w-20" />
+              <Skeleton className="h-3.5 w-28" />
+              <Skeleton className="h-3.5 w-24" />
+              <Skeleton className="h-3.5 w-20" />
+              <Skeleton className="h-5 w-16 rounded-md" />
+              <Skeleton className="h-3.5 w-24" />
+              <Skeleton className="h-5 w-12 rounded-md" />
+              <Skeleton className="ml-auto h-3.5 w-14" />
+            </div>
+          ))}
+        </div>
+      </Card>
+    </div>
   );
 }

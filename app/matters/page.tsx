@@ -12,7 +12,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AppShell } from "@/components/app-shell";
-import { AutoHideScroll } from "@/components/auto-hide-scroll";
 import { ZoneLabel } from "@/components/ui-bits/zone-label";
 import {
   MattersTable,
@@ -111,12 +110,12 @@ function MattersPageInner() {
   }, [data]);
 
   return (
-    <>
+    <div className="flex min-h-0 flex-1 flex-col">
       <ZoneLabel title="Matters" meta={isPending ? "Loading…" : meta} />
 
       {isPending ? (
-        <div className="space-y-3">
-          <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex min-h-0 flex-1 flex-col gap-3">
+          <div className="flex shrink-0 flex-wrap items-center justify-between gap-3">
             <div className="h-8 w-80 rounded-lg bg-muted" />
             <div className="h-8 w-56 rounded-lg bg-muted" />
           </div>
@@ -146,8 +145,8 @@ function MattersPageInner() {
       ) : null}
 
       {data ? (
-        <div className="space-y-3">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex min-h-0 flex-1 flex-col gap-3">
+          <div className="flex shrink-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <Tabs
               value={filter}
               onValueChange={(v) =>
@@ -204,31 +203,29 @@ function MattersPageInner() {
           />
         </div>
       ) : null}
-    </>
+    </div>
   );
 }
 
 export default function MattersPage() {
   return (
     <AppShell>
-      <AutoHideScroll className="min-h-0 flex-1">
-        <div className="min-w-0 px-4 pt-6 pb-12 md:px-8">
-          {/* Overview centres a 1440px column beside a 340px Pulse rail. No rail
-              here, so cap at 1440 + 340 to land on the same left edge. */}
-          <div className="mx-auto w-full min-w-0 max-w-[1780px]">
-            <Suspense
-              fallback={
-                <>
-                  <ZoneLabel title="Matters" meta="Loading…" />
-                  <MattersTableSkeleton />
-                </>
-              }
-            >
-              <MattersPageInner />
-            </Suspense>
-          </div>
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col px-4 pt-6 pb-6 md:px-8">
+        {/* Overview centres a 1440px column beside a 340px Pulse rail. No rail
+            here, so cap at 1440 + 340 to land on the same left edge. */}
+        <div className="mx-auto flex min-h-0 w-full min-w-0 max-w-[1780px] flex-1 flex-col">
+          <Suspense
+            fallback={
+              <div className="flex min-h-0 flex-1 flex-col">
+                <ZoneLabel title="Matters" meta="Loading…" />
+                <MattersTableSkeleton />
+              </div>
+            }
+          >
+            <MattersPageInner />
+          </Suspense>
         </div>
-      </AutoHideScroll>
+      </div>
     </AppShell>
   );
 }

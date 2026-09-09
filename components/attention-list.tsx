@@ -30,6 +30,34 @@ function formatBand(low: number, high: number) {
   return `${formatFeeDollars(low)} to ${formatFeeDollars(high)}`;
 }
 
+/** Cap badge width to “Over capacity”; split Past due so the duration wraps cleanly. */
+function AttentionLabel({ label }: { label: string }) {
+  const pastDue = label.match(/^Past due (.+)$/);
+  if (pastDue) {
+    return (
+      <span className="flex flex-col items-center leading-tight">
+        <span>Past due</span>
+        <span className="num">{pastDue[1]}</span>
+      </span>
+    );
+  }
+  return label;
+}
+
+/** Fixed to the width of “Over capacity”; only Past due stacks to two lines. */
+function AttentionBadge({ item }: { item: AttentionItem }) {
+  return (
+    <div className="flex min-h-5 w-[5.75rem] shrink-0 items-start">
+      <StatusBadge
+        tone={kindToTone(item.kind)}
+        className="h-auto min-h-5 max-w-full justify-center whitespace-nowrap px-1.5 text-center leading-tight"
+      >
+        <AttentionLabel label={item.label} />
+      </StatusBadge>
+    </div>
+  );
+}
+
 /** Same threshold and copy as the deadline list (review drafts under 0.72). */
 function LowConfidenceBadge({
   confidence,
@@ -301,9 +329,7 @@ function AttentionCard({ item }: { item: AttentionItem }) {
     >
       <Card className="flex flex-col gap-2 rounded-lg p-4 [--card-spacing:0px]">
         <div className="flex flex-col items-start gap-1.5">
-          <div className="flex h-5 items-center">
-            <StatusBadge tone={kindToTone(item.kind)}>{item.label}</StatusBadge>
-          </div>
+          <AttentionBadge item={item} />
           <div className="min-w-0 w-full">
             <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
                 {/^MOR-\d+/i.test(item.title) ? (
@@ -356,10 +382,8 @@ function AttentionRow({ item }: { item: AttentionItem }) {
       className="px-4 py-2.5 transition-colors duration-[var(--motion-duration)] ease-[var(--motion-ease-out)] hover:bg-surface-hover"
       style={{ borderBottom: "1px solid var(--border)" }}
     >
-      <div className="grid grid-cols-[7.5rem_minmax(0,1fr)_auto] items-center gap-x-3">
-        <div className="flex h-5 items-center self-start">
-          <StatusBadge tone={kindToTone(item.kind)}>{item.label}</StatusBadge>
-        </div>
+      <div className="grid grid-cols-[5.75rem_minmax(0,1fr)_auto] items-start gap-x-3">
+        <AttentionBadge item={item} />
         <div className="min-w-0">
           <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
                 {/^MOR-\d+/i.test(item.title) ? (

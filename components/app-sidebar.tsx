@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useSyncExternalStore } from "react";
 import { motion, LayoutGroup } from "framer-motion";
 import { transitionStandard } from "@/lib/motion";
 import {
@@ -36,17 +35,14 @@ const navItems = [
   { title: "Settings", href: "/settings", icon: Settings, soon: true },
 ] as const;
 
-const emptySubscribe = () => () => {};
+function isActivePath(pathname: string, href: string) {
+  return href === "/" ? pathname === "/" : pathname.startsWith(href);
+}
 
 export function AppSidebar({
   ...props
 }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname();
-  const mounted = useSyncExternalStore(
-    emptySubscribe,
-    () => true,
-    () => false
-  );
 
   return (
     <Sidebar variant="inset" collapsible="icon" {...props}>
@@ -74,56 +70,62 @@ export function AppSidebar({
       </SidebarHeader>
 
       <SidebarContent>
-          <SidebarGroup>
+        <SidebarGroup>
           <SidebarGroupContent>
             <nav aria-label="Primary">
               <LayoutGroup>
                 <SidebarMenu>
                   {navItems.map((item) => {
-                    const active =
-                      mounted &&
-                      (item.href === "/"
-                        ? pathname === "/"
-                        : pathname.startsWith(item.href));
+                    const active = isActivePath(pathname, item.href);
                     return (
                       <SidebarMenuItem key={item.title} className="relative">
-                        {active && (
+                        {active ? (
                           <motion.div
                             layoutId="sidebar-active"
                             className="pointer-events-none absolute inset-0 rounded-md bg-sidebar-accent"
                             transition={transitionStandard}
                           />
-                        )}
+                        ) : null}
                         <SidebarMenuButton
                           asChild
-                          isActive={active}
+                          // Active fill is the layoutId pill — keep data-active
+                          // off so CVA does not paint a second accent layer.
+                          isActive={false}
                           tooltip={
                             item.soon ? `${item.title} (Soon)` : item.title
                           }
                           className={cn(
-                            "relative z-[1] h-[34px] rounded-md",
+                            "relative z-[1] h-[34px] rounded-md transition-colors duration-[var(--motion-duration)] ease-[var(--motion-ease-out)]",
+                            // Kill default CVA accent flash on hover / :active press.
+                            "hover:bg-nav-item-hover-bg active:bg-nav-item-hover-bg",
                             active
-                              ? "bg-transparent text-sidebar-accent-foreground hover:bg-transparent hover:text-sidebar-accent-foreground"
+                              ? "text-sidebar-accent-foreground hover:bg-transparent hover:text-sidebar-accent-foreground active:bg-transparent active:text-sidebar-accent-foreground"
                               : item.soon
-                                ? "text-sidebar-foreground/55 hover:bg-surface-hover hover:text-sidebar-foreground/70"
-                                : "text-sidebar-foreground hover:bg-surface-hover hover:text-sidebar-foreground"
+                                ? "text-sidebar-foreground/55 hover:text-sidebar-foreground/70 active:text-sidebar-foreground/70"
+                                : "text-sidebar-foreground hover:text-sidebar-foreground active:text-sidebar-foreground"
                           )}
                         >
                           <Link
                             href={item.href}
-                            aria-current={mounted && active ? "page" : undefined}
+                            aria-current={active ? "page" : undefined}
                           >
                             <item.icon />
                             <span className="flex min-w-0 flex-1 items-center gap-2">
                               <span className="truncate">{item.title}</span>
                               {item.soon ? (
                                 <span
-                                  className="ml-auto shrink-0 rounded-md border border-sidebar-border px-1.5 py-0.5 font-medium text-sidebar-foreground/70 group-data-[collapsible=icon]:hidden"
+                                  className={cn(
+                                    "ml-auto shrink-0 rounded-md border px-1.5 py-0.5 font-medium group-data-[collapsible=icon]:hidden",
+                                    active
+                                      ? "border-sidebar-accent-foreground/20 text-sidebar-accent-foreground/55"
+                                      : "border-sidebar-border text-sidebar-foreground/70"
+                                  )}
                                   style={{
                                     fontSize: "var(--text-11)",
                                     lineHeight: 1.2,
-                                    background:
-                                      "color-mix(in oklch, var(--sidebar-foreground) 10%, transparent)",
+                                    background: active
+                                      ? "color-mix(in oklch, var(--sidebar-accent-foreground) 8%, transparent)"
+                                      : "color-mix(in oklch, var(--sidebar-foreground) 10%, transparent)",
                                   }}
                                 >
                                   Soon
