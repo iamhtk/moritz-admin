@@ -1,12 +1,111 @@
-# Moritz Operations Dashboard
+<p align="center">
+  <img src="./public/icon.svg" alt="Moritz Operations Dashboard" width="92" height="92" />
+</p>
 
-A single-page command center for a Law Firm Administrator at Moritz, an AI-native law firm.
+<h1 align="center">Moritz Operations Dashboard</h1>
 
-Built as a design assessment. The brief asked for a dashboard that is trustworthy, premium, Nordic-minimal, and pastel, serving a Law Firm Administrator managing case flow, capacity, and revenue.
+<p align="center">
+  <strong>A single-page command center for a Law Firm Administrator at Moritz, an AI-native law firm.</strong>
+</p>
+
+<p align="center">
+  Design assessment for a dashboard that is trustworthy, premium,<br />
+  Nordic-minimal, and pastel — managing case flow, capacity, and revenue.
+</p>
+
+<p align="center">
+  <a href="https://moritz-admin.vercel.app"><strong>View live app</strong></a>
+  ·
+  <a href="https://github.com/iamhtk/moritz-admin">GitHub</a>
+  ·
+  Built by <a href="https://github.com/iamhtk">Hrithik Sanyal</a>
+</p>
+
+<p align="center">
+  <img alt="Next.js" src="https://img.shields.io/badge/Next.js-16-000000?style=flat-square&logo=nextdotjs" />
+  <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-strict-3178C6?style=flat-square&logo=typescript&logoColor=white" />
+  <img alt="Supabase" src="https://img.shields.io/badge/Supabase-Realtime-3FCF8E?style=flat-square&logo=supabase&logoColor=white" />
+  <img alt="Gemini" src="https://img.shields.io/badge/AI-Gemini-8E75B2?style=flat-square&logo=googlegemini&logoColor=white" />
+  <img alt="Vercel" src="https://img.shields.io/badge/Deployed-Vercel-000000?style=flat-square&logo=vercel" />
+</p>
 
 ---
 
-## The one decision that shaped everything
+## Try It Now
+
+**Live app (no sign-up required):**
+https://moritz-admin.vercel.app
+
+Open Overview and work the three questions Ingrid asks every morning. The README opens with a five-minute reviewer path to navigate the build efficiently.
+
+**GitHub:** https://github.com/iamhtk/moritz-admin
+
+---
+
+## ✨ At a Glance
+
+- **One command-center page** balancing firm health, workload, and financial performance
+- **21 AI surfaces** under one actor (Nora), with streaming drafts and a data-scoped Ask panel
+- **Realtime collaboration** through Supabase on `matters` and `activity`
+- **Relative-time seeding** so the four-hour clock stays correct whenever a reviewer opens the link
+- **Production-minded frontend** with optimistic mutations, TanStack tables, token-enforced design, and WCAG 2.2 AA
+
+## 🧭 Contents
+
+- [Stack](#-stack)
+- [Five-Minute Reviewer Path](#-five-minute-reviewer-path)
+- [Pages](#️-pages)
+- [The One Decision That Shaped Everything](#️-the-one-decision-that-shaped-everything)
+- [The Persona](#-the-persona)
+- [Information Architecture](#️-information-architecture)
+- [Design System](#-design-system)
+- [Backend](#️-backend)
+- [Relative Time](#-relative-time)
+- [AI Surfaces](#-ai-surfaces-21)
+- [Frontend](#️-frontend)
+- [Accessibility](#-accessibility)
+- [Mobile](#-mobile)
+- [How This Was Built](#️-how-this-was-built)
+- [Out of Scope](#-out-of-scope-and-why)
+- [Assumptions](#-assumptions)
+- [Running Locally](#-running-locally)
+- [What I'd Build Next](#️-what-id-build-next)
+
+---
+
+## 🧰 Stack
+
+`Next.js 16` · `TypeScript` · `Tailwind CSS v4` · `Supabase` ·
+`Google Gemini` · `Framer Motion` · `Tiptap` · `TanStack Query` ·
+`TanStack Table` · `Recharts` · `shadcn/ui` · `Vercel`
+
+> Supabase powers PostgreSQL, Realtime, and RLS. Gemini powers Ask and client-update drafting through server-only API routes.
+
+---
+
+## ⏱️ Five-Minute Reviewer Path
+
+1. Open the live app — Overview loads with live firm state
+2. Read the morning brief — act on Reassign or Dismiss from the same row
+3. Scan the attention list — past due, under 20 min, unassigned, over capacity
+4. Open People — sort co-counsel by load, open a Reassign sheet
+5. Switch to Money — read the revenue chart caption, then the delivered plan line
+6. Press Cmd+K — jump to a matter or lawyer from the command palette
+7. Open Ask — ask who can take an employment matter and use a returned Assign button
+8. Read the decision, design system, and relative-time sections below for the why
+
+---
+
+## 🗺️ Pages
+
+`Overview` · `Matters` · `Lawyers` · `Notifications` · `Clients` ·
+`Finance` · `Settings` · `System`
+
+Clients, Finance, and Settings are intentionally stubbed — each route states what it would contain and why it isn't here.
+
+---
+
+## ⚖️ The One Decision That Shaped Everything
 
 Moritz doesn't bill by the hour. They quote a flat fee per matter, pay contracted co-counsel per matter, and promise a four-hour average turnaround on complex commercial work.
 
@@ -25,7 +124,7 @@ That reframe is printed on the dashboard itself, in the Money zone label and in 
 
 ---
 
-## The persona
+## 👤 The Persona
 
 Ingrid Solberg, Head of Operations. Not a lawyer.
 
@@ -39,7 +138,7 @@ Every element on the page answers one of those three. Anything that answered non
 
 ---
 
-## Information architecture
+## 🗺️ Information Architecture
 
 The brief asked for a "command center." That word carries three obligations:
 
@@ -82,13 +181,13 @@ The practical rule is **no red wash**: at most three red elements on screen at a
 
 ---
 
-## Design system
+## 🎨 Design System
 
 Every component is stock shadcn/ui on Radix. Nothing is forked. The entire visual identity lives in the token layer.
 
 ### Three tiers
 
-```
+```text
 primitives → semantic → component → UI
 ```
 
@@ -128,7 +227,7 @@ What was deliberately **not** adopted: their near-total absence of urgency signa
 
 ---
 
-## Backend
+## 🗄️ Backend
 
 ### Schema
 
@@ -166,7 +265,7 @@ A product whose premise is a live clock shouldn't need a manual refresh.
 
 ---
 
-## Relative time
+## ⏳ Relative Time
 
 The most interesting engineering decision in this project.
 
@@ -190,7 +289,7 @@ Matters created through the app carry real absolute timestamps and age normally,
 
 ---
 
-## AI: twenty-one surfaces, one rule set
+## 🤖 AI Surfaces (21)
 
 The AI actor is named **Nora**. She appears in the activity feed the same way any lawyer does, no badge, no special treatment, no distinct colour. She's identified as an actor, not announced as a feature.
 
@@ -241,7 +340,7 @@ One line in the Money zone: *"Average 2h 47m in draft, 1h 06m in lawyer review."
 
 ---
 
-## Frontend
+## 🖥️ Frontend
 
 **Data.** TanStack Query with a 60-second refetch and Realtime invalidation. One shared query feeds all three zones and the rail. Optimistic updates on all four mutations with snapshot rollback.
 
@@ -261,7 +360,7 @@ The rule throughout: **progressive disclosure hides detail, never the action.** 
 
 ---
 
-## Accessibility
+## ♿ Accessibility
 
 WCAG 2.2 AA, tested rather than assumed, and re-verified after every batch of changes.
 
@@ -279,7 +378,7 @@ Minimum target sizes: 32px desktop, 44px touch.
 
 ---
 
-## Mobile
+## 📱 Mobile
 
 A reduction, not a squeeze. Nothing scrolls sideways.
 
@@ -293,7 +392,7 @@ The two-second test passes at 390px too.
 
 ---
 
-## How this was actually built
+## 🛠️ How This Was Built
 
 The method mattered as much as the output.
 
@@ -313,7 +412,7 @@ The method mattered as much as the output.
 
 ---
 
-## Out of scope, and why
+## 🚫 Out of Scope, and Why
 
 **Authentication.** One reviewer, one page. A login screen is friction on a demo. The RLS policies are real; production would scope them to the authenticated administrator.
 
@@ -327,7 +426,7 @@ Matters and Lawyers were built, because the command palette, the filters, and th
 
 ---
 
-## Assumptions
+## 📌 Assumptions
 
 Moritz's internal admin workflows aren't public. The persona and the model of the work are inferred from their published operating model: flat fees, contracted co-counsel, same-day turnaround, intake by email and Slack.
 
@@ -343,7 +442,36 @@ In a real engagement these would be validated with the operations lead and two c
 
 ---
 
-## What I'd build next
+## 🧑‍💻 Running Locally
+
+**1. Clone and install**
+
+```bash
+git clone https://github.com/iamhtk/moritz-admin.git
+cd moritz-admin
+npm install
+```
+
+**2. Add `.env.local`**
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=your_url
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your_key
+SUPABASE_SECRET_KEY=your_secret
+GEMINI_API_KEY=your_key
+```
+
+**3. Start the app**
+
+```bash
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000). Overview loads with the live command center.
+
+---
+
+## ⏭️ What I'd Build Next
 
 **Validate the thresholds.** An hour each with the operations lead and two co-counsel. Every number in the assumptions list is a hypothesis until then.
 
@@ -357,4 +485,6 @@ In a real engagement these would be validated with the operations lead and two c
 
 ---
 
-Built for a firm that sells speed, by someone who thinks the interface should disappear.
+<p align="center">
+  Built for a firm that sells speed, by someone who thinks the interface should disappear.
+</p>
