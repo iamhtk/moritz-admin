@@ -85,7 +85,7 @@ export function NotificationRow({
       <span
         className={cn(
           "mt-1.5 size-1.5 shrink-0 rounded-full",
-          unread ? "bg-[var(--rowan-400,#c45c4a)]" : "bg-transparent"
+          unread ? "bg-[var(--rowan-400)]" : "bg-transparent"
         )}
         aria-hidden
       />
@@ -262,7 +262,7 @@ function NotificationList({
               <span
                 className={cn(
                   "mt-1.5 size-1.5 shrink-0 rounded-full",
-                  unread ? "bg-[var(--rowan-400,#c45c4a)]" : "bg-transparent"
+                  unread ? "bg-[var(--rowan-400)]" : "bg-transparent"
                 )}
                 aria-hidden
               />

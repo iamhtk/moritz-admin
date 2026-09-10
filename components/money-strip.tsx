@@ -271,14 +271,11 @@ export function MobileChartStat({
       >
         {label}
       </div>
-      <div
-        data-stat
-        className="mt-2"
-      >
-        {value}
-      </div>
-      <div className="mt-2">
-        <Sparkline values={spark} />
+      <div className="mt-2 min-w-0 overflow-hidden">
+        <div data-stat>{value}</div>
+        <div className="mt-1 min-w-0 overflow-hidden">
+          <Sparkline values={spark} />
+        </div>
       </div>
       <p
         className="mt-2 text-text-secondary"

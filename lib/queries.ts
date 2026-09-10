@@ -732,45 +732,98 @@ async function getConfig(db: ReturnType<typeof serverClient>): Promise<Config> {
     }`.trim();
   }
 
+  /** Mon–Fri, same working-day rule as the finance pace projection. */
+  function isWorkingDay(d: Date): boolean {
+    const day = d.getDay();
+    return day !== 0 && day !== 6;
+  }
+
+  /** Whole working days whose local calendar date falls in [start, end] inclusive. */
+  function workingDaysInRange(start: Date, end: Date): number {
+    let n = 0;
+    const from = new Date(start);
+    from.setHours(0, 0, 0, 0);
+    const to = new Date(end);
+    to.setHours(0, 0, 0, 0);
+    for (let d = new Date(from); d <= to; d.setDate(d.getDate() + 1)) {
+      if (isWorkingDay(d)) n++;
+    }
+    return n;
+  }
+
   /**
-   * Week-scoped capacity projection using the same intake-rate basis as the
-   * daily forecast: matters arrived in the last hour (or last 24h / 24 when
-   * the last hour is empty), times hours left in the calendar week, compared
-   * to remaining concurrent capacity slots (sum of lawyer weekly_capacity
-   * minus live matters).
+   * Remaining Mon–Fri time in the current calendar week (Sun–Sat), as a
+   * fractional day count. Weekends contribute nothing — same assumption as
+   * finance projections, which skip Sat/Sun entirely.
+   */
+  function remainingWorkingDaysThisWeek(now: Date): number {
+    const dow = now.getDay(); // 0 = Sun
+    if (dow === 0 || dow === 6) return 0;
+
+    const endOfToday = new Date(now);
+    endOfToday.setHours(24, 0, 0, 0);
+    let remaining =
+      Math.max(0, endOfToday.getTime() - now.getTime()) / 86_400_000;
+
+    // Full weekdays after today through Friday of this week.
+    for (let d = dow + 1; d <= 5; d++) {
+      remaining += 1;
+    }
+    return remaining;
+  }
+
+  /**
+   * Week-scoped capacity projection. Rate = matters submitted per working day
+   * over the past week (all stages), projected over remaining Mon–Fri time,
+   * compared to open concurrent slots. Returns null when the figure cannot be
+   * trusted (thin history or absurd overage).
    */
   function buildWeeklyForecast(
+    all: MatterStatus[],
     live: MatterStatus[],
-    loads: LawyerLoad[],
-    cfg: Config
-  ): string {
+    loads: LawyerLoad[]
+  ): OverviewPayload["ai"]["weeklyCapacityForecast"] {
     const totalCapacity = loads.reduce((s, l) => s + l.weekly_capacity, 0);
     const active = live.length;
     const room = Math.max(0, totalCapacity - active);
 
-    const lastHour = live.filter(
-      (m) => cfg.slaMinutes - m.minutes_remaining <= 60
-    ).length;
-    const lastDay = live.filter(
-      (m) => cfg.slaMinutes - m.minutes_remaining <= 24 * 60
-    ).length;
-    const ratePerHour = lastHour > 0 ? lastHour : lastDay / 24;
-
     const now = new Date();
-    const day = now.getDay(); // 0 = Sun
-    const daysAfterToday = day === 0 ? 0 : 7 - day;
-    const hoursLeftToday =
-      (23 - now.getHours()) + (60 - now.getMinutes()) / 60;
-    const hoursLeft = Math.max(0, hoursLeftToday + daysAfterToday * 24);
-    const projectedAdd = Math.round(ratePerHour * hoursLeft);
+    const lookbackDays = 7;
+    const windowStart = new Date(now.getTime() - lookbackDays * 86_400_000);
+    const received = all.filter(
+      (m) => m.submitted_at && new Date(m.submitted_at) >= windowStart
+    ).length;
+    const workDaysElapsed = workingDaysInRange(windowStart, now);
+    if (workDaysElapsed < 1 || received < 1) return null;
+
+    const ratePerWorkDay = received / workDaysElapsed;
+    const daysLeft = remainingWorkingDaysThisWeek(now);
+    if (daysLeft <= 0) return null;
+
+    const projectedAdd = Math.round(ratePerWorkDay * daysLeft);
+    const tooltip =
+      `${received} matters received over ${workDaysElapsed} working days` +
+      ` (≈${ratePerWorkDay.toFixed(1)}/day) × ${daysLeft.toFixed(1)} working days left` +
+      ` · ${active} active against ${totalCapacity} slots`;
 
     if (projectedAdd <= room) {
-      return "This week: On pace to stay within capacity this week";
+      return {
+        text: "This week: on pace to stay within capacity",
+        tooltip,
+      };
     }
+
     const over = projectedAdd - room;
-    return `This week: on pace to exceed capacity by ${over} ${
-      over === 1 ? "matter" : "matters"
-    } (≈${ratePerHour.toFixed(1)}/hr × ${Math.round(hoursLeft)}h left; ${active} active against ${totalCapacity} slots)`;
+    // Sanity: an overage larger than the firm's whole weekly capacity is not a
+    // forecast — it is a broken rate. Prefer silence over a confident wrong number.
+    if (over > totalCapacity) return null;
+
+    return {
+      text: `This week: on pace to exceed capacity by roughly ${over} ${
+        over === 1 ? "matter" : "matters"
+      }`,
+      tooltip,
+    };
   }
 
   /**
@@ -984,7 +1037,7 @@ async function getConfig(db: ReturnType<typeof serverClient>): Promise<Config> {
       ai: {
         brief: buildBrief(attention, loads, live),
         capacityForecast: buildForecast(live, loads, cfg),
-        weeklyCapacityForecast: buildWeeklyForecast(live, loads, cfg),
+        weeklyCapacityForecast: buildWeeklyForecast(all, live, loads),
         predictedVolume: buildPredictedVolume(all),
       },
     };

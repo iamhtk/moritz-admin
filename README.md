@@ -99,9 +99,11 @@ Open Overview and work the three questions Ingrid asks every morning. The README
 ## 🗺️ Pages
 
 `Overview` · `Matters` · `Lawyers` · `Notifications` · `Clients` ·
-`Finance` · `Settings` · `System`
+`Finance` · `Settings`
 
 Clients, Finance, and Settings are intentionally stubbed — each route states what it would contain and why it isn't here.
+
+The design-system reference lives at [`/system`](https://moritz-admin.vercel.app/system). It is intentionally unlinked from the product nav so the shipped surface stays a single command center; open the URL directly if you want the component and token inventory.
 
 ---
 
@@ -454,6 +456,8 @@ bun install
 
 **2. Add `.env.local`**
 
+Copy `.env.example` and fill in real values (never commit this file):
+
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=your_url
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your_key
@@ -461,7 +465,21 @@ SUPABASE_SECRET_KEY=your_secret
 GEMINI_API_KEY=your_key
 ```
 
-**3. Start the app**
+**3. Create the database**
+
+In the Supabase SQL editor, run these files in order:
+
+1. `supabase/01-schema.sql` — tables, view, trigger, RLS
+2. `supabase/relative-time.sql` — relative-time helpers for seeded rows
+3. `supabase/realtime.sql` — publish `matters` and `activity` for live updates
+
+**4. Seed demo data**
+
+```bash
+bun run seed
+```
+
+**5. Start the app**
 
 ```bash
 bun run dev

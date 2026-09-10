@@ -9,6 +9,11 @@ import {
   AlertTitle,
 } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { ZoneLabel } from "@/components/ui-bits/zone-label";
 import {
   CapacityTable,
@@ -132,7 +137,16 @@ export function ZonePeople({
         {data.lawyers.length} co-counsel · sorted by load
         {forecast ? ` · ${forecast}` : ""}
       </span>
-      <span>{weekly}</span>
+      {weekly ? (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span className="cursor-default">{weekly.text}</span>
+          </TooltipTrigger>
+          <TooltipContent side="bottom" className="max-w-xs">
+            {weekly.tooltip}
+          </TooltipContent>
+        </Tooltip>
+      ) : null}
     </span>
   );
 

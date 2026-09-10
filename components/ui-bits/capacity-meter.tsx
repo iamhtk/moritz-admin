@@ -28,13 +28,14 @@ export function CapacityMeter({
   state,
   label,
   name,
-  compact = false,
+  compact: _compact = false,
   layout = "inline",
 }: {
   pct: number;
   state: CapacityState;
   label: string;
   name: string;
+  /** Kept for callers; label is always shown (colour is never the sole signal). */
   compact?: boolean;
   /** stacked = full-width track with label/pct above (lawyer cards). */
   layout?: "inline" | "stacked";
@@ -86,6 +87,14 @@ export function CapacityMeter({
     </div>
   );
 
+  const stateBadge = (
+    <StatusBadge tone={toneByState[state]}>
+      <span className="num">
+        {label} · {pct}%
+      </span>
+    </StatusBadge>
+  );
+
   if (layout === "stacked") {
     return (
       <div
@@ -94,21 +103,10 @@ export function CapacityMeter({
         aria-valuenow={pct}
         aria-valuemin={0}
         aria-valuemax={BAR_MAX_PCT}
-        aria-label={`${name} at ${pct} percent of capacity`}
+        aria-label={`${name}: ${label}, ${pct} percent of capacity`}
       >
         <div className="flex items-baseline justify-between gap-2">
-          <span
-            className="text-text-secondary"
-            style={{ fontSize: "var(--text-12)" }}
-          >
-            Capacity
-          </span>
-          <span
-            className="num text-text-secondary"
-            style={{ fontSize: "var(--text-12)" }}
-          >
-            {pct}%
-          </span>
+          {stateBadge}
         </div>
         {track}
       </div>
@@ -122,23 +120,10 @@ export function CapacityMeter({
       aria-valuenow={pct}
       aria-valuemin={0}
       aria-valuemax={BAR_MAX_PCT}
-      aria-label={`${name} at ${pct} percent of capacity`}
+      aria-label={`${name}: ${label}, ${pct} percent of capacity`}
     >
       {track}
-      {compact ? (
-        <span
-          className="num text-text-secondary"
-          style={{ fontSize: "var(--text-11)" }}
-        >
-          {pct}%
-        </span>
-      ) : (
-        <StatusBadge tone={toneByState[state]}>
-          <span className="num">
-            {label} · {pct}%
-          </span>
-        </StatusBadge>
-      )}
+      {stateBadge}
     </div>
   );
 }

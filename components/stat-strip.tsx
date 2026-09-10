@@ -134,7 +134,7 @@ export function StatStrip({ stats }: { stats: Stats }) {
         {cells.map((cell) => (
           <Card
             key={cell.label}
-            className="gap-0 rounded-lg p-4 [--card-spacing:0px]"
+            className="min-w-0 gap-0 overflow-hidden rounded-lg p-4 [--card-spacing:0px]"
           >
             <div
               className="font-medium text-text-secondary"
@@ -149,12 +149,17 @@ export function StatStrip({ stats }: { stats: Stats }) {
                 <TooltipContent side="bottom">{cell.tooltip}</TooltipContent>
               </Tooltip>
             </div>
-            <div className="mt-2">
+            <div className="mt-2 min-w-0 overflow-hidden">
               <StatValue
                 value={cell.value}
                 tooltip={cell.tooltip}
                 risk={cell.risk}
               />
+              {cell.trend ? (
+                <div className="mt-1 min-w-0 overflow-hidden">
+                  <Sparkline values={cell.trend} />
+                </div>
+              ) : null}
             </div>
             <div
               className="mt-2 text-text-tertiary"
@@ -167,13 +172,13 @@ export function StatStrip({ stats }: { stats: Stats }) {
       </div>
 
       {/* Desktop: joined strip */}
-      <Card className="hidden gap-0 rounded-lg py-0 [--card-spacing:0px] md:block">
+      <Card className="hidden gap-0 overflow-hidden rounded-lg py-0 [--card-spacing:0px] md:block">
         <div className="grid grid-cols-4">
           {cells.map((cell, i) => (
             <div
               key={cell.label}
               className={cn(
-                "flex flex-col gap-2 px-4 py-4",
+                "flex min-w-0 flex-col gap-2 overflow-hidden px-4 py-4",
                 i < cells.length - 1 && "border-r border-border"
               )}
             >
@@ -190,16 +195,18 @@ export function StatStrip({ stats }: { stats: Stats }) {
                   <TooltipContent side="bottom">{cell.tooltip}</TooltipContent>
                 </Tooltip>
               </div>
-              <div className="flex items-center justify-start gap-4">
-                <StatValue
-                  value={cell.value}
-                  tooltip={cell.tooltip}
-                  risk={cell.risk}
-                />
+              <div className="flex min-w-0 items-center gap-3 overflow-hidden">
+                <div className="shrink-0">
+                  <StatValue
+                    value={cell.value}
+                    tooltip={cell.tooltip}
+                    risk={cell.risk}
+                  />
+                </div>
                 {cell.trend ? (
-                  <span className="hidden md:inline-flex">
+                  <div className="min-w-0 flex-1 overflow-hidden">
                     <Sparkline values={cell.trend} />
-                  </span>
+                  </div>
                 ) : null}
               </div>
               <div
@@ -239,9 +246,9 @@ export function StatStripSkeleton() {
               )}
             >
               <Skeleton className="h-3 w-20" />
-              <div className="flex items-center justify-start gap-4">
-                <Skeleton className="h-[34px] w-14" />
-                <Skeleton className="h-6 w-[76px]" />
+              <div className="flex min-w-0 items-center gap-3 overflow-hidden">
+                <Skeleton className="h-[34px] w-14 shrink-0" />
+                <Skeleton className="h-6 w-full max-w-[76px] flex-1" />
               </div>
               <Skeleton className="h-3 w-36" />
             </div>

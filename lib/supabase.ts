@@ -214,8 +214,14 @@ export interface OverviewPayload {
   ai: {
     brief: { headline: string; detail: string; action: AttentionItem | null } | null;
     capacityForecast: string | null;
-    /** Week-scoped capacity projection; always present when overview loads. */
-    weeklyCapacityForecast: string;
+    /**
+     * Week-scoped capacity projection over remaining working days.
+     * Null when the data cannot support a trustworthy number.
+     */
+    weeklyCapacityForecast: {
+      text: string;
+      tooltip: string;
+    } | null;
     /** Forward intake estimate for the coming week. */
     predictedVolume: {
       estimate: number;

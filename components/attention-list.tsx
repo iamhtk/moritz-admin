@@ -30,29 +30,21 @@ function formatBand(low: number, high: number) {
   return `${formatFeeDollars(low)} to ${formatFeeDollars(high)}`;
 }
 
-/** Cap badge width to “Over capacity”; split Past due so the duration wraps cleanly. */
-function AttentionLabel({ label }: { label: string }) {
-  const pastDue = label.match(/^Past due (.+)$/);
-  if (pastDue) {
-    return (
-      <span className="flex flex-col items-center leading-tight">
-        <span>Past due</span>
-        <span className="num">{pastDue[1]}</span>
-      </span>
-    );
-  }
-  return label;
-}
+/** Single line up to the width of “Over capacity”; longer labels may wrap. */
+const BADGE_SINGLE_LINE_MAX = "Over capacity";
 
-/** Fixed to the width of “Over capacity”; only Past due stacks to two lines. */
 function AttentionBadge({ item }: { item: AttentionItem }) {
+  const singleLine = item.label.length <= BADGE_SINGLE_LINE_MAX.length;
   return (
     <div className="flex min-h-5 w-[5.75rem] shrink-0 items-start">
       <StatusBadge
         tone={kindToTone(item.kind)}
-        className="h-auto min-h-5 max-w-full justify-center whitespace-nowrap px-1.5 text-center leading-tight"
+        className={cn(
+          "h-auto min-h-5 max-w-full justify-center px-1.5 text-center leading-tight",
+          singleLine ? "whitespace-nowrap" : "whitespace-normal"
+        )}
       >
-        <AttentionLabel label={item.label} />
+        {item.label}
       </StatusBadge>
     </div>
   );
