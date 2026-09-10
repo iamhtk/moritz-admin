@@ -40,7 +40,7 @@
 ## ✨ At a Glance
 
 - **One command-center page** balancing firm health, workload, and financial performance
-- **21 AI surfaces** under one actor (Nora), with streaming drafts and a data-scoped Ask panel
+- **19 AI surfaces** under one actor (Nora), with streaming drafts and a data-scoped Ask panel
 - **Realtime collaboration** through Supabase on `matters` and `activity`
 - **Relative-time seeding** so the four-hour clock stays correct whenever a reviewer opens the link
 - **Token-enforced design system** with Figma Foundations, Tokens, Components, Screens, and Decisions documented below
@@ -56,7 +56,7 @@
 - [The Figma File](#-the-figma-file)
 - [Backend](#️-backend)
 - [Relative Time](#-relative-time)
-- [AI: Twenty-One Surfaces, One Rule Set](#-ai-twenty-one-surfaces-one-rule-set)
+- [AI: Nineteen Surfaces, One Rule Set](#-ai-nineteen-surfaces-one-rule-set)
 - [Frontend](#️-frontend)
 - [Accessibility](#-accessibility)
 - [Mobile](#-mobile)
@@ -160,7 +160,7 @@ Balance means equal completeness, not equal prominence. Urgency still orders the
 
 The brief's phrase was "turning legal chaos into organized calm." The easy way to look calm is to show almost nothing, which fails the moment real data arrives.
 
-So the demo state is deliberately busy: 48 matters, 14 lawyers, twenty-one AI surfaces, a live feed. Calm comes from hierarchy, not emptiness.
+So the demo state is deliberately busy: 48 matters, 14 lawyers, nineteen AI surfaces, a live feed. Calm comes from hierarchy, not emptiness.
 
 The practical rule is **no red wash**: at most three red elements on screen at any moment, the at-risk number and the breach badges. Three matters at risk means three small badges, never three red cards. Alarm is carried by position and by one number, never by area of colour.
 
@@ -310,7 +310,7 @@ A production deployment would scope these to the authenticated administrator. Au
 
 ### Realtime
 
-`matters` and `activity` are published to the Realtime channel. A change on either invalidates the overview query, so assigning a matter in one tab updates the feed, counts, and stats in another within a second.
+`matters` and `activity` are published to the Realtime channel. A change on either invalidates both the overview query and the Matters directory query (`matters-all`), so assigning a matter in one tab updates the Overview, the Matters list, the feed, counts, and stats in another within a second.
 
 A product whose premise is a live clock shouldn't need a manual refresh.
 
@@ -340,11 +340,11 @@ Matters created through the app carry real absolute timestamps and age normally,
 
 ---
 
-## 🤖 AI: Twenty-One Surfaces, One Rule Set
+## 🤖 AI: Nineteen Surfaces, One Rule Set
 
 The AI actor is named **Nora**. She appears in the activity feed the same way any lawyer does, no badge, no special treatment, no distinct colour. She's identified as an actor, not announced as a feature.
 
-### The rules that hold twenty-one surfaces together
+### The rules that hold nineteen surfaces together
 
 1. One visual treatment. Fjord tint or fjord text. No sparkles, gradients, or glow.
 2. Nora's name appears sparingly, only where she's genuinely the author of something.
@@ -358,11 +358,12 @@ The AI actor is named **Nora**. She appears in the activity feed the same way an
 ### Ambient, things Nora surfaces unprompted
 
 - **Morning brief** — connects two facts into one action ("2 matters past due and Lars is at 133 percent. Reassigning MOR-1042 to Ingrid Lie clears both") with the action attached.
-- **Capacity forecast, daily** — who passes capacity by a specific time today, from current intake rate.
+- **Capacity forecast, daily** — who is already over or at the watch threshold, recent intake, and who still has room. States load from live data; it does not invent a tip-over clock.
 - **Capacity forecast, weekly** — whether the week's pace exceeds total capacity before it ends.
 - **Money anomaly** — flags a service line whose average fee deviates from firm-wide.
 - **Predictive matter volume** — expected intake for the coming week, with its basis stated.
 - **Cost of delay** — at-risk matters expressed as summed flat-fee value. Pure arithmetic on real fees, not a speculative cost model.
+- **Draft / review timing (80/20)** — one Money-zone line of average minutes in draft versus lawyer review, so Moritz's 80/20 claim is a number rather than a slogan.
 
 ### Inline, at the moment of decision
 
@@ -385,15 +386,11 @@ The AI actor is named **Nora**. She appears in the activity feed the same way an
 - **Ask panel** — scoped strictly to the firm's live data, rebuilt on every request so it never answers from stale state. Answers name the matters and lawyers they're based on. Critically, when an answer mentions someone with capacity or a matter needing action, it renders real action buttons underneath, so asking "who can take an employment matter" returns three names each with a working Assign button.
 - **General legal information mode** — a separately labelled, clearly bounded mode for general legal concepts, with a persistent disclaimer, visually distinguished from firm-grounded answers, and hard-separated from the rest of the app's AI logic so it can never be cited as a basis for anything else.
 
-### The 80/20, made measurable
-
-One line in the Money zone: *"Average 2h 47m in draft, 1h 06m in lawyer review."* Moritz sells the claim that AI does 80 percent of the work. This makes it a number.
-
 ---
 
 ## 🖥️ Frontend
 
-**Data.** TanStack Query with a 60-second refetch and Realtime invalidation. One shared query feeds all three zones and the rail. Optimistic updates on all four mutations with snapshot rollback.
+**Data.** TanStack Query with a 60-second refetch and Realtime invalidation. One shared query feeds all three Overview zones and the rail; the Matters page uses its own `matters-all` query. Assign, nudge, and quote use optimistic updates with snapshot rollback so the row moves before the network returns. Create and client-update are invalidate-only: create waits on the server for a real reference and id, and client-update is a streaming generative write rather than a patchable row state.
 
 **Tables.** TanStack Table for the capacity table and the Matters page, with real sorting and pagination.
 

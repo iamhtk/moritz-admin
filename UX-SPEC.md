@@ -39,8 +39,8 @@ The third is the one most dashboards fail. So the rule is: **every problem this 
 | Tier | Contents | Desktop | Mobile |
 |---|---|---|---|
 | Act now | Matters with under 60 minutes on the clock or past it. Unassigned matters. Co-counsel over 100 percent. | Above the fold, always | Above the fold, always |
-| Watch today | Co-counsel load. Matters by stage. Deadlines next 4 hours. Turnaround trend this week. | Visible without scrolling on 1440 by 900 | One tap, People tab |
-| Context | Revenue vs target. Margin per matter. Matters opened vs closed. Activity feed including filings, meetings, and onboardings. | Below or in the rail | One tap, Money and Feed tabs |
+| Watch today | Co-counsel load. Matters by stage. Deadlines next 4 hours. Turnaround trend this week. | Visible without scrolling on 1440 by 900 | Scroll to People |
+| Context | Revenue vs target. Margin per matter. Matters opened vs closed. Activity feed including filings, meetings, and onboardings. | Below or in the rail | Scroll to Money; Pulse via bottom nav |
 
 ### Zones (three maximum, plus a rail)
 
@@ -50,7 +50,7 @@ The third is the one most dashboards fail. So the rule is: **every problem this 
 
 **Zone 3 · Money.** Left, revenue this month as a line with the monthly target as a dotted reference. Right, matters delivered per day as bars against a plan line. Each chart carries a one-sentence caption that states its story. Below both, five money numbers: Revenue to date · Target · Average fee · Margin per matter · Opened vs closed this month. Any matter still unquoted appears as a single line under the numbers with a Send quote action, because an unquoted matter cannot start and that is the admin's blocker to clear.
 
-**Rail · Pulse.** Activity feed, grouped by day, one line per event, avatar plus verb plus object. Filter chips with today's counts: All 24 · Submitted 7 · Assigned 6 · Delivered 4 · Filed 2 · Meetings 3 · Escalated 1 · Onboarded 1. Counts are computed from the seed, never hardcoded. The counts are the pulse at a glance; the feed is the detail. Event types include filed and meeting, because the brief names filings and meetings and Moritz runs litigation and discovery work. Sticky on desktop. A tab on mobile.
+**Rail · Pulse.** Activity feed, grouped by day, one line per event, avatar plus verb plus object. Filter chips with today's counts: All 24 · Submitted 7 · Assigned 6 · Delivered 4 · Filed 2 · Meetings 3 · Escalated 1 · Onboarded 1. Counts are computed from the seed, never hardcoded. The counts are the pulse at a glance; the feed is the detail. Event types include filed and meeting, because the brief names filings and meetings and Moritz runs litigation and discovery work. Sticky right rail on wide screens (≥1200px). Below that breakpoint, Pulse leaves the Overview and is a primary destination in the bottom navigation.
 
 ### The balance check
 
@@ -164,18 +164,16 @@ Density comes from typography, not from boxes.
 
 ## 6. AI surfaces
 
-Moritz is an AI-native firm, so AI belongs on this page. It belongs in decisions, not in decoration. Twelve surfaces, each in one of four roles, each answering a question the numbers alone cannot.
+Moritz is an AI-native firm, so AI belongs on this page. It belongs in decisions, not in decoration. **Nineteen surfaces** ship in the product today, each in one of four roles, each answering a question the numbers alone cannot. The original twelve-surface cut was the minimum; the rest grew under the same rules.
 
 ### The four roles
 
 | Role | Job | Surfaces |
 |---|---|---|
-| Ambient | Tells you something you did not ask | Morning brief · Capacity forecast · Money anomaly |
-| Inline | Helps at the moment of a decision | Suggested lawyer · Smart triage · Fee suggestion · Slip risk · Draft confidence |
-| Generative | Writes something you would have written | Client update · Escalation handoff |
-| Conversational | Answers what you ask | Chat panel |
-
-Plus the 80/20 line, which is a number, not a feature.
+| Ambient | Tells you something you did not ask | Morning brief · Capacity forecast (daily) · Capacity forecast (weekly) · Money anomaly · Predictive matter volume · Cost of delay · Draft/review timing (80/20) |
+| Inline | Helps at the moment of a decision | Suggested lawyer · First available slot · Smart triage · Fee suggestion · Slip risk · Draft confidence · Duplicate intake catch · Explain this number |
+| Generative | Writes something you would have written | Client update draft · Escalation handoff |
+| Conversational | Answers what you ask | Ask panel · General legal information mode |
 
 ### Ambient
 
@@ -184,10 +182,10 @@ Plus the 80/20 line, which is a number, not a feature.
 
 Buttons: the proposed action, and Dismiss. Regenerates when state changes. When the firm is calm it says so in one line and offers nothing: "Nothing at risk. Five matters due in the next hour, all assigned." Component: Card with fjord tint, Button size="sm", Button variant="ghost" for Dismiss.
 
-**A2 · Capacity forecast.** One line above the co-counsel table.
-> "At the current intake rate, three lawyers pass capacity by 16:00. Sofie and Catarina have room."
+**A2 · Capacity forecast (daily).** One line above the co-counsel table.
+> "2 lawyers are over capacity, 1 at the 80 percent watch threshold. 3 matters arrived in the last hour. Sofie and Catarina have room."
 
-Derived from intake rate over the last 3 hours against remaining capacity. Component: inline text in the zone label row, `--text-secondary`, no card.
+States who is already over or at watch, recent intake, and who still has room. Does not invent a tip-over clock the data cannot support. Component: inline text in the zone label row, `--text-secondary`, no card.
 
 **A3 · Money anomaly.** One line under the charts. Fires only when a real deviation exists in the seed.
 > "Employment matters are averaging $890 this month against $1,240 firm-wide. Three were quoted below band."
@@ -236,9 +234,9 @@ Components: Sheet, Command-style input, Button variant="ghost" for prompts, Skel
 In the money zone, under the numbers:
 > "Average 2h 51m in AI draft, 1h 04m in lawyer review."
 
-Moritz sells the 80/20 split. This makes it measurable. No other candidate will show it.
+Moritz sells the 80/20 split. This makes it measurable. It counts as an ambient surface, not a separate product category.
 
-### Rules that keep twelve surfaces from reading as a gimmick reel
+### Rules that keep nineteen surfaces from reading as a gimmick reel
 
 1. **One visual treatment.** Every AI surface uses a fjord tint background or fjord text. No sparkles, no gradients, no purple, no glow, no separate AI color.
 2. **The word AI appears at most twice on the page.** Everywhere else the surface just does its job. "Suggested", not "AI suggested".
@@ -276,7 +274,7 @@ Every level-one row carries its action inline. Progressive disclosure hides deta
 | Activity feed | Today, collapsed after 8 items | Show more | Filter chips |
 | Command palette | Hidden | Cmd+K | Groups: Actions, Go to, Recent matters |
 
-Everything collapsed by default opens the section that answers the current question first. On mobile, level one is the whole screen and levels two and three sit behind tabs and sheets.
+Everything collapsed by default opens the section that answers the current question first. On mobile, level one is the whole screen; levels two and three are reached by scrolling the stacked zones or opening sheets, not by hiding zones behind tabs.
 
 ---
 
@@ -372,9 +370,9 @@ interface FinanceSummary {
 
 ## 10. Mobile rules (390px)
 
-AI on mobile: the morning brief stays above the stat grid, because it is the fastest read on the page. The chat panel becomes a full-height bottom Sheet. Inline AI badges survive. Capacity forecast and money anomaly move inside their tabs. Client update opens as a full-screen Sheet.
+AI on mobile: the morning brief stays above the stat grid, because it is the fastest read on the page. The chat panel becomes a full-height bottom Sheet. Inline AI badges survive. Capacity forecast and money anomaly stay inline in their stacked zones. Client update opens as a full-screen Sheet.
 
-Stacking order: morning brief · stat grid 2 by 2 · attention cards · Tabs (People, Money, Feed). Sidebar becomes a left Sheet. New matter becomes a bottom Sheet from a floating primary button. Charts become one number plus a sparkline. Co-counsel table becomes cards: name, load bar, next due. Deadline list stays a list. Feed stays a feed. Nothing scrolls horizontally. Touch targets 44px.
+Stacking order on Overview: morning brief · stat grid 2 by 2 · attention cards · People · Money. Pulse is a primary item in the bottom navigation (Overview, Matters, Lawyers, Pulse, More), not an Overview tab. Sidebar is desktop-only above 1200px; below that the bottom bar owns destinations. New matter opens as a bottom Sheet from the header. Both Money charts stay visible: shorter height, fewer axis ticks, captions kept. Co-counsel table becomes cards: name, load bar, next due. Deadline list stays a list. Feed stays a feed on `/pulse`. Nothing scrolls horizontally. Touch targets 44px. Nothing visible on desktop is absent on a narrower screen; elements adapt rather than disappear.
 
 ---
 
