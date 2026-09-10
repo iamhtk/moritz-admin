@@ -196,8 +196,8 @@ export function RevenueChart({
         </AreaChart>
       </ChartContainer>
       <p
-        className="text-text-secondary"
-        style={{ fontSize: "var(--text-12)", marginTop: "10px" }}
+        className="mt-auto text-text-secondary"
+        style={{ fontSize: "var(--text-12)", paddingTop: "10px" }}
       >
         Revenue is <span className="num">{pctOfTarget}</span> percent of target
         with <span className="num">{daysLeft}</span> days left. On pace for{" "}
@@ -212,7 +212,7 @@ export function RevenueChartSkeleton() {
     <Card className="h-full flex flex-col gap-0 rounded-lg p-4 [--card-spacing:0px]">
       <Skeleton className="h-3 w-56" />
       <Skeleton className="mt-2 h-40 w-full rounded-md" />
-      <Skeleton className="mt-2.5 h-3 w-4/5 max-w-md" />
+      <Skeleton className="mt-auto h-3 w-4/5 max-w-md pt-2.5" />
     </Card>
   );
 }

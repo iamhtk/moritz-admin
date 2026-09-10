@@ -61,6 +61,12 @@ export function DeliveredChart({
 
   return (
     <Card className="h-full flex flex-col gap-0 rounded-lg p-4 [--card-spacing:0px]">
+      <p
+        className="mb-2 font-medium text-text-secondary"
+        style={{ fontSize: "var(--text-11)" }}
+      >
+        Matters delivered this week
+      </p>
       <ChartContainer
         config={chartConfig}
         className="aspect-auto h-40 w-full"
@@ -155,8 +161,8 @@ export function DeliveredChart({
         </BarChart>
       </ChartContainer>
       <p
-        className="text-text-secondary"
-        style={{ fontSize: "var(--text-12)", marginTop: "10px" }}
+        className="mt-auto text-text-secondary"
+        style={{ fontSize: "var(--text-12)", paddingTop: "10px" }}
       >
         <span className="num">{deliveredThisWeek}</span> matters delivered this
         week against a plan of{" "}
@@ -169,8 +175,9 @@ export function DeliveredChart({
 export function DeliveredChartSkeleton() {
   return (
     <Card className="h-full flex flex-col gap-0 rounded-lg p-4 [--card-spacing:0px]">
-      <Skeleton className="h-40 w-full rounded-md" />
-      <Skeleton className="mt-2.5 h-3 w-3/5 max-w-sm" />
+      <Skeleton className="h-3 w-48" />
+      <Skeleton className="mt-2 h-40 w-full rounded-md" />
+      <Skeleton className="mt-auto h-3 w-3/5 max-w-sm pt-2.5" />
     </Card>
   );
 }
