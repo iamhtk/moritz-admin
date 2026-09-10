@@ -238,27 +238,13 @@ Three collections, **219 variables**. Only the semantic tier carries light and d
 | Semantic | Light, Dark | 76 |
 | Component | Value | 47 |
 
-**Tier 1, primitives.** Raw values with no meaning attached. Six OKLCH ramps (full 50–950 scales) plus the type scale, spacing, radius and opacity stops.
-
 <p align="center">
-  <img src="./docs/images/figma-variables--primitives.png" alt="Primitives collection" width="720" />
-</p>
-
-**Tier 2, semantic.** shadcn's own variable names, aliasing primitives only. This is the only tier with light and dark modes, and the only place the theme flips.
-
-<p align="center">
-  <img src="./docs/images/figma-variables--semantic.png" alt="Semantic collection" width="720" />
-</p>
-
-**Tier 3, component.** Component-scoped tokens, aliasing semantic only. Single-mode by design, since the tier beneath it already carries the mode logic.
-
-<p align="center">
-  <img src="./docs/images/figma-variables--component.png" alt="Component collection" width="720" />
+  <img src="./docs/images/figma-tokens.png" alt="Figma Tokens page" width="720" />
 </p>
 
 ### Components
 
-Organised by atomic level. Every component names its Obra equivalent and the reasoning behind how it is used, followed by a map of every composite surface in the product and a section documenting the four places this product deliberately extends the kit.
+Opens with the Obra kit unstyled (36 live instances linked to the published library), then the same components wearing the token layer. Every component names its Obra equivalent and the reasoning behind how it is used, followed by a map of every composite surface in the product and a section documenting the four places this product deliberately extends the kit.
 
 <p align="center">
   <img src="./docs/images/figma-components.png" alt="Figma Components page" width="720" />
