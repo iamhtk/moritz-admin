@@ -162,12 +162,6 @@ export function DeliveredChart({
         week against a plan of{" "}
         <span className="num">{plannedThisWeek}</span>.
       </p>
-      <p
-        className="text-text-tertiary"
-        style={{ fontSize: "var(--text-11)", marginTop: "4px" }}
-      >
-        Weekends show no deliveries.
-      </p>
     </Card>
   );
 }

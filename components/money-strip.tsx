@@ -103,14 +103,37 @@ export function MoneyStrip({
           className="font-semibold text-foreground"
         />
       ),
-      sub:
-        finance.avgFeeDelta == null ? (
-          <>median flat fee across delivered matters</>
-        ) : (
-          <>
-            up $<span className="num">{finance.avgFeeDelta}</span> vs {priorMonth}
-          </>
-        ),
+      sub: finance.anomaly ? (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              className="cursor-help text-left underline decoration-dotted decoration-border underline-offset-2"
+            >
+              {finance.avgFeeDelta == null ? (
+                <>median flat fee across delivered matters</>
+              ) : (
+                <>
+                  up $<span className="num">{finance.avgFeeDelta}</span> vs{" "}
+                  {priorMonth}
+                </>
+              )}
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="bottom" className="max-w-xs">
+            {finance.anomaly.serviceLine} matters average{" "}
+            {formatCurrency(finance.anomaly.avg)} against{" "}
+            {formatCurrency(finance.anomaly.firmAvg)} firm-wide across{" "}
+            {finance.anomaly.count} matters.
+          </TooltipContent>
+        </Tooltip>
+      ) : finance.avgFeeDelta == null ? (
+        <>median flat fee across delivered matters</>
+      ) : (
+        <>
+          up $<span className="num">{finance.avgFeeDelta}</span> vs {priorMonth}
+        </>
+      ),
     },
     {
       label: "Margin per matter",

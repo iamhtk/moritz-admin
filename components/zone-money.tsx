@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertCircle, ChevronRight } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 import {
   Alert,
   AlertAction,
@@ -8,7 +8,7 @@ import {
   AlertTitle,
 } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { formatDuration, formatFeeDollars } from "@/lib/format";
+import { formatDuration } from "@/lib/format";
 import { ZoneLabel } from "@/components/ui-bits/zone-label";
 import {
   RevenueChart,
@@ -26,7 +26,6 @@ import {
 import { UnquotedRow } from "@/components/unquoted-row";
 import { useOverview } from "@/hooks/use-overview";
 import type { FinanceDayRow } from "@/lib/supabase";
-import { useRouter } from "next/navigation";
 import { cn } from "cn";
 
 function monthNameFromDays(days: FinanceDayRow[]) {
@@ -68,7 +67,6 @@ export function ZoneMoney({
   className?: string;
   hideLabel?: boolean;
 }) {
-  const router = useRouter();
   const { data, error, isPending, refetch, isFetching } = useOverview();
 
   if (isPending) {
@@ -126,7 +124,6 @@ export function ZoneMoney({
   const daysLeft = daysLeftInMonth();
   const draft = formatDuration(finance.avgDraftMinutes);
   const review = formatDuration(finance.avgReviewMinutes);
-  const anomaly = finance.anomaly;
   const revenueSpark = cumulativeRevenue(
     finance.revenueDays?.length ? finance.revenueDays : finance.days
   );
@@ -219,56 +216,6 @@ export function ZoneMoney({
         >
           Average <span className="num">{draft}</span> in draft,{" "}
           <span className="num">{review}</span> in lawyer review.
-          {anomaly ? (
-            <>
-              {" "}
-              {anomaly.serviceLine} matters average{" "}
-              <span className="num">{formatFeeDollars(anomaly.avg)}</span> against{" "}
-              <span className="num">{formatFeeDollars(anomaly.firmAvg)}</span>{" "}
-              firm-wide across <span className="num">{anomaly.count}</span>{" "}
-              matters.
-              <Button
-                type="button"
-                variant="link"
-                size="sm"
-                className="ml-1 h-auto min-h-11 px-0 align-baseline text-accent-foreground underline-offset-4 md:min-h-0"
-                style={{ fontSize: "var(--text-12)" }}
-                onClick={() =>
-                  router.push(
-                    `/matters?q=${encodeURIComponent(anomaly.serviceLine)}`
-                  )
-                }
-              >
-                See matters
-                <ChevronRight className="size-3.5" aria-hidden />
-              </Button>
-            </>
-          ) : null}
-        </p>
-      ) : anomaly ? (
-        <p
-          className="text-text-secondary"
-          style={{ fontSize: "var(--text-12)", marginTop: "10px" }}
-        >
-          {anomaly.serviceLine} matters average{" "}
-          <span className="num">{formatFeeDollars(anomaly.avg)}</span> against{" "}
-          <span className="num">{formatFeeDollars(anomaly.firmAvg)}</span>{" "}
-          firm-wide across <span className="num">{anomaly.count}</span> matters.
-          <Button
-            type="button"
-            variant="link"
-            size="sm"
-            className="ml-1 h-auto min-h-11 px-0 align-baseline text-accent-foreground underline-offset-4 md:min-h-0"
-            style={{ fontSize: "var(--text-12)" }}
-            onClick={() =>
-              router.push(
-                `/matters?q=${encodeURIComponent(anomaly.serviceLine)}`
-              )
-            }
-          >
-            See matters
-            <ChevronRight className="size-3.5" aria-hidden />
-          </Button>
         </p>
       ) : null}
 
