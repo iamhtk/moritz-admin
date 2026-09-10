@@ -180,9 +180,19 @@ Organised by atomic level. Every component names its Obra equivalent and the rea
 
 ### Variables
 
-Three collections, 166 variables. Only the semantic tier carries light and dark modes, because the component tier aliases through it and does not need its own. Zero tier violations: nothing skips a level, and no colour literal exists outside the primitives.
+Three collections, 187 variables. Only the semantic tier carries light and dark modes, because the component tier aliases through it and does not need its own. Zero tier violations: nothing skips a level, and no colour literal exists outside the primitives.
 
-*(Screenshot of the Figma variables panel pending — needs a manual capture of the editor UI; frame export cannot show the panel.)*
+**Tier 1, primitives.** Raw values with no meaning attached. Six OKLCH ramps plus the type scale, spacing, radius and opacity stops.
+
+![Primitives collection](./docs/images/figma-variables--primitives.png)
+
+**Tier 2, semantic.** shadcn's own variable names, aliasing primitives only. This is the only tier with light and dark modes, and the only place the theme flips.
+
+![Semantic collection](./docs/images/figma-variables--semantic.png)
+
+**Tier 3, component.** Component-scoped tokens, aliasing semantic only. Single-mode by design, since the tier beneath it already carries the mode logic.
+
+![Component collection](./docs/images/figma-variables--component.png)
 
 ### Decisions
 
