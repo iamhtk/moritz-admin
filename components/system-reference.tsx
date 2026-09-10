@@ -788,18 +788,24 @@ function ComponentGroups() {
             state="room"
             label="Room"
             name="Example"
+            active={2}
+            capacity={4}
           />
           <CapacityMeter
             pct={85}
             state="high"
             label="High"
             name="Example"
+            active={4}
+            capacity={5}
           />
           <CapacityMeter
             pct={112}
             state="over"
             label="Over capacity"
             name="Example"
+            active={4}
+            capacity={3}
           />
         </div>
         <Caption
@@ -1041,7 +1047,7 @@ function ComponentGroups() {
                 className="text-text-secondary"
                 style={{ fontSize: "var(--text-13)" }}
               >
-                One of four surfaces that use blur. Dashboard tables never do.
+                Floating sheet with glass tokens. Dashboard tables never use blur.
               </p>
             </div>
           </SheetContent>
@@ -1221,7 +1227,8 @@ export function SystemReference() {
               className="mb-4 text-text-secondary"
               style={{ fontSize: "var(--text-13)" }}
             >
-              Manrope, three weights: 400, 500, 600.
+              Cormorant Garamond for page titles and major section headings.
+              Manrope for everything functional, three weights: 400, 500, 600.
             </p>
             <div className="space-y-4">
               {TYPE_SCALE.map((row) => (

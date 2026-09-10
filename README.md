@@ -418,7 +418,7 @@ Contrast verified on every text and background pairing in both light and dark mo
 
 Real landmarks: `nav`, `main`, `aside`. Heading order with no level skipped. `aria-current` on the active nav item, on one element only.
 
-Meters carry `role="meter"` with value attributes. Charts carry `role="img"` with descriptions. The assistant answer is an `aria-live` polite region. Capacity always shows a label and a percentage, never colour alone.
+Meters carry `role="meter"` with value attributes. Charts carry `role="img"` with descriptions. The assistant answer is an `aria-live` polite region. Capacity always shows a ratio (and a state badge when High or Over), never colour alone; the percentage is in the tooltip.
 
 Minimum target sizes: 32px desktop, 44px touch.
 

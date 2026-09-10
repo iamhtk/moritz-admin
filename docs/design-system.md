@@ -6,7 +6,7 @@ How this app satisfies the two brief rules: follow shadcn/ui principles, and use
 
 Every component on this page is stock shadcn on Radix. Nothing is forked. The primitives live under `components/ui/` as generated shadcn files. App composites compose those primitives. They do not reimplement them.
 
-The visual identity comes entirely from the token layer in `app/globals.css`: a cool snow neutral instead of the default grey, Manrope instead of Inter, one dimmed sea teal (fjord) as the single brand hue, pastel confined to tint stops, flat surfaces with hairlines instead of shadows, and blur reserved for the four surfaces that genuinely float. Change the tokens and the whole app reskins without touching a component.
+The visual identity comes entirely from the token layer in `app/globals.css`: a cool snow neutral instead of the default grey, Manrope for UI and Cormorant Garamond for headings instead of Inter, one dimmed sea teal (fjord) as the single brand hue, pastel confined to tint stops, flat surfaces with hairlines instead of shadows, and blur reserved for floating overlays. Change the tokens and the whole app reskins without touching a component.
 
 ## 2. The three tiers
 
@@ -67,12 +67,15 @@ Read from call sites in `components/` (and the sheet or dialog close buttons tha
 
 ## 5. Floating surfaces
 
-The four surfaces that use the glass tokens (`--glass-bg`, `--glass-border`, `--glass-blur`, `--glass-inset`, `--glass-shadow`) are:
+Floating overlays use the glass tokens (`--glass-bg`, `--glass-border`, `--glass-blur`, `--glass-inset`, `--glass-shadow`) via the shared `overlay-surface` class. That includes:
 
 1. Command palette
 2. Assign sheet
-3. Chat panel
+3. Ask panel
 4. Client update sheet
+5. New matter sheet
+6. Quote sheet
+7. User menu (and other popover-style menus that share the class)
 
 No dashboard surface uses blur. Blur behind a table degrades text contrast and tabular numbers lose their edge, so glass is a material for things that float rather than a decoration for things that do not. Sheet and dialog overlays use `--overlay-bg` without backdrop blur.
 

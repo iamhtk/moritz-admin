@@ -46,7 +46,7 @@ The third is the one most dashboards fail. So the rule is: **every problem this 
 
 **Zone 1 · Today.** Four numbers at 36px: In flight · Due next hour · At risk · Unassigned. Only At risk is allowed color, and only when it is above zero. Below the numbers, the attention strip: one row per act-now item, reason in plain words, one action button. Rows are sorted by minutes remaining, ascending. Past-due first.
 
-**Zone 2 · People.** Left, co-counsel table sorted by load descending. Columns: lawyer, practice areas, active matters, capacity bar, this week (delivered against weekly target, e.g. 6 of 8), next due, status. The "this week" column is the per-lawyer target the brief calls billable targets, translated to Moritz's flat-fee model. Each co-counsel row carries a row action: Reassign for anyone over capacity, View matters for everyone else. Right, the deadline list: next four hours, ranked by time remaining, each row showing matter reference, client, lawyer, minutes left, and one action: Nudge lawyer, or Reassign when the matter is past due.
+**Zone 2 · People.** Left, co-counsel table sorted by load descending. Columns: lawyer, capacity (ratio and bar), this week (delivered against weekly target, e.g. 6 of 8), action. The "this week" column is the per-lawyer target the brief calls billable targets, translated to Moritz's flat-fee model. Each co-counsel row carries a row action: Reassign for anyone over capacity, View matters for everyone else. Right, the deadline list: next four hours, ranked by time remaining, each row showing matter reference, client, lawyer, minutes left, and one action: Nudge lawyer, or Reassign when the matter is past due.
 
 **Zone 3 · Money.** Left, revenue this month as a line with the monthly target as a dotted reference. Right, matters delivered per day as bars against a plan line. Each chart carries a one-sentence caption that states its story. Below both, five money numbers: Revenue to date · Target · Average fee · Margin per matter · Opened vs closed this month. Any matter still unquoted appears as a single line under the numbers with a Send quote action, because an unquoted matter cannot start and that is the admin's blocker to clear.
 
@@ -62,7 +62,7 @@ Cover the screen. Reveal it for two seconds. The user must be able to say the At
 
 ### Navigation
 
-Sidebar: Overview (this page) · Matters · Lawyers · Clients · Finance · Settings. Only Overview is built. The others exist so the page reads as part of a product, not a poster. Top bar: firm name, global search (opens the command palette), notification bell, avatar.
+Sidebar: Overview (this page) · Matters · Lawyers · Clients · Finance · Settings. Overview, Matters, Lawyers, and Pulse are built. Clients, Finance, and Settings are stubs that state what they would contain. Top bar: firm name, global search (opens the command palette), notification bell, avatar.
 
 ---
 
@@ -86,13 +86,13 @@ Every element uses a shadcn component in the way shadcn intends. No custom boxes
 | Activity feed | ScrollArea, Avatar, Separator | | Grouped by day with a small day label |
 | Feed filters | ToggleGroup | | Single select. Each chip shows today's count, computed from the seed. Chips: All · Submitted · Assigned · Delivered · Filed · Meetings · Escalated · Onboarded. The counts are the pulse summary. |
 | AI chat panel | Sheet, Input, Button, Skeleton | side="right", width 380px, Cmd+J | Streaming with stop. Three state-generated prompts. Answers cite rows and end in the row's own action |
-| Client update | Sheet, Textarea, Button | side="right" | Draft streams into an editable Textarea, not a preview |
+| Client update | Sheet, Tiptap editor, Button | side="right" | Draft streams into an editable Tiptap field, not a preview |
 | Morning brief | Card, Button | fjord tint, Button size="sm" | One line, one action, Dismiss |
 | AI badges | Badge, Tooltip | variant="outline" | Suggested · Likely to slip · Draft confidence. Tooltip carries the basis |
 | Command palette | Command, CommandDialog, CommandInput, CommandList, CommandGroup, CommandItem | Cmd+K | Actions: New matter, Assign, Reassign, Send quote, Go to |
 | Saved views on table | Tabs | | At risk · Unassigned · By service line |
 | Mobile sidebar | Sheet | side="left" | Triggered by SidebarTrigger |
-| Mobile sections | Tabs | People · Money · Feed | |
+| Mobile Overview | stacked zones | Today · People · Money | Pulse is a bottom-nav destination at `/pulse`, not a tab |
 | Loading | Skeleton | | Every zone has one |
 | Empty state | Centered text plus one Button | | No illustration |
 | Error state | Alert | variant="destructive" | Message says what happened and what to do |
@@ -105,9 +105,9 @@ Submitted (neutral) · Quoted (info) · Drafting (info) · In review (watch) · 
 
 ### Capacity thresholds
 
-Under 85 percent: ok fill. 85 to 100: watch fill. Over 100: over fill, row moves to the attention strip. The thresholds live in mapped tokens so the walkthrough can show them as system decisions.
+Under 80 percent: muted Room fill with a plain ratio, no badge. 80 to 100: watch fill with a High badge. Over 100: over fill with an Over badge. Over-capacity stays in the People table; it is not repeated as an attention row. The thresholds live in mapped tokens so the walkthrough can show them as system decisions.
 
-Capacity is always shown as color plus label plus percentage, never color alone. "Over capacity · 118%" next to a red fill. "Room · 62%" next to a teal fill. The label is the accessible name; the color is reinforcement.
+Capacity is always shown as a ratio (`4 of 3`), never colour alone. Room rows are a muted bar plus the ratio. High and Over keep a badge and coloured fill (`High · 4 of 5`, `Over capacity · 4 of 3`). The percentage lives in the tooltip and `aria-label`.
 
 ### SLA thresholds
 
@@ -125,7 +125,7 @@ Density comes from typography, not from boxes.
 - Body and table text 13px. Secondary text 12px in `--text-secondary`. Tertiary 11px in `--text-tertiary`. Three levels, no more.
 - Table rows 44px. Attention rows 48px because they carry a button.
 - Every number is tabular. Money right-aligned. Minutes right-aligned.
-- Every capacity indicator shows label and percentage, not color alone.
+- Every capacity indicator shows a ratio (and a state badge when High or Over), not color alone.
 - Every chart has a caption sentence.
 - Every stat number carries a tooltip stating how it is calculated, including the threshold. "At risk: matters with under 60 minutes left on the four-hour clock, or past due."
 - Three content zones on desktop. If a fourth zone appears, something moves to a tab or the rail.
@@ -148,7 +148,7 @@ Density comes from typography, not from boxes.
 
 **Status hues.** Sea glass teal for delivered. Dusty amber for review and near-due. Dimmed rowan red for breach. Lilac exists only as chart-3.
 
-**Typography.** Manrope for everything. Geometric, Nordic, slightly rounded, has tabular numerals. One family, weights 400, 500, 600. No serif, no mono. Numbers get `tabular-nums` and a slightly tighter letter-spacing so columns align.
+**Typography.** Cormorant Garamond for page titles and major section headings. Manrope for everything functional: labels, tables, buttons, body. Manrope weights 400, 500, 600, with tabular numerals. Numbers get `tabular-nums` and a slightly tighter letter-spacing so columns align.
 
 **Radius.** 8px base. Controls 6px. Cards 8px. Badges pill. Nothing above 12px.
 
@@ -346,7 +346,7 @@ interface FinanceSummary {
 
 ### Seed rules
 
-- 14 lawyers with Nordic and international names. Capacity 6 to 10 matters per week. Two are over 100 percent. Three are between 85 and 100. The rest are under.
+- 14 lawyers with Nordic and international names. Capacity 6 to 10 matters per week. Two are over 100 percent. Three are between 80 and 100. The rest are under.
 - 48 active matters plus 90 delivered in the last 30 days. Fees inside the band. Payout 35 to 55 percent of fee.
 - The clock feels live: at the seeded "now", 2 matters are past due, 3 are inside the last hour, 2 are unassigned and arrived within the last 15 minutes, 11 are in review, 20 are drafting.
 - 12 clients. Names that sound like real startups. Two on enterprise plans.
@@ -380,7 +380,7 @@ Stacking order on Overview: morning brief · stat grid 2 by 2 · attention cards
 
 Said out loud in the walkthrough and printed on the /system page. Stating them is stronger than pretending they are facts.
 
-- Moritz's internal admin workflows and data model were not available. Capacity thresholds (85 and 100 percent), the four-hour SLA window with a 60-minute watch band, the $180,000 monthly target, and the co-counsel payout range (35 to 55 percent of fee) are prototype assumptions.
+- Moritz's internal admin workflows and data model were not available. Capacity thresholds (80 and 100 percent), the four-hour SLA window with a 60-minute watch band, the $180,000 monthly target, and the co-counsel payout range (35 to 55 percent of fee) are prototype assumptions.
 - The persona is inferred from the operating model: contracted co-counsel, flat fees, hour-scale turnaround. If the real administrator is a managing partner, margin moves above throughput. If the real firm invoices on terms, AR aging joins Zone 3.
 - Event categories in the feed are inferred from the public matter flow: submitted, quoted, assigned, drafted, delivered, escalated, onboarded, plus filed and meeting from the brief.
 - The build uses the real shadcn/ui components in code. Every component on the page maps one to one to an Obra Shadcn UI Kit component; the /system page names the pairs, and the finished screens are exported to a Figma file alongside the Obra kit for reviewers who work in Figma.
@@ -394,7 +394,7 @@ Said out loud in the walkthrough and printed on the /system page. Stating them i
 - Every component on the page appears on the /system page with its variant name.
 - No hex or oklch literal outside Tier 1 of globals.css.
 - Every number is tabular.
-- Every capacity indicator shows label and percentage, not color alone.
+- Every capacity indicator shows a ratio (and a state badge when High or Over), not color alone.
 - Every chart has a caption sentence, and no chart carries a legend.
 - Assign sheet marks a suggested lawyer with a reason.
 - Every stat number has a tooltip stating its calculation and threshold.
