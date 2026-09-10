@@ -61,7 +61,7 @@ export function AssignSheet({
 }) {
   const assign = useAssign();
 
-  const { data, isPending, error } = useQuery({
+  const { data, isPending, error, refetch, isFetching } = useQuery({
     queryKey: ["candidates", matterId],
     queryFn: async (): Promise<CandidatesPayload> => {
       const res = await fetch(`/api/matters/${matterId}/candidates`);
@@ -152,12 +152,23 @@ export function AssignSheet({
               ))}
             </div>
           ) : error || !data ? (
-            <p
-              className="px-3 py-8 text-center text-text-secondary"
-              style={{ fontSize: "var(--text-13)" }}
-            >
-              Couldn&apos;t load available lawyers.
-            </p>
+            <div className="flex flex-col items-center gap-3 px-3 py-8 text-center">
+              <p
+                className="text-text-secondary"
+                style={{ fontSize: "var(--text-13)" }}
+              >
+                Couldn&apos;t load available lawyers.
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={isFetching}
+                onClick={() => void refetch()}
+              >
+                {isFetching ? "Retrying…" : "Retry"}
+              </Button>
+            </div>
           ) : (
             <>
               {allOver ? (

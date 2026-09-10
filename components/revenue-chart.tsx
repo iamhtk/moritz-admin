@@ -87,7 +87,7 @@ export function RevenueChart({
         className="mb-2 font-medium text-text-secondary"
         style={{ fontSize: "var(--text-11)" }}
       >
-        Cumulative revenue this month (matches Revenue to date)
+        Cumulative revenue this month
       </p>
       <ChartContainer
         config={chartConfig}
@@ -201,9 +201,7 @@ export function RevenueChart({
       >
         Revenue is <span className="num">{pctOfTarget}</span> percent of target
         with <span className="num">{daysLeft}</span> days left. On pace for{" "}
-        <span className="num">{projectedPct}</span> percent. End point{" "}
-        <span className="num">{formatCurrency(running)}</span> matches the tile
-        below.
+        <span className="num">{projectedPct}</span> percent.
       </p>
     </Card>
   );

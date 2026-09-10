@@ -18,7 +18,8 @@ const eslintConfig = defineConfig([
   ]),
   {
     files: ["components/**/*.{js,jsx,ts,tsx}", "app/**/*.{js,jsx,ts,tsx}"],
-    ignores: ["components/ui/**"],
+    // next/og ImageResponse cannot read CSS variables; hex there is intentional.
+    ignores: ["components/ui/**", "app/opengraph-image.tsx"],
     rules: {
       "no-restricted-syntax": [
         "error",

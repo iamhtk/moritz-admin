@@ -142,6 +142,8 @@ export interface AttentionItem {
   duplicateOf?: { reference: string; minutesAgo: number } | null;
   /** Same threshold as the deadline list: review drafts under 0.72. */
   lowConfidence?: { confidence: number; flaggedClauses: number } | null;
+  /** Slip-risk basis when reason includes "likely to slip". Quiet when absent. */
+  slipBasis?: string | null;
 }
 
 /** An unquoted matter with a server-computed fee suggestion. */
@@ -173,9 +175,9 @@ export interface OverviewPayload {
     unassigned: number;
     serviceLines: number;
     oldestUnassignedMinutes: number | null;
-    inFlightTrend: number[];
-    dueTrend: number[];
-    unassignedTrend: number[];
+    inFlightTrend: number[] | null;
+    dueTrend: number[] | null;
+    unassignedTrend: number[] | null;
   };
   attention: AttentionItem[];
   lawyers: LawyerLoad[];
@@ -189,7 +191,7 @@ export interface OverviewPayload {
     pctOfTarget: number;
     projectedPct: number;
     avgFee: number;
-    avgFeeDelta: number;
+    avgFeeDelta: number | null;
     marginPct: number;
     payoutPct: number;
     openedThisMonth: number;

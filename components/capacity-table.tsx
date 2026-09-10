@@ -20,8 +20,7 @@ import {
 } from "@/components/ui/tooltip";
 import { CapacityMeter } from "@/components/ui-bits/capacity-meter";
 import { LawyerAvatar } from "@/components/ui-bits/lawyer-avatar";
-import { StatusBadge } from "@/components/ui-bits/status-badge";
-import type { CapacityState, LawyerLoad } from "@/lib/supabase";
+import type { LawyerLoad } from "@/lib/supabase";
 import { useDashboardActions } from "@/components/actions-provider";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -34,12 +33,6 @@ const PREVIEW_MOBILE = 5;
  * switch to a stacked row layout instead of compressing columns.
  */
 const TABLE_MIN_WIDTH = 520;
-
-const badgeTone: Record<CapacityState, "ok" | "watch" | "risk"> = {
-  room: "ok",
-  high: "watch",
-  over: "risk",
-};
 
 function LawyerAction({
   lawyer,
@@ -83,32 +76,27 @@ function LawyerAction({
 function LawyerCard({ lawyer }: { lawyer: LawyerLoad }) {
   return (
     <Card className="flex flex-col gap-3 rounded-lg p-4 [--card-spacing:0px]">
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-2.5">
-          <LawyerAvatar
-            lawyerId={lawyer.id}
-            name={lawyer.name}
-            initials={lawyer.initials}
-            size="lg"
-          />
-          <div className="min-w-0">
-            <div
-              className="font-medium text-pretty text-foreground"
-              style={{ fontSize: "var(--text-13)" }}
-            >
-              {lawyer.name}
-            </div>
-            <div
-              className="text-text-tertiary"
-              style={{ fontSize: "var(--text-11)" }}
-            >
-              {lawyer.practice_areas[0]}
-            </div>
+      <div className="flex min-w-0 items-center gap-2.5">
+        <LawyerAvatar
+          lawyerId={lawyer.id}
+          name={lawyer.name}
+          initials={lawyer.initials}
+          size="lg"
+        />
+        <div className="min-w-0">
+          <div
+            className="font-medium text-pretty text-foreground"
+            style={{ fontSize: "var(--text-13)" }}
+          >
+            {lawyer.name}
+          </div>
+          <div
+            className="text-text-tertiary"
+            style={{ fontSize: "var(--text-11)" }}
+          >
+            {lawyer.practice_areas[0]}
           </div>
         </div>
-        <StatusBadge tone={badgeTone[lawyer.capacityState]}>
-          {lawyer.capacityLabel}
-        </StatusBadge>
       </div>
       <CapacityMeter
         pct={lawyer.utilizationPct}
@@ -179,9 +167,6 @@ function LawyerStackedRow({
             {lawyer.practice_areas[0]}
           </div>
         </div>
-        <StatusBadge tone={badgeTone[lawyer.capacityState]}>
-          {lawyer.capacityLabel}
-        </StatusBadge>
       </div>
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="min-w-0 flex-1 space-y-1.5">

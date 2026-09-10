@@ -7,6 +7,7 @@ import {
   type QueryClient,
 } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { buildBrief, buildForecast } from "@/lib/ambient-ai";
 import type { OverviewPayload } from "@/lib/supabase";
 
 type Snapshot = { previous?: OverviewPayload };
@@ -29,6 +30,57 @@ type AssignVars = {
   reference: string;
   mode: "assign" | "reassign";
 };
+
+/** Patch overview so the brief matches the same write the attention list sees. */
+function overviewAfterAssign(
+  previous: OverviewPayload,
+  vars: AssignVars
+): OverviewPayload {
+  const matters = previous.matters.map((m) =>
+    m.id === vars.matterId
+      ? { ...m, lawyer_id: vars.lawyerId, lawyer_name: vars.lawyerName }
+      : m
+  );
+  const deadlines = previous.deadlines.map((m) =>
+    m.id === vars.matterId
+      ? { ...m, lawyer_id: vars.lawyerId, lawyer_name: vars.lawyerName }
+      : m
+  );
+  const attention = previous.attention
+    .filter(
+      (a) => !(a.kind === "unassigned" && a.matterId === vars.matterId)
+    )
+    .map((a) => {
+      if (a.matterId !== vars.matterId) return a;
+      if (a.kind !== "breach" && a.kind !== "watch") return a;
+      const matter = matters.find((m) => m.id === vars.matterId);
+      if (!matter) {
+        return { ...a, lawyerId: vars.lawyerId, action: "Reassign" as const };
+      }
+      return {
+        ...a,
+        lawyerId: vars.lawyerId,
+        action: "Reassign" as const,
+        reason: `${matter.client_name} · ${matter.type} · with ${vars.lawyerName}`,
+      };
+    });
+
+  return {
+    ...previous,
+    matters,
+    deadlines,
+    attention,
+    ai: {
+      ...previous.ai,
+      brief: buildBrief(attention, previous.lawyers, matters),
+      capacityForecast: buildForecast(
+        matters,
+        previous.lawyers,
+        previous.config
+      ),
+    },
+  };
+}
 
 type NudgeVars = {
   matterId: string;
@@ -63,21 +115,10 @@ export function useAssign() {
       await qc.cancelQueries({ queryKey: ["overview"] });
       const previous = qc.getQueryData<OverviewPayload>(["overview"]);
       if (previous) {
-        qc.setQueryData<OverviewPayload>(["overview"], {
-          ...previous,
-          attention: previous.attention.filter(
-            (a) => a.matterId !== vars.matterId
-          ),
-          deadlines: previous.deadlines.map((m) =>
-            m.id === vars.matterId
-              ? {
-                  ...m,
-                  lawyer_id: vars.lawyerId,
-                  lawyer_name: vars.lawyerName,
-                }
-              : m
-          ),
-        });
+        qc.setQueryData<OverviewPayload>(
+          ["overview"],
+          overviewAfterAssign(previous, vars)
+        );
       }
       return { previous };
     },

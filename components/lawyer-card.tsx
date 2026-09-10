@@ -10,18 +10,11 @@ import {
 } from "@/components/ui/tooltip";
 import { CapacityMeter } from "@/components/ui-bits/capacity-meter";
 import { MinutesLeft } from "@/components/ui-bits/minutes-left";
-import { StatusBadge } from "@/components/ui-bits/status-badge";
 import { LawyerAvatar } from "@/components/ui-bits/lawyer-avatar";
 import { MatterReference } from "@/components/matter-reference";
 import { useDashboardActions } from "@/components/actions-provider";
 import type { LawyerLoad, MatterStatus } from "@/lib/supabase";
 import { cn } from "cn";
-
-const capacityTone = {
-  room: "ok" as const,
-  high: "watch" as const,
-  over: "risk" as const,
-};
 
 export function LawyerCard({
   lawyer,
@@ -80,9 +73,6 @@ export function LawyerCard({
               </div>
             </div>
           </div>
-          <StatusBadge tone={capacityTone[lawyer.capacityState]}>
-            {lawyer.capacityLabel}
-          </StatusBadge>
         </div>
 
         <div className="mt-3">

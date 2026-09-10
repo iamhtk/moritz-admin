@@ -29,7 +29,7 @@ export function MorningBrief({ brief }: { brief: Brief | null }) {
   if (dismissedFp === fp) return null;
 
   return (
-    <Card className="mb-3 flex flex-col gap-2 rounded-lg border border-border bg-card px-4 py-2.5 ring-0 [--card-spacing:0px] sm:flex-row sm:items-center">
+    <Card className="mb-3 flex flex-col gap-2 rounded-lg border border-[var(--status-info-border)] bg-[var(--status-info-bg)] px-4 py-2.5 ring-0 [--card-spacing:0px] sm:flex-row sm:items-center">
       <div className="min-w-0 flex-1" style={{ fontSize: "var(--text-13)" }}>
         <span className="font-semibold text-foreground">{brief.headline}</span>{" "}
         <span className="font-normal text-foreground">{brief.detail}</span>

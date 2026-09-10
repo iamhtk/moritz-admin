@@ -111,7 +111,24 @@ function AttentionReason({ item }: { item: AttentionItem }) {
       className="line-clamp-2 text-text-secondary"
       style={{ fontSize: "var(--text-12)" }}
     >
-      {item.reason}
+      {item.slipBasis && item.reason.includes("likely to slip") ? (
+        <>
+          {item.reason.replace(" · likely to slip", "")}
+          {" · "}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="cursor-default underline decoration-dotted underline-offset-2">
+                likely to slip
+              </span>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="max-w-xs">
+              {item.slipBasis}
+            </TooltipContent>
+          </Tooltip>
+        </>
+      ) : (
+        item.reason
+      )}
     </span>
   );
 }

@@ -27,6 +27,7 @@ import {
     type ServiceLine,
     type UnquotedMatter,
   } from "./supabase";
+import { buildBrief, buildForecast } from "./ambient-ai";
 import { formatDuration, formatFeeDollars } from "./format";
 
 /* ---------- config ------------------------------------------------------- */
@@ -379,6 +380,9 @@ async function getConfig(db: ReturnType<typeof serverClient>): Promise<Config> {
           matterId: m.id,
           lawyerId: m.lawyer_id,
           lowConfidence: lowConfidenceFor(m),
+          slipBasis: slip
+            ? "Past halfway on the clock, still drafting, and this lawyer's on-time rate is under 85 percent."
+            : null,
         });
       }
 
@@ -470,6 +474,7 @@ async function getConfig(db: ReturnType<typeof serverClient>): Promise<Config> {
     days: FinanceDayRow[],
     delivered: MatterStatus[],
     live: MatterStatus[],
+    all: MatterStatus[],
     cfg: Config
   ) {
     // The series is a trailing window and crosses month boundaries. The target
@@ -607,11 +612,17 @@ async function getConfig(db: ReturnType<typeof serverClient>): Promise<Config> {
       pctOfTarget,
       projectedPct,
       avgFee,
-      avgFeeDelta: 80, // vs prior month, held as a stated assumption
+      avgFeeDelta: null as number | null,
       marginPct,
       payoutPct,
-      openedThisMonth: 96,
-      closedThisMonth: 90,
+      openedThisMonth: all.filter(
+        (m) =>
+          m.submitted_at && String(m.submitted_at).slice(0, 7) === monthPrefix
+      ).length,
+      closedThisMonth: delivered.filter(
+        (m) =>
+          m.delivered_at && String(m.delivered_at).slice(0, 7) === monthPrefix
+      ).length,
       deliveredThisWeek,
       plannedThisWeek,
       avgDraftMinutes,
@@ -624,113 +635,7 @@ async function getConfig(db: ReturnType<typeof serverClient>): Promise<Config> {
     };
   }
   
-  /* ---------- ambient AI --------------------------------------------------- */
-  
-  /**
-   * The morning brief. Connects two facts and proposes the one action that
-   * resolves the most. Generated from state, never hardcoded. Quiet when calm.
-   */
-  function buildBrief(
-    attention: AttentionItem[],
-    loads: LawyerLoad[],
-    live: MatterStatus[]
-  ) {
-    const breaches = attention.filter((a) => a.kind === "breach");
-    const over = loads.filter((l) => l.capacityState === "over");
-    const unassigned = attention.filter((a) => a.kind === "unassigned");
-  
-    if (breaches.length === 0 && over.length === 0 && unassigned.length === 0) {
-      return {
-        headline: "Nothing at risk.",
-        detail: "Every matter in flight has time on the clock and a lawyer on it.",
-        action: null,
-      };
-    }
-  
-    if (breaches.length && over.length) {
-      const worst = breaches[0];
-      const busiest = over[0];
-      // loads runs busiest first, so reversed is least loaded first.
-      const withRoom = [...loads]
-        .reverse()
-        .filter((l) => l.capacityState === "room");
-      // Naming a lawyer is only a suggestion worth making if they practise the
-      // line. Litigation and Employment does not answer a Commercial MSA.
-      const matter = live.find((m) => m.id === worst.matterId);
-      const fit = matter
-        ? withRoom
-            .filter((l) => l.practice_areas.includes(matter.service_line))
-            .sort((a, b) => a.utilizationPct - b.utilizationPct)[0]
-        : undefined;
-      const breachOnBusiest =
-        matter?.lawyer_id != null && matter.lawyer_id === busiest.id;
-      const busiestFirst = busiest.name.split(" ")[0];
-      let detail: string;
-      if (fit && breachOnBusiest) {
-        detail = `Reassigning ${worst.title} to ${fit.name.split(" ")[0]} clears the past-due matter and eases load on ${busiestFirst}.`;
-      } else if (fit) {
-        detail = `Reassign ${worst.title} to ${fit.name.split(" ")[0]} to clear the oldest past-due matter. ${busiestFirst} still needs work moved off them separately.`;
-      } else if (breachOnBusiest) {
-        detail = `Reassigning ${worst.title} off ${busiestFirst} clears the past-due matter and is the first step to easing their load.`;
-      } else {
-        detail = `Reassign ${worst.title} to clear the oldest past-due matter. ${busiestFirst} still needs work moved off them separately.`;
-      }
-      return {
-        headline: `${breaches.length === 1 ? "One matter is" : `${breaches.length} matters are`} past due and ${busiest.name} is at ${busiest.utilizationPct} percent.`,
-        detail,
-        action: worst,
-      };
-    }
-  
-    if (breaches.length) {
-      return {
-        headline: `${breaches.length === 1 ? "One matter is" : `${breaches.length} matters are`} past due.`,
-        detail: `${breaches[0].title} is the oldest at ${formatDuration(Math.abs(breaches[0].minutesRemaining ?? 0))} over.`,
-        action: breaches[0],
-      };
-    }
-  
-    if (unassigned.length) {
-      return {
-        headline: `${unassigned.length} ${unassigned.length === 1 ? "matter has" : "matters have"} no lawyer.`,
-        detail: `The oldest arrived ${formatDuration(240 - (unassigned[0].minutesRemaining ?? 240))} ago.`,
-        action: unassigned[0],
-      };
-    }
-  
-    const busiest = over[0];
-    return {
-      headline: `${busiest.name} is at ${busiest.utilizationPct} percent.`,
-      detail: "Nothing is past due yet, but the next matter should go elsewhere.",
-      action: attention.find((a) => a.lawyerId === busiest.id) ?? null,
-    };
-  }
-  
-  /**
-   * Capacity forecast. Prediction, not restatement: projects the current intake
-   * rate forward and names who runs out of room, and who still has some.
-   */
-  function buildForecast(live: MatterStatus[], loads: LawyerLoad[], cfg: Config) {
-    const lastHour = live.filter(
-      (m) => cfg.slaMinutes - m.minutes_remaining <= 60
-    ).length;
-    if (lastHour === 0) return null;
-  
-    const nearing = loads.filter(
-      (l) => l.capacityState === "high" || l.capacityState === "over"
-    );
-    if (nearing.length === 0) return null;
-  
-    const room = loads.filter((l) => l.capacityState === "room").slice(-2);
-    const inTwoHours = new Date(Date.now() + 2 * 3600_000);
-    const hh = inTwoHours.getHours().toString().padStart(2, "0");
-  
-    return `At the current intake rate, ${nearing.length} ${
-      nearing.length === 1 ? "lawyer passes" : "lawyers pass"
-    } capacity by ${hh}:00. ${
-      room.length ? `${room.map((l) => l.name.split(" ")[0]).join(" and ")} have room.` : ""
-    }`.trim();
-  }
+  /* ---------- ambient AI: buildBrief / buildForecast in lib/ambient-ai.ts --- */
 
   /** Mon–Fri, same working-day rule as the finance pace projection. */
   function isWorkingDay(d: Date): boolean {
@@ -996,10 +901,11 @@ async function getConfig(db: ReturnType<typeof serverClient>): Promise<Config> {
     const financeThroughToday = ((financeRes.data ?? []) as FinanceDayRow[]).filter(
       (d) => String(d.date).slice(0, 10) <= todayIso
     );
-    const week = financeThroughToday.slice(-7);
-    const inFlightTrend = week.map((d, i) => live.length - (6 - i) * 2 + (i % 3));
-    const dueTrend = week.map((d) => d.delivered);
-    const unassignedTrend = week.map((_, i) => 1 + (i % 3));
+    // No historical snapshots of in-flight or unassigned counts — omit rather
+    // than invent sparklines. Delivered-per-day is real but belongs on Money.
+    const inFlightTrend = null;
+    const dueTrend = null;
+    const unassignedTrend = null;
   
     return {
       config: cfg,
@@ -1025,6 +931,7 @@ async function getConfig(db: ReturnType<typeof serverClient>): Promise<Config> {
         financeThroughToday,
         delivered,
         live,
+        all,
         cfg
       ),
       activity,

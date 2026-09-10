@@ -84,10 +84,7 @@ export function MobileBottomNav() {
                         aria-hidden
                       />
                     ) : null}
-                    <item.icon
-                      className={cn("size-5", active && "stroke-[2.25]")}
-                      aria-hidden
-                    />
+                    <item.icon className="size-5" aria-hidden />
                     <span
                       className={cn(
                         "truncate font-medium",
@@ -123,13 +120,7 @@ export function MobileBottomNav() {
                     aria-hidden
                   />
                 ) : null}
-                <MoreHorizontal
-                  className={cn(
-                    "size-5",
-                    (moreActive || moreOpen) && "stroke-[2.25]"
-                  )}
-                  aria-hidden
-                />
+                <MoreHorizontal className="size-5" aria-hidden />
                 <span
                   className="truncate font-medium"
                   style={{ fontSize: "var(--text-11)" }}
@@ -161,6 +152,11 @@ export function MobileBottomNav() {
                     <Link
                       href={item.href}
                       aria-current={active ? "page" : undefined}
+                      aria-label={
+                        item.soon
+                          ? `${item.title} (coming soon)`
+                          : undefined
+                      }
                       onClick={() => setMoreOpen(false)}
                       className={cn(
                         "flex min-h-11 items-center gap-3 rounded-lg px-3 py-2.5 transition-colors",
@@ -178,6 +174,7 @@ export function MobileBottomNav() {
                       </span>
                       {item.soon ? (
                         <span
+                          aria-hidden="true"
                           className={cn(
                             "shrink-0 rounded-md border px-1.5 py-0.5 font-medium",
                             active

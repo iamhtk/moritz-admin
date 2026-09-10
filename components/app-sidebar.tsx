@@ -108,12 +108,18 @@ export function AppSidebar({
                           <Link
                             href={item.href}
                             aria-current={active ? "page" : undefined}
+                            aria-label={
+                              item.soon
+                                ? `${item.title} (coming soon)`
+                                : undefined
+                            }
                           >
                             <item.icon />
                             <span className="flex min-w-0 flex-1 items-center gap-2">
                               <span className="truncate">{item.title}</span>
                               {item.soon ? (
                                 <span
+                                  aria-hidden="true"
                                   className={cn(
                                     "ml-auto shrink-0 rounded-md border px-1.5 py-0.5 font-medium group-data-[collapsible=icon]:hidden",
                                     active

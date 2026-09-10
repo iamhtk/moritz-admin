@@ -91,8 +91,8 @@ import { cn } from "cn";
 const TOKEN_CHAINS = [
   {
     mapped: "--capacity-fill-over",
-    semantic: "--status-watch-fill",
-    primitive: "--ember-500",
+    semantic: "--status-risk-fill-soft",
+    primitive: "--rowan-400",
   },
   {
     mapped: "--badge-delivered-bg",

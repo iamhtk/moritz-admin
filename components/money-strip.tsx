@@ -103,11 +103,14 @@ export function MoneyStrip({
           className="font-semibold text-foreground"
         />
       ),
-      sub: (
-        <>
-          up $<span className="num">{finance.avgFeeDelta}</span> vs {priorMonth}
-        </>
-      ),
+      sub:
+        finance.avgFeeDelta == null ? (
+          <>median flat fee across delivered matters</>
+        ) : (
+          <>
+            up $<span className="num">{finance.avgFeeDelta}</span> vs {priorMonth}
+          </>
+        ),
     },
     {
       label: "Margin per matter",
@@ -133,7 +136,9 @@ export function MoneyStrip({
       ),
       sub: (
         <>
-          net +<span className="num">{net}</span> in flight
+          net{" "}
+          {net >= 0 ? "+" : ""}
+          <span className="num">{net}</span> this month
         </>
       ),
       fullWidthMobile: true,

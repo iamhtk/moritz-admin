@@ -134,9 +134,12 @@ export function ZoneMoney({
   const meta = (
     <>
       {month} · flat fees per matter, not billable hours
-      {" · "}
-      ≈{data.ai.predictedVolume.estimate} new matters next week.{" "}
-      {data.ai.predictedVolume.basis}.
+      {data.ai.predictedVolume.weeksUsed > 0 ? (
+        <>
+          {" · "}≈{data.ai.predictedVolume.estimate} new matters next week.{" "}
+          {data.ai.predictedVolume.basis}.
+        </>
+      ) : null}
     </>
   );
 
@@ -209,38 +212,65 @@ export function ZoneMoney({
         priorMonth={priorMonth}
       />
 
-      <p
-        className="text-text-secondary"
-        style={{ fontSize: "var(--text-12)", marginTop: "10px" }}
-      >
-        Average <span className="num">{draft}</span> in draft,{" "}
-        <span className="num">{review}</span> in lawyer review.
-        {anomaly ? (
-          <>
-            {" "}
-            {anomaly.serviceLine} matters average{" "}
-            <span className="num">{formatFeeDollars(anomaly.avg)}</span> against{" "}
-            <span className="num">{formatFeeDollars(anomaly.firmAvg)}</span>{" "}
-            firm-wide across <span className="num">{anomaly.count}</span>{" "}
-            matters.
-            <Button
-              type="button"
-              variant="link"
-              size="sm"
-              className="ml-1 h-auto min-h-11 px-0 align-baseline text-accent-foreground underline-offset-4 md:min-h-0"
-              style={{ fontSize: "var(--text-12)" }}
-              onClick={() =>
-                router.push(
-                  `/matters?q=${encodeURIComponent(anomaly.serviceLine)}`
-                )
-              }
-            >
-              See matters
-              <ChevronRight className="size-3" aria-hidden />
-            </Button>
-          </>
-        ) : null}
-      </p>
+      {finance.avgDraftMinutes > 0 || finance.avgReviewMinutes > 0 ? (
+        <p
+          className="text-text-secondary"
+          style={{ fontSize: "var(--text-12)", marginTop: "10px" }}
+        >
+          Average <span className="num">{draft}</span> in draft,{" "}
+          <span className="num">{review}</span> in lawyer review.
+          {anomaly ? (
+            <>
+              {" "}
+              {anomaly.serviceLine} matters average{" "}
+              <span className="num">{formatFeeDollars(anomaly.avg)}</span> against{" "}
+              <span className="num">{formatFeeDollars(anomaly.firmAvg)}</span>{" "}
+              firm-wide across <span className="num">{anomaly.count}</span>{" "}
+              matters.
+              <Button
+                type="button"
+                variant="link"
+                size="sm"
+                className="ml-1 h-auto min-h-11 px-0 align-baseline text-accent-foreground underline-offset-4 md:min-h-0"
+                style={{ fontSize: "var(--text-12)" }}
+                onClick={() =>
+                  router.push(
+                    `/matters?q=${encodeURIComponent(anomaly.serviceLine)}`
+                  )
+                }
+              >
+                See matters
+                <ChevronRight className="size-3.5" aria-hidden />
+              </Button>
+            </>
+          ) : null}
+        </p>
+      ) : anomaly ? (
+        <p
+          className="text-text-secondary"
+          style={{ fontSize: "var(--text-12)", marginTop: "10px" }}
+        >
+          {anomaly.serviceLine} matters average{" "}
+          <span className="num">{formatFeeDollars(anomaly.avg)}</span> against{" "}
+          <span className="num">{formatFeeDollars(anomaly.firmAvg)}</span>{" "}
+          firm-wide across <span className="num">{anomaly.count}</span> matters.
+          <Button
+            type="button"
+            variant="link"
+            size="sm"
+            className="ml-1 h-auto min-h-11 px-0 align-baseline text-accent-foreground underline-offset-4 md:min-h-0"
+            style={{ fontSize: "var(--text-12)" }}
+            onClick={() =>
+              router.push(
+                `/matters?q=${encodeURIComponent(anomaly.serviceLine)}`
+              )
+            }
+          >
+            See matters
+            <ChevronRight className="size-3.5" aria-hidden />
+          </Button>
+        </p>
+      ) : null}
 
       <UnquotedRow unquoted={finance.unquoted} />
     </section>

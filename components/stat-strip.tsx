@@ -82,9 +82,7 @@ export function StatStrip({ stats }: { stats: Stats }) {
         stats.dueNextHour === 0 ? (
           <>nothing due in the next hour</>
         ) : (
-          <>
-            of <span className="num">{stats.dueToday}</span> due today
-          </>
+          <>under 60 minutes left on the clock</>
         ),
       trend: stats.dueTrend,
       tooltip: "Matters with under 60 minutes left on the four hour clock.",

@@ -85,7 +85,7 @@ export function NotificationRow({
       <span
         className={cn(
           "mt-1.5 size-1.5 shrink-0 rounded-full",
-          unread ? "bg-[var(--rowan-400)]" : "bg-transparent"
+          unread ? "bg-[var(--status-risk-fill-soft)]" : "bg-transparent"
         )}
         aria-hidden
       />
@@ -262,7 +262,7 @@ function NotificationList({
               <span
                 className={cn(
                   "mt-1.5 size-1.5 shrink-0 rounded-full",
-                  unread ? "bg-[var(--rowan-400)]" : "bg-transparent"
+                  unread ? "bg-[var(--status-risk-fill-soft)]" : "bg-transparent"
                 )}
                 aria-hidden
               />
@@ -363,7 +363,7 @@ function BellTrigger({
           className="absolute top-1.5 right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 font-semibold text-primary-foreground md:top-0.5 md:right-0.5"
           style={{
             fontSize: "0.625rem",
-            background: "var(--rowan-500, var(--destructive))",
+            background: "var(--status-risk-fill)",
           }}
           aria-hidden
         >

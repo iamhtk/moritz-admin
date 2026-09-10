@@ -33,19 +33,17 @@ function shortLawyerName(name: string | null): string {
   return `${first} ${lastInitial}.`;
 }
 
-function firstName(name: string | null): string {
-  if (!name) return "This lawyer";
-  return name.trim().split(/\s+/)[0];
+/** Client-side slip signal. Must match server `likelyToSlip` in lib/queries.ts. */
+function isLikelyToSlip(m: MatterStatus, slaMinutes: number): boolean {
+  if (m.risk !== "ok" && m.risk !== "watch") return false;
+  if (!m.on_time_rate) return false;
+  if (m.stage === "delivered") return false;
+  const elapsedPct = 1 - m.minutes_remaining / slaMinutes;
+  return elapsedPct > 0.5 && m.stage !== "review" && m.on_time_rate < 0.85;
 }
 
-/** Client-side slip signal. Basis must stay visible in the tooltip. */
-function isLikelyToSlip(m: MatterStatus, slaMinutes: number): boolean {
-  if (m.on_time_rate == null || m.on_time_rate >= 0.85) return false;
-  if (m.stage === "review") return false;
-  if (m.minutes_remaining <= 0) return false;
-  const elapsedPct = 1 - m.minutes_remaining / slaMinutes;
-  return elapsedPct > 0.5;
-}
+const SLIP_BASIS =
+  "Past halfway on the clock, still drafting, and this lawyer's on-time rate is under 85 percent.";
 
 const MotionRow = motion.create(TableRow);
 
@@ -120,7 +118,24 @@ export function DeadlineList({
                           <span className="line-clamp-2">
                             {matter.client_name} ·{" "}
                             {shortLawyerName(matter.lawyer_name)}
-                            {slip ? " · likely to slip" : null}
+                            {slip ? (
+                              <>
+                                {" · "}
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <span className="cursor-default underline decoration-dotted underline-offset-2">
+                                      likely to slip
+                                    </span>
+                                  </TooltipTrigger>
+                                  <TooltipContent
+                                    side="bottom"
+                                    className="max-w-xs"
+                                  >
+                                    {SLIP_BASIS}
+                                  </TooltipContent>
+                                </Tooltip>
+                              </>
+                            ) : null}
                           </span>
                           {lowConfidence ? (
                             <Tooltip>
@@ -303,9 +318,7 @@ export function DeadlineList({
                                   side="bottom"
                                   className="max-w-xs"
                                 >
-                                  {firstName(matter.lawyer_name)}&apos;s last
-                                  three matters of this type ran past four
-                                  hours.
+                                  {SLIP_BASIS}
                                 </TooltipContent>
                               </Tooltip>
                             </>

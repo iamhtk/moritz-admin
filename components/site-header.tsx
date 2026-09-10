@@ -95,7 +95,7 @@ export function SiteHeader() {
             onClick={() => openCommandPalette()}
           >
             <span className="flex min-w-0 items-center gap-2">
-              <Search className="size-3.5 shrink-0" aria-hidden />
+              <Search className="size-4 shrink-0" aria-hidden />
               <span className="truncate">Search</span>
             </span>
             <kbd
@@ -114,7 +114,7 @@ export function SiteHeader() {
             aria-label="Ask"
             onClick={() => openChat()}
           >
-            <Sparkles className="size-4 sm:size-3.5" aria-hidden />
+            <Sparkles className="size-4" aria-hidden />
             <span className="hidden sm:inline">Ask</span>
           </Button>
         </div>

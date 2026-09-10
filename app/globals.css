@@ -208,6 +208,9 @@
   --status-risk-border: var(--rowan-700);
   --status-risk-fg: var(--rowan-700);
   --status-risk-fill: var(--rowan-500);
+  /* Soft risk fill for broad washes (capacity bars). Keeps --status-risk-fill
+     at rowan-500 for dots, rings, and feed marks without a red wash. */
+  --status-risk-fill-soft: var(--rowan-400);
 
   --status-info-bg: var(--fjord-100);
   --status-info-border: var(--fjord-700);
@@ -226,9 +229,29 @@
   /* Body / meta copy. Must stay ≥ 4.5:1 on --card and --background. */
   --text-tertiary: var(--snow-500);
   --surface-hover: var(--snow-100);
+  /* Quiet mark on light surfaces (default feed dots). One stop above hover. */
+  --surface-quiet: var(--snow-300);
   /* Row/matter highlight: light tint, keep dark body text. */
   --surface-selected: var(--snow-200);
   --hairline: var(--border);
+
+  /* Chart chrome. Distinct from body tertiary so dark can lift axis ticks
+     without changing copy colour. */
+  --chart-guide: var(--snow-400);
+  --chart-axis: var(--snow-500);
+
+  /* Sidebar rail hover: matches surface-hover in light; one step above
+     --sidebar in dark so the rail does not flash. */
+  --sidebar-hover: var(--snow-100);
+
+  /* Elevation and floating materials. Purpose-named, alias primitives only. */
+  --elevation-float: var(--shadow-float);
+  --overlay: var(--snow-900-32);
+  --glass-fill: var(--snow-0-92);
+  --glass-stroke: var(--snow-0-75);
+  --glass-highlight: var(--snow-0-90);
+  --glass-shade: var(--snow-900-13);
+  --glass-shade-soft: var(--snow-900-08);
 }
 
 /* ---------- TIER 3 · MAPPED (component tokens) ------------------------- */
@@ -252,22 +275,22 @@
   --attention-action-fg: var(--primary-foreground);
 
   /* Capacity bars (Progress) */
-  --capacity-track: var(--snow-200);
+  --capacity-track: var(--muted);
   --capacity-track-w: 5.5rem;      /* 88px. Narrow enough that three stacked bars do not wash the table */
   --capacity-track-h: 6px;
   --capacity-fill-ok: var(--status-ok-fill);
   --capacity-fill-watch: var(--status-watch-fill);
-  --capacity-fill-over: var(--rowan-400);
+  --capacity-fill-over: var(--status-risk-fill-soft);
   --capacity-threshold-watch: 80;
   --capacity-threshold-over: 100;
-  --capacity-tick: var(--snow-500);
+  --capacity-tick: var(--input);
 
   /* Sparkline. Legible or absent. Never on the at-risk stat, which already carries red. */
-  --spark-stroke: var(--fjord-300);
+  --spark-stroke: var(--chart-2);
   --spark-width: 1.5px;
   /* Terminal dot: one stop deeper than the line so it reads as the line's
      anchor into the stat number, not just another segment of it. */
-  --spark-dot: var(--fjord-500);
+  --spark-dot: var(--chart-1);
 
   /* SLA clock */
   --sla-ok-fg: var(--text-secondary);
@@ -297,16 +320,16 @@
   --badge-breached-fg: var(--status-risk-fg);
   --badge-radius: calc(var(--radius) - 2px); /* matches the button family, not a pill */
 
-  --chart-target-line: var(--snow-400);
+  --chart-target-line: var(--chart-guide);
   --chart-delivered-bar: var(--chart-2);
-  --chart-grid: var(--snow-200);
-  --chart-axis-text: var(--text-tertiary);
+  --chart-grid: var(--muted);
+  --chart-axis-text: var(--chart-axis);
 
   /* Activity feed */
-  --feed-dot-default: var(--snow-300);
+  --feed-dot-default: var(--surface-quiet);
   --feed-dot-delivered: var(--status-ok-fill);
   --money-strip-divider: var(--hairline);
-  --table-inner-line: var(--snow-100);
+  --table-inner-line: var(--surface-hover);
   --feed-dot-escalated: var(--status-risk-fill);
   --feed-day-label: var(--text-secondary);
   --feed-line: var(--hairline);
@@ -325,19 +348,19 @@
   --table-row-hover: var(--surface-hover);
   --table-border: var(--hairline);
 
-  /* Command palette and sheets. Glass lives here and nowhere else. */
-  --overlay-bg: var(--snow-900-32);
-  --float-shadow: var(--shadow-float);
+  /* Command palette and sheets. Glass aliases semantic material tokens. */
+  --overlay-bg: var(--overlay);
+  --float-shadow: var(--elevation-float);
   /* ~0.92 alpha + stronger blur: frosted glass that still keeps text contrast. */
-  --glass-bg: var(--snow-0-92);
-  --glass-border: var(--snow-0-75);
+  --glass-bg: var(--glass-fill);
+  --glass-border: var(--glass-stroke);
   --glass-blur: blur(28px) saturate(160%);
-  --glass-inset: inset 0 1px 0 var(--snow-0-90);
-  --glass-shadow: 0 16px 40px var(--snow-900-13), 0 2px 8px var(--snow-900-08);
+  --glass-inset: inset 0 1px 0 var(--glass-highlight);
+  --glass-shadow: 0 16px 40px var(--glass-shade), 0 2px 8px var(--glass-shade-soft);
 
   /* Charts */
   --chart-revenue-line: var(--chart-1);
-  --chart-revenue-area: var(--fjord-50);
+  --chart-revenue-area: var(--status-ok-bg);
 }
 
 /* ---------- DARK MODE (semantic only, primitives stay fixed) ----------- */
@@ -360,8 +383,8 @@
   --accent-foreground: var(--snow-900);
   --brand: var(--fjord-400);
   --brand-strong: var(--fjord-200);
-  --glass-bg: var(--snow-800-90);
-  --glass-border: var(--snow-0-12);
+  --glass-fill: var(--snow-800-90);
+  --glass-stroke: var(--snow-0-12);
   /* Lifted for ~3:1 UI edge contrast on dark surfaces. */
   --border: var(--snow-500);
   /* Split from --border: form fields need a clearer edge on dark panels. */
@@ -372,14 +395,16 @@
   --sidebar-accent: var(--snow-50);
   --sidebar-accent-foreground: var(--snow-900);
   --sidebar-border: var(--snow-500);
+  --sidebar-hover: var(--snow-800);
   --text-secondary: var(--snow-400);
   /* Distinct from secondary, still ≥4.5:1 on dark backgrounds. */
   --text-tertiary: oklch(0.64 0.013 250);
   /* One step above --card (snow-800) so row hover is visible. */
   --surface-hover: var(--snow-700);
+  --surface-quiet: var(--snow-500);
   /* One step above --sidebar (snow-900); do not reuse surface-hover or hover
      jumps two stops and reads as a bright flash on the rail. */
-  --nav-item-hover-bg: var(--snow-800);
+  --nav-item-hover-bg: var(--sidebar-hover);
   /* Dark mode: soft neutral wash; body text stays --foreground (light). */
   --surface-selected: color-mix(in oklch, var(--snow-50) 12%, var(--snow-800));
   --status-ok-bg: var(--fjord-800);   --status-ok-fg: var(--fjord-100);   --status-ok-border: var(--fjord-300);
@@ -388,15 +413,9 @@
   --status-info-bg: var(--fjord-700);  --status-info-fg: var(--fjord-100);  --status-info-border: var(--fjord-300);
   --status-neutral-bg: var(--snow-800); --status-neutral-fg: var(--snow-300); --status-neutral-border: var(--snow-400);
 
-  /* Mapped tokens that otherwise stay light and vanish or wash out on dark cards. */
-  --capacity-track: var(--snow-700);
-  --capacity-tick: var(--snow-400);
-  --chart-target-line: var(--snow-500);
-  --chart-grid: var(--snow-700);
-  --chart-axis-text: var(--snow-400);
-  --table-inner-line: var(--snow-700);
-  --chart-revenue-area: var(--fjord-800);
-  --feed-dot-default: var(--snow-500);
+  /* Chart chrome that must lift independently of body tertiary. */
+  --chart-guide: var(--snow-500);
+  --chart-axis: var(--snow-400);
 }
 
 /* ---------- TAILWIND v4 THEME BRIDGE ----------------------------------- */
@@ -451,6 +470,7 @@
   --color-status-risk-fg: var(--status-risk-fg);
   --color-status-risk-border: var(--status-risk-border);
   --color-status-risk-fill: var(--status-risk-fill);
+  --color-status-risk-fill-soft: var(--status-risk-fill-soft);
   --color-status-info: var(--status-info-bg);
   --color-status-info-fg: var(--status-info-fg);
   --color-status-info-border: var(--status-info-border);
@@ -789,22 +809,22 @@ body:has([data-slot="dialog-overlay"][data-state="open"]) [data-slot="tooltip-co
    fully opaque popover instead, same as every other floating surface. */
 @media (prefers-reduced-transparency: reduce) {
   :root {
-    --glass-bg: var(--popover);
-    --glass-border: var(--border);
+    --glass-fill: var(--popover);
+    --glass-stroke: var(--border);
   }
   .dark {
-    --glass-bg: var(--popover);
-    --glass-border: var(--border);
+    --glass-fill: var(--popover);
+    --glass-stroke: var(--border);
   }
 }
 
 @supports not (backdrop-filter: blur(1px)) {
   :root {
-    --glass-bg: var(--popover);
-    --glass-border: var(--border);
+    --glass-fill: var(--popover);
+    --glass-stroke: var(--border);
   }
   .dark {
-    --glass-bg: var(--popover);
-    --glass-border: var(--border);
+    --glass-fill: var(--popover);
+    --glass-stroke: var(--border);
   }
 }

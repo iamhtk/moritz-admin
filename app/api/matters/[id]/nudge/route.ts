@@ -19,6 +19,24 @@ export async function POST(
     return NextResponse.json({ error: "Matter not found." }, { status: 404 });
   }
 
+  // Collapse double-submits and accidental re-clicks into one pulse entry.
+  const since = new Date(Date.now() - 2 * 60 * 1000).toISOString();
+  const { data: recent } = await db
+    .from("activity")
+    .select("id")
+    .eq("matter_id", matter.id)
+    .eq("verb", "escalated")
+    .eq("note", "nudged by operations")
+    .gte("at", since)
+    .limit(1);
+  if (recent && recent.length > 0) {
+    return NextResponse.json({
+      ok: true,
+      reference: matter.reference,
+      deduped: true,
+    });
+  }
+
   const { error } = await db.from("activity").insert({
     actor_id: matter.lawyer_id,
     verb: "escalated",
