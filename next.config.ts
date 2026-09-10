@@ -1,8 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Required by Dockerfile's standalone copy; harmless on Vercel.
-  output: "standalone",
+  // Standalone is for the Dockerfile only. Vercel's builder fails when this
+  // is always on (missing next-server.js.nft.json during onBuildComplete).
+  ...(process.env.DOCKER_BUILD === "1" ? { output: "standalone" as const } : {}),
   async headers() {
     return [
       {
