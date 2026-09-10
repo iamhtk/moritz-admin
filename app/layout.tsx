@@ -16,11 +16,32 @@ const cormorant = Cormorant_Garamond({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://moritz-admin.vercel.app"),
   title: {
     default: "Moritz · Overview",
     template: "Moritz · %s",
   },
-  description: "Firm command center for law firm operations",
+  description:
+    "Firm command center for Moritz operations — triage, capacity, and flat-fee delivery.",
+  openGraph: {
+    title: "Moritz Operations Dashboard",
+    description:
+      "A single-page command center for law firm operations: triage, capacity, and flat-fee delivery.",
+    url: "https://moritz-admin.vercel.app",
+    siteName: "Moritz",
+    type: "website",
+    locale: "en_GB",
+  },
+  twitter: {
+    card: "summary",
+    title: "Moritz Operations Dashboard",
+    description:
+      "A single-page command center for law firm operations: triage, capacity, and flat-fee delivery.",
+  },
+  robots: {
+    index: false,
+    follow: false,
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
