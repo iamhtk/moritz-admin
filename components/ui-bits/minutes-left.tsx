@@ -1,6 +1,5 @@
 "use client";
 
-import { StatusBadge } from "@/components/ui-bits/status-badge";
 import { formatDuration } from "@/lib/format";
 
 /** Circular ring drain from full (240 min left) to empty (0 or past due). */
@@ -56,9 +55,9 @@ function SlaRing({
   );
 }
 
-/** Clock signal: risk under zero, watch under an hour, plain text above.
- *  Past due and watch both render as StatusBadge so the Left column stays
- *  a single aligned pill stack instead of mixing naked text with badges. */
+/** Clock signal as plain coloured text — no pill. Past due risk, under an hour
+ *  watch, otherwise secondary. Colour is never the sole signal: the sign and
+ *  duration remain. */
 export function MinutesLeft({
   minutes,
   delivered = false,
@@ -71,23 +70,32 @@ export function MinutesLeft({
   }
   if (minutes < 0) {
     return (
-      <StatusBadge tone="risk">
+      <span
+        className="num flex items-center gap-1 font-medium"
+        style={{ color: "var(--status-risk-fg)" }}
+      >
         <SlaRing minutes={0} fillColor="var(--status-risk-fill)" />
-        <span className="num">-{formatDuration(Math.abs(minutes))}</span>
-      </StatusBadge>
+        -{formatDuration(Math.abs(minutes))}
+      </span>
     );
   }
   if (minutes < 60) {
     return (
-      <StatusBadge tone="watch">
+      <span
+        className="num flex items-center gap-1 font-medium"
+        style={{ color: "var(--status-watch-fg)" }}
+      >
         <SlaRing minutes={minutes} fillColor="var(--status-watch-fill)" />
-        <span className="num">{formatDuration(minutes)}</span>
-      </StatusBadge>
+        {formatDuration(minutes)}
+      </span>
     );
   }
   return (
-    <span className="num text-text-secondary flex items-center gap-1">
-      <SlaRing minutes={minutes} fillColor="var(--sla-ok-fg,var(--text-secondary))" />
+    <span className="num flex items-center gap-1 text-text-secondary">
+      <SlaRing
+        minutes={minutes}
+        fillColor="var(--sla-ok-fg,var(--text-secondary))"
+      />
       {formatDuration(minutes)}
     </span>
   );

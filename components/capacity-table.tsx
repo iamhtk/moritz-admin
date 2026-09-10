@@ -28,11 +28,11 @@ const PREVIEW_DESKTOP = 5;
 const PREVIEW_MOBILE = 5;
 
 /**
- * Full five-column row needs roughly this much content width (avatar + full
- * name + Active + stacked meter + "7 of 8" + Reassign + padding). Below this,
- * switch to a stacked row layout instead of compressing columns.
+ * Four-column row needs roughly this much content width (avatar + name +
+ * stacked meter + "7 of 8" + Reassign + padding). Below this, switch to a
+ * stacked row layout instead of compressing columns.
  */
-const TABLE_MIN_WIDTH = 520;
+const TABLE_MIN_WIDTH = 460;
 
 function LawyerAction({
   lawyer,
@@ -106,6 +106,8 @@ function LawyerCard({ lawyer }: { lawyer: LawyerLoad }) {
         state={lawyer.capacityState}
         label={lawyer.capacityLabel}
         name={lawyer.name}
+        active={lawyer.activeMatters}
+        capacity={lawyer.weekly_capacity}
         layout="stacked"
       />
       <div className="flex items-center justify-between gap-3">
@@ -114,15 +116,9 @@ function LawyerCard({ lawyer }: { lawyer: LawyerLoad }) {
           style={{ fontSize: "var(--text-11)" }}
         >
           <span>
-            Active{" "}
-            <span className="num font-medium text-foreground">
-              {lawyer.activeMatters}
-            </span>
-          </span>
-          <span>
             This week{" "}
             <span className="num font-medium text-foreground">
-              {lawyer.delivered_this_week}/{lawyer.weekly_target}
+              {lawyer.delivered_this_week} of {lawyer.weekly_target}
             </span>
           </span>
         </div>
@@ -173,18 +169,14 @@ function LawyerStackedRow({
             state={lawyer.capacityState}
             label={lawyer.capacityLabel}
             name={lawyer.name}
+            active={lawyer.activeMatters}
+            capacity={lawyer.weekly_capacity}
             layout="stacked"
           />
           <div
             className="flex flex-wrap gap-x-4 gap-y-0.5 text-text-secondary"
             style={{ fontSize: "var(--text-11)" }}
           >
-            <span>
-              Active{" "}
-              <span className="num font-medium text-foreground">
-                {lawyer.activeMatters}
-              </span>
-            </span>
             <Tooltip>
               <TooltipTrigger asChild>
                 <span className="cursor-default">
@@ -310,21 +302,14 @@ export function CapacityTable({
                   <TableRow className="border-border hover:bg-transparent">
                     <TableHead
                       scope="col"
-                      className="h-auto w-[32%] px-3 py-2.5 font-medium text-text-tertiary"
+                      className="h-auto w-[42%] px-3 py-2.5 font-medium text-text-tertiary"
                       style={{ fontSize: "var(--text-11)" }}
                     >
                       Lawyer
                     </TableHead>
                     <TableHead
                       scope="col"
-                      className="h-auto w-[10%] px-2 py-2.5 text-right font-medium text-text-tertiary"
-                      style={{ fontSize: "var(--text-11)" }}
-                    >
-                      Active
-                    </TableHead>
-                    <TableHead
-                      scope="col"
-                      className="h-auto w-[26%] px-2 py-2.5 font-medium text-text-tertiary"
+                      className="h-auto w-[28%] px-2 py-2.5 font-medium text-text-tertiary"
                       style={{ fontSize: "var(--text-11)" }}
                     >
                       Capacity
@@ -338,7 +323,7 @@ export function CapacityTable({
                     </TableHead>
                     <TableHead
                       scope="col"
-                      className="h-auto w-[16%] px-2 py-2.5 text-right font-medium text-text-tertiary"
+                      className="h-auto w-[14%] px-2 py-2.5 text-right font-medium text-text-tertiary"
                       style={{ fontSize: "var(--text-11)" }}
                     >
                       <span className="sr-only">Action</span>
@@ -376,15 +361,14 @@ export function CapacityTable({
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell className="px-2 py-0 text-right">
-                        <span className="num">{lawyer.activeMatters}</span>
-                      </TableCell>
                       <TableCell className="min-w-0 px-2 py-0">
                         <CapacityMeter
                           pct={lawyer.utilizationPct}
                           state={lawyer.capacityState}
                           label={lawyer.capacityLabel}
                           name={lawyer.name}
+                          active={lawyer.activeMatters}
+                          capacity={lawyer.weekly_capacity}
                           layout="stacked"
                         />
                       </TableCell>
@@ -455,10 +439,10 @@ export function CapacityTableSkeleton() {
       </div>
       <Card className="hidden h-full min-w-0 flex-col gap-0 rounded-lg py-0 [--card-spacing:0px] md:flex">
         <div
-          className="grid grid-cols-[1.4fr_auto_1.2fr_auto_auto] gap-4 px-4 py-2.5"
+          className="grid grid-cols-[1.6fr_1.2fr_auto_auto] gap-4 px-4 py-2.5"
           style={{ borderBottom: "1px solid var(--border)" }}
         >
-          {Array.from({ length: 5 }).map((_, i) => (
+          {Array.from({ length: 4 }).map((_, i) => (
             <Skeleton key={i} className="h-3 w-14" />
           ))}
         </div>
@@ -478,7 +462,6 @@ export function CapacityTableSkeleton() {
                 <Skeleton className="h-3 w-16" />
               </div>
             </div>
-            <Skeleton className="h-3.5 w-6" />
             <Skeleton className="h-4 w-36" />
             <Skeleton className="h-3.5 w-14" />
             <Skeleton className="h-7 w-14" />

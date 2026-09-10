@@ -107,17 +107,8 @@ export function ZoneMoney({
   const daysLeft = daysLeftInMonth();
   const draft = formatDuration(finance.avgDraftMinutes);
   const review = formatDuration(finance.avgReviewMinutes);
-  const meta = (
-    <>
-      {month} · flat fees per matter, not billable hours
-      {data.ai.predictedVolume.weeksUsed > 0 ? (
-        <>
-          {" · "}≈{data.ai.predictedVolume.estimate} new matters next week.{" "}
-          {data.ai.predictedVolume.basis}.
-        </>
-      ) : null}
-    </>
-  );
+  // Flat-fee reframe only — charts and the money strip already carry the rest.
+  const meta = <>{month} · flat fees per matter, not billable hours</>;
 
   return (
     <section aria-label="Money" className={cn("mt-6 md:mt-8", className)}>

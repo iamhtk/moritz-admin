@@ -254,10 +254,13 @@ export function AssignSheet({
                         </div>
                         <CapacityMeter
                           compact
+                          showTooltip={false}
                           pct={lawyer.utilizationPct}
                           state={lawyer.capacityState}
                           label={lawyer.capacityLabel}
                           name={lawyer.name}
+                          active={lawyer.activeMatters}
+                          capacity={lawyer.weekly_capacity}
                         />
                       </Button>
                     </li>

@@ -291,33 +291,34 @@ export const deliveredMatters: Matter[] = (() => {
 /* activity ---------------------------------------------------------------- */
 
 export const activity: ActivityEvent[] = [
-  // Compressed into the last ~5 hours. Eighteen of twenty-four sit inside the
-  // last ~40 minutes so a local "today" filter looks busy at any open time,
-  // including just after midnight; six trail to ~5h for daytime depth.
+  // Spread across the last ~5 hours. Fifteen of the eighteen "recent" events
+  // sit in the last hour (irregular gaps, denser near now) so a local "today"
+  // filter still shows ~15 just after midnight; the other three thin out to
+  // ~2.7h. Six trail to ~5h for daytime depth.
   { id: "e1",  at: minsAgo(3),   actorId: "system", verb: "escalated", matterId: "m1",  clientId: "c1",  note: "past due" },
-  { id: "e2",  at: minsAgo(17),  actorId: "l5",     verb: "delivered", matterId: null,  clientId: "c7",  note: "MSA for Fjordline" },
-  { id: "e3",  at: minsAgo(21),  actorId: "system", verb: "submitted", matterId: "m5",  clientId: "c4",  note: "NDA via Slack" },
-  { id: "e4",  at: minsAgo(26),  actorId: "l6",     verb: "assigned",  matterId: "m9",  clientId: "c4",  note: null as unknown as string },
+  { id: "e2",  at: minsAgo(41),  actorId: "l5",     verb: "delivered", matterId: null,  clientId: "c7",  note: "MSA for Fjordline" },
+  { id: "e3",  at: minsAgo(55),  actorId: "system", verb: "submitted", matterId: "m5",  clientId: "c4",  note: "NDA via Slack" },
+  { id: "e4",  at: minsAgo(65),  actorId: "l6",     verb: "assigned",  matterId: "m9",  clientId: "c4",  note: null as unknown as string },
   { id: "e5",  at: minsAgo(102), actorId: "l8",     verb: "filed",     matterId: "m16", clientId: "c6",  note: "discovery request" },
   { id: "e6",  at: minsAgo(148), actorId: "l2",     verb: "delivered", matterId: null,  clientId: "c6",  note: "term sheet for Oslo Grid" },
   { id: "e7",  at: minsAgo(196), actorId: "l3",     verb: "meeting",   matterId: null,  clientId: "c3",  note: "client meeting with Halden Labs" },
   { id: "e8",  at: minsAgo(244), actorId: "system", verb: "onboarded", matterId: null,  clientId: "c8",  note: "enterprise plan" },
-  { id: "e9",  at: minsAgo(8),   actorId: "system", verb: "submitted", matterId: "m6",  clientId: "c4",  note: "NDA via email" },
-  { id: "e10", at: minsAgo(5),   actorId: "system", verb: "submitted", matterId: "m7",  clientId: "c8",  note: "term sheet via platform" },
-  { id: "e11", at: minsAgo(24),  actorId: "l12",    verb: "quoted",    matterId: "m34", clientId: "c8",  note: "$1,200" },
-  { id: "e12", at: minsAgo(29),  actorId: "ai",     verb: "drafted",   matterId: "m10", clientId: "c5",  note: "sublease, 2 clauses flagged" },
-  { id: "e13", at: minsAgo(32),  actorId: "l9",     verb: "assigned",  matterId: "m33", clientId: "c2",  note: null as unknown as string },
+  { id: "e9",  at: minsAgo(10),  actorId: "system", verb: "submitted", matterId: "m6",  clientId: "c4",  note: "NDA via email" },
+  { id: "e10", at: minsAgo(6),   actorId: "system", verb: "submitted", matterId: "m7",  clientId: "c8",  note: "term sheet via platform" },
+  { id: "e11", at: minsAgo(58),  actorId: "l12",    verb: "quoted",    matterId: "m34", clientId: "c8",  note: "$1,200" },
+  { id: "e12", at: minsAgo(82),  actorId: "ai",     verb: "drafted",   matterId: "m10", clientId: "c5",  note: "sublease, 2 clauses flagged" },
+  { id: "e13", at: minsAgo(62),  actorId: "l9",     verb: "assigned",  matterId: "m33", clientId: "c2",  note: null as unknown as string },
   { id: "e14", at: minsAgo(281), actorId: "l7",     verb: "delivered", matterId: null,  clientId: "c12", note: "lease amendment" },
   { id: "e15", at: minsAgo(318), actorId: "l4",     verb: "meeting",   matterId: null,  clientId: "c9",  note: "kickoff with Terrapin Health" },
-  { id: "e16", at: minsAgo(35),  actorId: "ai",     verb: "drafted",   matterId: "m24", clientId: "c10", note: "option plan, high confidence" },
-  { id: "e17", at: minsAgo(38),  actorId: "l14",    verb: "filed",     matterId: "m26", clientId: "c6",  note: "small claims" },
-  { id: "e18", at: minsAgo(41),  actorId: "system", verb: "submitted", matterId: "m4",  clientId: "c6",  note: "term sheet via email" },
-  { id: "e19", at: minsAgo(12),  actorId: "l1",     verb: "assigned",  matterId: "m20", clientId: "c2",  note: null as unknown as string },
-  { id: "e20", at: minsAgo(10),  actorId: "l11",    verb: "delivered", matterId: null,  clientId: "c4",  note: "employment contract" },
-  { id: "e21", at: minsAgo(19),  actorId: "l13",    verb: "quoted",    matterId: "m18", clientId: "c7",  note: "$300" },
-  { id: "e22", at: minsAgo(44),  actorId: "l6",     verb: "meeting",   matterId: null,  clientId: "c10", note: "quarterly review with Solvei" },
-  { id: "e23", at: minsAgo(15),  actorId: "ai",     verb: "drafted",   matterId: "m21", clientId: "c11", note: "privacy policy" },
-  { id: "e24", at: minsAgo(47),  actorId: "l10",    verb: "assigned",  matterId: "m13", clientId: "c11", note: null as unknown as string },
+  { id: "e16", at: minsAgo(120), actorId: "ai",     verb: "drafted",   matterId: "m24", clientId: "c10", note: "option plan, high confidence" },
+  { id: "e17", at: minsAgo(52),  actorId: "l14",    verb: "filed",     matterId: "m26", clientId: "c6",  note: "small claims" },
+  { id: "e18", at: minsAgo(60),  actorId: "system", verb: "submitted", matterId: "m4",  clientId: "c6",  note: "term sheet via email" },
+  { id: "e19", at: minsAgo(21),  actorId: "l1",     verb: "assigned",  matterId: "m20", clientId: "c2",  note: null as unknown as string },
+  { id: "e20", at: minsAgo(15),  actorId: "l11",    verb: "delivered", matterId: null,  clientId: "c4",  note: "employment contract" },
+  { id: "e21", at: minsAgo(47),  actorId: "l13",    verb: "quoted",    matterId: "m18", clientId: "c7",  note: "$300" },
+  { id: "e22", at: minsAgo(162), actorId: "l6",     verb: "meeting",   matterId: null,  clientId: "c10", note: "quarterly review with Solvei" },
+  { id: "e23", at: minsAgo(28),  actorId: "ai",     verb: "drafted",   matterId: "m21", clientId: "c11", note: "privacy policy" },
+  { id: "e24", at: minsAgo(34),  actorId: "l10",    verb: "assigned",  matterId: "m13", clientId: "c11", note: null as unknown as string },
 
   // yesterday and earlier
   { id: "e25", at: hoursAgo(21), actorId: "l3",     verb: "delivered", matterId: null,  clientId: "c5",  note: "DPA for Vesta Freight" },

@@ -140,6 +140,8 @@ export function SiteHeader() {
           type="button"
           size="icon"
           className="min-h-11 min-w-11 min-[390px]:hidden"
+          aria-keyshortcuts="N"
+          aria-label="New matter"
           onClick={() => openNewMatter()}
         >
           <Plus className="size-4" aria-hidden />
@@ -148,10 +150,17 @@ export function SiteHeader() {
         <Button
           type="button"
           size="sm"
-          className="hidden shrink-0 min-[390px]:inline-flex"
+          className="hidden shrink-0 gap-2 min-[390px]:inline-flex"
+          aria-keyshortcuts="N"
           onClick={() => openNewMatter()}
         >
           New matter
+          <kbd
+            className="pointer-events-none inline-flex h-5 items-center rounded-md border border-primary-foreground/25 px-1.5 font-medium text-primary-foreground/80"
+            style={{ fontSize: "var(--text-11)" }}
+          >
+            N
+          </kbd>
         </Button>
       </div>
     </header>

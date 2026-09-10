@@ -59,15 +59,21 @@ export function buildBrief(
 
     if (!actionable) {
       const oldest = breaches[0];
+      const overAction: AttentionItem = {
+        kind: "overCapacity",
+        id: `over-${busiest.id}`,
+        label: "Over capacity",
+        title: busiest.name,
+        reason: `${busiest.activeMatters} of ${busiest.weekly_capacity} active · ${busiest.utilizationPct} percent`,
+        action: "Reassign",
+        minutesRemaining: null,
+        matterId: null,
+        lawyerId: busiest.id,
+      };
       return {
         headline,
         detail: `${oldest.title} is the oldest past-due. ${busiestFirst} still needs work moved off separately.`,
-        action:
-          attention.find(
-            (a) => a.kind === "overCapacity" && a.lawyerId === busiest.id
-          ) ??
-          attention.find((a) => a.lawyerId === busiest.id) ??
-          null,
+        action: overAction,
       };
     }
 
@@ -132,10 +138,21 @@ export function buildBrief(
   }
 
   const busiest = over[0];
+  const overAction: AttentionItem = {
+    kind: "overCapacity",
+    id: `over-${busiest.id}`,
+    label: "Over capacity",
+    title: busiest.name,
+    reason: `${busiest.activeMatters} of ${busiest.weekly_capacity} active · ${busiest.utilizationPct} percent`,
+    action: "Reassign",
+    minutesRemaining: null,
+    matterId: null,
+    lawyerId: busiest.id,
+  };
   return {
     headline: `${busiest.name} is at ${busiest.utilizationPct} percent.`,
     detail: "Nothing is past due yet, but the next matter should go elsewhere.",
-    action: attention.find((a) => a.lawyerId === busiest.id) ?? null,
+    action: overAction,
   };
 }
 

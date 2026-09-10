@@ -278,6 +278,8 @@
   --capacity-track: var(--muted);
   --capacity-track-w: 5.5rem;      /* 88px. Narrow enough that three stacked bars do not wash the table */
   --capacity-track-h: 6px;
+  /* Room rows: slightly darker than the track, no status hue. */
+  --capacity-fill-quiet: color-mix(in oklab, var(--foreground) 22%, var(--capacity-track));
   --capacity-fill-ok: var(--status-ok-fill);
   --capacity-fill-watch: var(--status-watch-fill);
   --capacity-fill-over: var(--status-risk-fill-soft);
@@ -620,7 +622,7 @@
 }
 
 /* Live urgency pulse. Faster blink for attention (100% ↔ 35%).
-   Reserved for At-risk stat and escalated Pulse feed dots. */
+   Reserved for the At-risk stat dot. */
 @keyframes pulse-dot {
   0%,
   100% {

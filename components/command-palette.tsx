@@ -157,22 +157,12 @@ export function CommandPalette({
       const inField =
         tag === "input" ||
         tag === "textarea" ||
+        tag === "select" ||
         Boolean(target?.isContentEditable);
       const inCmdk = Boolean(target?.closest("[cmdk-root]"));
 
-      // Plain N while the palette is open and the search field is empty → New matter.
-      // Capture phase so cmdk does not swallow the key into the filter first.
-      if (open && !e.metaKey && !e.ctrlKey && !e.altKey && key === "n") {
-        const cmdkInput =
-          document.querySelector<HTMLInputElement>("[cmdk-input]");
-        if (!cmdkInput || cmdkInput.value === "") {
-          e.preventDefault();
-          e.stopPropagation();
-          onOpenChange(false);
-          openNewMatter();
-          return;
-        }
-      }
+      // Plain N is a global shortcut (see DashboardOverlays) — never bind it
+      // here. Inside the palette, N must type into the search field.
 
       if (!(e.metaKey || e.ctrlKey)) return;
       if (key !== "k" && key !== "j") return;
@@ -188,7 +178,7 @@ export function CommandPalette({
     };
     window.addEventListener("keydown", onKeyDown, true);
     return () => window.removeEventListener("keydown", onKeyDown, true);
-  }, [open, onOpenChange, openChat, openNewMatter]);
+  }, [open, onOpenChange, openChat]);
 
   const run = (fn: () => void) => {
     onOpenChange(false);

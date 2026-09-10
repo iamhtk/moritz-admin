@@ -12,7 +12,6 @@ import {
 } from "@/lib/activity-copy";
 import { formatLocalClock } from "@/lib/format";
 import type { ActivityItem } from "@/lib/supabase";
-import { cn } from "cn";
 
 /** Local clock after mount so SSR (UTC on Vercel) cannot paint midnight for a Pacific evening. */
 function LocalClock({ iso }: { iso: string }) {
@@ -49,10 +48,7 @@ export function FeedItem({ item }: { item: ActivityItem }) {
         />
       ) : (
         <span
-          className={cn(
-            "mt-2 size-1.5 shrink-0 rounded-full",
-            item.verb === "escalated" && "pulse-dot"
-          )}
+          className="mt-2 size-1.5 shrink-0 rounded-full"
           style={{ background: activityDotColor(item.verb) }}
           aria-hidden
         />

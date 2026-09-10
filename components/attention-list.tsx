@@ -23,7 +23,7 @@ import { formatFeeDollars } from "@/lib/format";
 import { MatterReference } from "@/components/matter-reference";
 import { cn } from "cn";
 
-const PREVIEW_DESKTOP = 6;
+const PREVIEW_DESKTOP = 4;
 const PREVIEW_MOBILE = 4;
 
 function formatBand(low: number, high: number) {
@@ -459,15 +459,10 @@ export function AttentionList({ items }: { items: AttentionItem[] }) {
     );
   }
 
-  const shouldCollapse = items.length - preview >= 3;
-  let visible = expanded || !shouldCollapse ? items : items.slice(0, preview);
-  if (!expanded && shouldCollapse) {
-    const shown = new Set(visible.map((i) => i.id));
-    const pinned = items.filter(
-      (i) => i.kind === "unassigned" && !shown.has(i.id)
-    );
-    if (pinned.length) visible = [...visible, ...pinned];
-  }
+  // Top four by urgency; the rest behind Show more. Do not re-inflate the
+  // preview by pinning later rows — that undoes the calm cut.
+  const shouldCollapse = items.length > preview;
+  const visible = expanded || !shouldCollapse ? items : items.slice(0, preview);
   const remaining = items.length - visible.length;
   const showFooter = shouldCollapse;
 

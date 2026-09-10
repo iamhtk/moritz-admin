@@ -162,7 +162,7 @@ The brief's phrase was "turning legal chaos into organized calm." The easy way t
 
 So the demo state is deliberately busy: 48 matters, 14 lawyers, nineteen AI surfaces, a live feed. Calm comes from hierarchy, not emptiness.
 
-The practical rule is **no red wash**: at most three red elements on screen at any moment, the at-risk number and the breach badges. Three matters at risk means three small badges, never three red cards. Alarm is carried by position and by one number, never by area of colour.
+The practical rule is **no red wash**: red appears only where a person must act, and never twice for the same fact as two filled containers. The at-risk number and past-due badges mark matters that need a hand; over-capacity bars mark lawyers that need load moved, with the state word as plain coloured text beside them rather than a second red pill. Alarm is carried by position and by a word or number, never by area of colour.
 
 ---
 

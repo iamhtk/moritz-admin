@@ -129,23 +129,22 @@ export function ZonePeople({
     );
   }
 
-  const forecast = data.ai.capacityForecast;
   const weekly = data.ai.weeklyCapacityForecast;
   const meta = (
-    <span className="flex flex-col gap-0.5">
-      <span>
-        {data.lawyers.length} co-counsel · sorted by load
-        {forecast ? ` · ${forecast}` : ""}
-      </span>
+    <span>
+      {data.lawyers.length} co-counsel · sorted by load
       {weekly ? (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <span className="cursor-default">{weekly.text}</span>
-          </TooltipTrigger>
-          <TooltipContent side="bottom" className="max-w-xs">
-            {weekly.tooltip}
-          </TooltipContent>
-        </Tooltip>
+        <>
+          {" · "}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="cursor-default">{weekly.text}</span>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="max-w-xs">
+              {weekly.tooltip}
+            </TooltipContent>
+          </Tooltip>
+        </>
       ) : null}
     </span>
   );

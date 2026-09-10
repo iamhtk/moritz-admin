@@ -81,6 +81,8 @@ export function LawyerCard({
             state={lawyer.capacityState}
             label={lawyer.capacityLabel}
             name={lawyer.name}
+            active={lawyer.activeMatters}
+            capacity={lawyer.weekly_capacity}
             layout="stacked"
           />
         </div>

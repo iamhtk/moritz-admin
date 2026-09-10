@@ -18,7 +18,7 @@ Colour is organised in three tiers. Each tier may only alias the tier above it. 
 | 2 · Semantic | shadcn or status name that aliases a primitive | `--status-risk-fg` | `var(--rowan-700)` |
 | 3 · Mapped | Component token that aliases a semantic | `--stat-risk-color` | `var(--status-risk-fg)` |
 
-The same chain appears on capacity fills: `--fjord-400` to `--status-ok-fill` to `--capacity-fill-ok`. A mapped token such as `--capacity-fill-over` must alias a semantic status fill, never a Tier 1 stop.
+The same chain appears on capacity fills: `--fjord-400` to `--status-ok-fill` to `--capacity-fill-ok`. A mapped token such as `--capacity-fill-over` must alias a semantic status fill, never a Tier 1 stop. Over and high rows use plain status-coloured text for the label; the bar alone is the filled colour signal, so each row has one coloured element rather than a pill plus a bar.
 
 This is enforced by an ESLint `no-restricted-syntax` rule in `eslint.config.mjs`, not by convention. The rule flags colour literals in `components/` and `app/` (excluding `components/ui/`) so a hex or `oklch()` in JSX fails the lint.
 

@@ -165,7 +165,9 @@ export function activitySentencePlain(item: ActivityItem): string {
 
 export function activityDotColor(verb: ActivityItem["verb"]): string {
   if (verb === "delivered") return "var(--feed-dot-delivered)";
-  if (verb === "escalated") return "var(--feed-dot-escalated)";
+  // Escalated stays a word in the sentence; a red dot would re-encode the
+  // same past-due fact already marked in Today.
+  if (verb === "escalated") return "var(--feed-dot-default)";
   return "var(--feed-dot-default)";
 }
 

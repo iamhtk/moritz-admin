@@ -321,7 +321,6 @@ async function getConfig(db: ReturnType<typeof serverClient>): Promise<Config> {
   
   function buildAttention(
     live: MatterStatus[],
-    loads: LawyerLoad[],
     cfg: Config,
     delivered: MatterStatus[]
   ): AttentionItem[] {
@@ -416,39 +415,8 @@ async function getConfig(db: ReturnType<typeof serverClient>): Promise<Config> {
       }
     }
 
-    // One attention row for capacity: when two or more lawyers are over, collapse
-    // to a single badge so the strip does not flood with red.
-    const over = loads
-      .filter((l) => l.capacityState === "over")
-      .sort((a, b) => b.utilizationPct - a.utilizationPct);
-
-    if (over.length >= 2) {
-      const primary = over[0];
-      items.push({
-        kind: "overCapacity",
-        id: "over-capacity-group",
-        label: "Over capacity",
-        title: `${over.length} lawyers over capacity`,
-        reason: over.map((l) => l.name).join(", "),
-        action: "Reassign",
-        minutesRemaining: null,
-        matterId: null,
-        lawyerId: primary.id,
-      });
-    } else if (over.length === 1) {
-      const l = over[0];
-      items.push({
-        kind: "overCapacity",
-        id: `over-${l.id}`,
-        label: "Over capacity",
-        title: l.name,
-        reason: `${l.utilizationPct} percent · ${l.activeMatters} active matters against a capacity of ${l.weekly_capacity}`,
-        action: "Reassign",
-        minutesRemaining: null,
-        matterId: null,
-        lawyerId: l.id,
-      });
-    }
+    // Over-capacity lives in the People table (badge + bar + Reassign). Repeating
+    // it here as another red badge encodes the same fact a third time.
 
     // Past due first, then least time remaining within kind, unassigned before
     // capacity problems so triage stays visible without opening show-more.
@@ -713,7 +681,7 @@ async function getConfig(db: ReturnType<typeof serverClient>): Promise<Config> {
 
     if (projectedAdd <= room) {
       return {
-        text: "This week: on pace to stay within capacity",
+        text: "on pace to stay within capacity this week",
         tooltip,
       };
     }
@@ -724,9 +692,9 @@ async function getConfig(db: ReturnType<typeof serverClient>): Promise<Config> {
     if (over > totalCapacity) return null;
 
     return {
-      text: `This week: on pace to exceed capacity by roughly ${over} ${
+      text: `on pace to exceed capacity by roughly ${over} ${
         over === 1 ? "matter" : "matters"
-      }`,
+      } this week`,
       tooltip,
     };
   }
@@ -836,7 +804,7 @@ async function getConfig(db: ReturnType<typeof serverClient>): Promise<Config> {
     const lawyerRows = (lawyersRes.data ?? []) as LawyerRow[];
   
     const loads = buildLawyerLoads(lawyerRows, live, cfg);
-    const attention = buildAttention(live, loads, cfg, delivered);
+    const attention = buildAttention(live, cfg, delivered);
   
     const clientNames = new Map(
       (clientsRes.data ?? []).map((c) => [c.id as string, c.company as string])
