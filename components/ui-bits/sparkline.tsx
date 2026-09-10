@@ -1,20 +1,13 @@
-"use client";
-
-import { motion, useReducedMotion } from "framer-motion";
-
-const DRAW_DURATION = 1.7;
-const HOLD_DURATION = 1.5;
-const CYCLE = DRAW_DURATION + HOLD_DURATION;
-
 /** Intrinsic drawing size. Scales down inside its slot; never overflows it. */
 const WIDTH = 76;
 const HEIGHT = 26;
 const INSET = 4;
 const DOT_RADIUS = 2;
 
-export function Sparkline({ values }: { values: number[] }) {
-  const reduceMotion = useReducedMotion();
+/** Draw 1.7s + hold 1.5s — must match `@keyframes spark-draw` / `spark-dot`. */
+const CYCLE_SEC = 3.2;
 
+export function Sparkline({ values }: { values: number[] }) {
   if (values.length < 2) return null;
 
   const centerY = HEIGHT / 2;
@@ -45,34 +38,14 @@ export function Sparkline({ values }: { values: number[] }) {
   const lastX = coords[coords.length - 1].x;
 
   // Stagger loops slightly so a strip of sparklines doesn't blink in unison.
-  const stagger =
+  const staggerSec =
     (values.reduce((sum, v, i) => sum + v * (i + 1), 0) % 11) * 0.08;
-
-  const drawTransition = reduceMotion
-    ? { duration: 0 }
-    : {
-        duration: CYCLE,
-        times: [0, DRAW_DURATION / CYCLE, 1],
-        ease: "easeOut" as const,
-        repeat: Infinity,
-        repeatType: "loop" as const,
-        delay: stagger,
-      };
-
-  const dotTransition = reduceMotion
-    ? { duration: 0 }
-    : {
-        duration: CYCLE,
-        times: [0, 0.32, 0.48, 0.88, 1],
-        ease: "easeOut" as const,
-        repeat: Infinity,
-        repeatType: "loop" as const,
-        delay: stagger,
-      };
 
   return (
     // Block slot: width capped at the drawing size, shrinks with the column,
     // clips any stroke so a resize can never paint into the next cell.
+    // Animation is CSS (`spark-draw` / `spark-dot`) so overview polling
+    // re-renders cannot cancel the loop the way Framer Motion WAAPI did.
     <span
       className="block w-full max-w-[76px] min-w-0 overflow-hidden"
       style={{ height: HEIGHT }}
@@ -86,7 +59,7 @@ export function Sparkline({ values }: { values: number[] }) {
         className="block max-w-full"
         style={{ overflow: "hidden" }}
       >
-        <motion.path
+        <path
           d={d}
           fill="none"
           stroke="var(--spark-stroke)"
@@ -94,29 +67,23 @@ export function Sparkline({ values }: { values: number[] }) {
           strokeLinecap="round"
           strokeLinejoin="round"
           vectorEffect="non-scaling-stroke"
-          initial={false}
-          animate={
-            reduceMotion
-              ? { pathLength: 1, opacity: 1 }
-              : { pathLength: [0, 1, 1], opacity: [0.35, 1, 1] }
-          }
-          transition={drawTransition}
+          pathLength={1}
+          className="spark-draw"
+          style={{
+            animationDuration: `${CYCLE_SEC}s`,
+            animationDelay: `${staggerSec}s`,
+          }}
         />
-        <motion.circle
+        <circle
           cx={lastX}
           cy={centerY}
           r={DOT_RADIUS}
           fill="var(--spark-dot)"
-          initial={false}
-          animate={
-            reduceMotion
-              ? { opacity: 1, scale: 1 }
-              : {
-                  opacity: [0, 0, 1, 1, 0],
-                  scale: [0.6, 0.6, 1, 1, 0.6],
-                }
-          }
-          transition={dotTransition}
+          className="spark-dot"
+          style={{
+            animationDuration: `${CYCLE_SEC}s`,
+            animationDelay: `${staggerSec}s`,
+          }}
         />
       </svg>
     </span>
