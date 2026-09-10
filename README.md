@@ -1,16 +1,84 @@
-# Moritz Operations Dashboard
+<p align="center">
+  <img src="./public/icon.svg" alt="Moritz Operations Dashboard" width="92" height="92" />
+</p>
 
-A single-page command center for a Law Firm Administrator at Moritz, an AI-native law firm.
+<h1 align="center">Moritz Operations Dashboard</h1>
 
-Built as a design assessment. The brief asked for a dashboard that is trustworthy, premium, Nordic-minimal, and pastel, serving a Law Firm Administrator managing case flow, capacity, and revenue.
+<p align="center">
+  <strong>A single-page command center for a Law Firm Administrator at Moritz, an AI-native law firm.</strong>
+</p>
 
-**[Live application](https://moritz-admin.vercel.app)** · **[Figma design system](https://www.figma.com/design/wCNR8r9BTCy2OiFeniCgQQ/Moritz--assessment)** · [Design system notes](./docs/design-system.md) · [UX specification](./UX-SPEC.md)
+<p align="center">
+  Built as a design assessment. The brief asked for a dashboard that is trustworthy, premium,<br />
+  Nordic-minimal, and pastel, serving a Law Firm Administrator managing case flow, capacity, and revenue.
+</p>
 
-![Overview dashboard](./docs/images/overview.png)
+<p align="center">
+  <a href="https://moritz-admin.vercel.app"><strong>Live application</strong></a>
+  ·
+  <a href="https://www.figma.com/design/wCNR8r9BTCy2OiFeniCgQQ/Moritz--assessment"><strong>Figma design system</strong></a>
+  ·
+  <a href="./docs/design-system.md">Design system notes</a>
+  ·
+  <a href="./UX-SPEC.md">UX specification</a>
+</p>
+
+<p align="center">
+  <img alt="Next.js" src="https://img.shields.io/badge/Next.js-16-000000?style=flat-square&logo=nextdotjs" />
+  <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-strict-3178C6?style=flat-square&logo=typescript&logoColor=white" />
+  <img alt="Supabase" src="https://img.shields.io/badge/Supabase-Realtime-3FCF8E?style=flat-square&logo=supabase&logoColor=white" />
+  <img alt="Gemini" src="https://img.shields.io/badge/AI-Gemini-8E75B2?style=flat-square&logo=googlegemini&logoColor=white" />
+  <img alt="Vercel" src="https://img.shields.io/badge/Deployed-Vercel-000000?style=flat-square&logo=vercel" />
+</p>
+
+<p align="center">
+  <img src="./docs/images/overview.png" alt="Overview dashboard" width="900" />
+</p>
 
 ---
 
-## Five minutes
+## ✨ At a Glance
+
+- **One command-center page** balancing firm health, workload, and financial performance
+- **21 AI surfaces** under one actor (Nora), with streaming drafts and a data-scoped Ask panel
+- **Realtime collaboration** through Supabase on `matters` and `activity`
+- **Relative-time seeding** so the four-hour clock stays correct whenever a reviewer opens the link
+- **Token-enforced design system** with Figma foundations, components, variables, and decisions documented below
+
+## 🧭 Contents
+
+- [Stack](#-stack)
+- [Five Minutes](#️-five-minutes)
+- [The One Decision That Shaped Everything](#️-the-one-decision-that-shaped-everything)
+- [The Persona](#-the-persona)
+- [Information Architecture](#️-information-architecture)
+- [Design System](#-design-system)
+- [The Figma File](#-the-figma-file)
+- [Backend](#️-backend)
+- [Relative Time](#-relative-time)
+- [AI: Twenty-One Surfaces, One Rule Set](#-ai-twenty-one-surfaces-one-rule-set)
+- [Frontend](#️-frontend)
+- [Accessibility](#-accessibility)
+- [Mobile](#-mobile)
+- [How This Was Actually Built](#️-how-this-was-actually-built)
+- [Out of Scope, and Why](#-out-of-scope-and-why)
+- [Assumptions](#-assumptions)
+- [Running Locally](#-running-locally)
+- [What I'd Build Next](#️-what-id-build-next)
+
+---
+
+## 🧰 Stack
+
+`Next.js 16` · `TypeScript` · `Tailwind CSS v4` · `Supabase` ·
+`Google Gemini` · `Framer Motion` · `Tiptap` · `TanStack Query` ·
+`TanStack Table` · `Recharts` · `shadcn/ui` · `Vercel`
+
+> Supabase powers PostgreSQL, Realtime, and RLS. Gemini powers Ask and client-update drafting through server-only API routes.
+
+---
+
+## ⏱️ Five Minutes
 
 If you have five minutes, this is the order that makes the most sense.
 
@@ -20,25 +88,9 @@ If you have five minutes, this is the order that makes the most sense.
 4. **Open it on a phone.** Navigation becomes a bottom bar rather than a drawer, the zones move behind tabs, and the tables become cards.
 5. **[Open the Figma file](https://www.figma.com/design/wCNR8r9BTCy2OiFeniCgQQ/Moritz--assessment).** Four pages: the token architecture, every component mapped to the Obra kit, and the reasoning behind the decisions.
 
-## Running it locally
-
-```bash
-git clone https://github.com/iamhtk/moritz-admin.git
-cd moritz-admin
-bun install
-cp .env.example .env.local   # fill in Supabase and Gemini keys
-```
-
-Then run the SQL files in the Supabase editor in order, `supabase/01-schema.sql`, then `supabase/relative-time.sql`, then `supabase/realtime.sql`, and seed:
-
-```bash
-bun run seed
-bun run dev
-```
-
 ---
 
-## The one decision that shaped everything
+## ⚖️ The One Decision That Shaped Everything
 
 Moritz doesn't bill by the hour. They quote a flat fee per matter, pay contracted co-counsel per matter, and promise a four-hour average turnaround on complex commercial work.
 
@@ -57,7 +109,7 @@ That reframe is printed on the dashboard itself, in the Money zone label and in 
 
 ---
 
-## The persona
+## 👤 The Persona
 
 Ingrid Solberg, Head of Operations. Not a lawyer.
 
@@ -71,7 +123,7 @@ Every element on the page answers one of those three. Anything that answered non
 
 ---
 
-## Information architecture
+## 🗺️ Information Architecture
 
 The brief asked for a "command center." That word carries three obligations:
 
@@ -114,13 +166,13 @@ The practical rule is **no red wash**: at most three red elements on screen at a
 
 ---
 
-## Design system
+## 🎨 Design System
 
 Every component is stock shadcn/ui on Radix. Nothing is forked. The entire visual identity lives in the token layer.
 
 ### Three tiers
 
-```
+```text
 primitives → semantic → component → UI
 ```
 
@@ -160,7 +212,7 @@ What was deliberately **not** adopted: their near-total absence of urgency signa
 
 ---
 
-## The Figma file
+## 🖼️ The Figma File
 
 The design system is documented in Figma across four pages. It exists to show the parts that read better as a system than as a running app: the token architecture, the mapping to the Obra kit, and the reasoning behind each decision.
 
@@ -170,13 +222,17 @@ The design system is documented in Figma across four pages. It exists to show th
 
 The three tiers shown resolving rather than described, the six OKLCH ramps, the five status tones, and the type scale with both faces side by side.
 
-![Figma Foundations page](./docs/images/figma-foundations.png)
+<p align="center">
+  <img src="./docs/images/figma-foundations.png" alt="Figma Foundations page" width="720" />
+</p>
 
 ### Components
 
 Organised by atomic level. Every component names its Obra equivalent and the reasoning behind how it is used, followed by a map of every composite surface in the product and a section documenting the four places this product deliberately extends the kit.
 
-![Figma Components page](./docs/images/figma-components.png)
+<p align="center">
+  <img src="./docs/images/figma-components.png" alt="Figma Components page" width="720" />
+</p>
 
 ### Variables
 
@@ -184,25 +240,33 @@ Three collections, 187 variables. Only the semantic tier carries light and dark 
 
 **Tier 1, primitives.** Raw values with no meaning attached. Six OKLCH ramps plus the type scale, spacing, radius and opacity stops.
 
-![Primitives collection](./docs/images/figma-variables--primitives.png)
+<p align="center">
+  <img src="./docs/images/figma-variables--primitives.png" alt="Primitives collection" width="720" />
+</p>
 
 **Tier 2, semantic.** shadcn's own variable names, aliasing primitives only. This is the only tier with light and dark modes, and the only place the theme flips.
 
-![Semantic collection](./docs/images/figma-variables--semantic.png)
+<p align="center">
+  <img src="./docs/images/figma-variables--semantic.png" alt="Semantic collection" width="720" />
+</p>
 
 **Tier 3, component.** Component-scoped tokens, aliasing semantic only. Single-mode by design, since the tier beneath it already carries the mode logic.
 
-![Component collection](./docs/images/figma-variables--component.png)
+<p align="center">
+  <img src="./docs/images/figma-variables--component.png" alt="Component collection" width="720" />
+</p>
 
 ### Decisions
 
 Eight cards covering the metric reframe, the persona, the every-row-carries-its-action rule, black for actions and colour for state, pastel as tint, chaos into calm, glass only where things float, and the stated assumptions.
 
-![Figma Decisions page](./docs/images/figma-decisions.png)
+<p align="center">
+  <img src="./docs/images/figma-decisions.png" alt="Figma Decisions page" width="720" />
+</p>
 
 ---
 
-## Backend
+## 🗄️ Backend
 
 ### Schema
 
@@ -240,7 +304,7 @@ A product whose premise is a live clock shouldn't need a manual refresh.
 
 ---
 
-## Relative time
+## ⏳ Relative Time
 
 The most interesting engineering decision in this project.
 
@@ -264,7 +328,7 @@ Matters created through the app carry real absolute timestamps and age normally,
 
 ---
 
-## AI: twenty-one surfaces, one rule set
+## 🤖 AI: Twenty-One Surfaces, One Rule Set
 
 The AI actor is named **Nora**. She appears in the activity feed the same way any lawyer does, no badge, no special treatment, no distinct colour. She's identified as an actor, not announced as a feature.
 
@@ -315,7 +379,7 @@ One line in the Money zone: *"Average 2h 47m in draft, 1h 06m in lawyer review."
 
 ---
 
-## Frontend
+## 🖥️ Frontend
 
 **Data.** TanStack Query with a 60-second refetch and Realtime invalidation. One shared query feeds all three zones and the rail. Optimistic updates on all four mutations with snapshot rollback.
 
@@ -335,7 +399,7 @@ The rule throughout: **progressive disclosure hides detail, never the action.** 
 
 ---
 
-## Accessibility
+## ♿ Accessibility
 
 WCAG 2.2 AA, tested rather than assumed, and re-verified after every batch of changes.
 
@@ -353,7 +417,7 @@ Minimum target sizes: 32px desktop, 44px touch.
 
 ---
 
-## Mobile
+## 📱 Mobile
 
 A reduction, not a squeeze. Nothing scrolls sideways.
 
@@ -367,7 +431,7 @@ The two-second test passes at 390px too.
 
 ---
 
-## How this was actually built
+## 🛠️ How This Was Actually Built
 
 The method mattered as much as the output.
 
@@ -387,7 +451,7 @@ The method mattered as much as the output.
 
 ---
 
-## Out of scope, and why
+## 🚫 Out of Scope, and Why
 
 **Authentication.** One reviewer, one page. A login screen is friction on a demo. The RLS policies are real; production would scope them to the authenticated administrator.
 
@@ -401,7 +465,7 @@ Matters and Lawyers were built, because the command palette, the filters, and th
 
 ---
 
-## Assumptions
+## 📌 Assumptions
 
 Moritz's internal admin workflows aren't public. The persona and the model of the work are inferred from their published operating model: flat fees, contracted co-counsel, same-day turnaround, intake by email and Slack.
 
@@ -417,7 +481,25 @@ In a real engagement these would be validated with the operations lead and two c
 
 ---
 
-## What I'd build next
+## 🧑‍💻 Running Locally
+
+```bash
+git clone https://github.com/iamhtk/moritz-admin.git
+cd moritz-admin
+bun install
+cp .env.example .env.local   # fill in Supabase and Gemini keys
+```
+
+Then run the SQL files in the Supabase editor in order, `supabase/01-schema.sql`, then `supabase/relative-time.sql`, then `supabase/realtime.sql`, and seed:
+
+```bash
+bun run seed
+bun run dev
+```
+
+---
+
+## ⏭️ What I'd Build Next
 
 **Validate the thresholds.** An hour each with the operations lead and two co-counsel. Every number in the assumptions list is a hypothesis until then.
 
@@ -431,4 +513,6 @@ In a real engagement these would be validated with the operations lead and two c
 
 ---
 
-Built for a firm that sells speed, by someone who thinks the interface should disappear.
+<p align="center">
+  <em>Built for a firm that sells speed, by someone who thinks the interface should disappear.</em>
+</p>
