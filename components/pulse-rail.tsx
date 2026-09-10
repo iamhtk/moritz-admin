@@ -154,7 +154,7 @@ function PulseBody({
   );
 }
 
-/** Pulse content for the mobile/tablet tab (no sticky rail chrome). */
+/** Pulse content for the /pulse page (no sticky rail chrome). */
 export function PulsePanel({ embedded = false }: { embedded?: boolean }) {
   const { data, error, isPending, refetch, isFetching } = useOverview();
   const [filter, setFilter] = useState("all");

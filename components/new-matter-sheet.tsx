@@ -130,6 +130,7 @@ export function NewMatterSheet({
       }
       toast.success(`${body.matter.reference} created.`);
       await qc.invalidateQueries({ queryKey: ["overview"] });
+      await qc.invalidateQueries({ queryKey: ["matters-all"] });
       onOpenChange(false);
     } catch (e) {
       toast.error(

@@ -6,6 +6,7 @@ import { useState } from "react";
 import { motion, LayoutGroup } from "framer-motion";
 import { transitionStandard } from "@/lib/motion";
 import {
+  Activity,
   Building2,
   FileText,
   LayoutDashboard,
@@ -28,6 +29,7 @@ const primaryItems = [
   { title: "Overview", href: "/", icon: LayoutDashboard },
   { title: "Matters", href: "/matters", icon: FileText },
   { title: "Lawyers", href: "/lawyers", icon: Users },
+  { title: "Pulse", href: "/pulse", icon: Activity },
 ] as const;
 
 const moreItems = [
@@ -41,8 +43,8 @@ function isActivePath(pathname: string, href: string) {
 }
 
 /**
- * Mobile-only primary navigation. Replaces the hamburger + side drawer
- * below `md`. Desktop continues to use the sidebar.
+ * Primary navigation below the Pulse-rail breakpoint (1200px).
+ * Desktop (≥1200) uses the sidebar + Overview rail instead.
  */
 export function MobileBottomNav() {
   const pathname = usePathname();
@@ -56,11 +58,13 @@ export function MobileBottomNav() {
     <>
       <nav
         aria-label="Primary"
-        className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-background pb-[env(safe-area-inset-bottom)] md:hidden"
-        style={{ height: "calc(var(--bottom-nav-h) + env(safe-area-inset-bottom, 0px))" }}
+        className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-background pb-[env(safe-area-inset-bottom)] xl:hidden"
+        style={{
+          height: "calc(var(--bottom-nav-h) + env(safe-area-inset-bottom, 0px))",
+        }}
       >
         <LayoutGroup>
-          <ul className="grid h-(--bottom-nav-h) grid-cols-4">
+          <ul className="grid h-(--bottom-nav-h) grid-cols-5">
             {primaryItems.map((item) => {
               const active = isActivePath(pathname, item.href);
               return (
@@ -69,7 +73,7 @@ export function MobileBottomNav() {
                     href={item.href}
                     aria-current={active ? "page" : undefined}
                     className={cn(
-                      "relative flex h-full flex-col items-center justify-center gap-0.5 px-1 outline-none transition-colors",
+                      "relative flex h-full flex-col items-center justify-center gap-0.5 px-0.5 outline-none transition-colors",
                       "focus-visible:ring-3 focus-visible:ring-ring/50",
                       active
                         ? "text-sidebar-accent"
@@ -79,7 +83,7 @@ export function MobileBottomNav() {
                     {active ? (
                       <motion.span
                         layoutId="bottom-nav-indicator"
-                        className="absolute inset-x-3 top-0 h-0.5 rounded-full bg-sidebar-accent"
+                        className="absolute inset-x-2 top-0 h-0.5 rounded-full bg-sidebar-accent"
                         transition={transitionStandard}
                         aria-hidden
                       />
@@ -105,7 +109,7 @@ export function MobileBottomNav() {
                 aria-haspopup="dialog"
                 onClick={() => setMoreOpen(true)}
                 className={cn(
-                  "relative flex h-full w-full flex-col items-center justify-center gap-0.5 px-1 outline-none transition-colors",
+                  "relative flex h-full w-full flex-col items-center justify-center gap-0.5 px-0.5 outline-none transition-colors",
                   "focus-visible:ring-3 focus-visible:ring-ring/50",
                   moreActive || moreOpen
                     ? "text-sidebar-accent"
@@ -115,7 +119,7 @@ export function MobileBottomNav() {
                 {moreActive || moreOpen ? (
                   <motion.span
                     layoutId="bottom-nav-indicator"
-                    className="absolute inset-x-3 top-0 h-0.5 rounded-full bg-sidebar-accent"
+                    className="absolute inset-x-2 top-0 h-0.5 rounded-full bg-sidebar-accent"
                     transition={transitionStandard}
                     aria-hidden
                   />

@@ -13,12 +13,18 @@ export function useRealtimeOverview() {
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "matters" },
-        () => qc.invalidateQueries({ queryKey: ["overview"] })
+        () => {
+          void qc.invalidateQueries({ queryKey: ["overview"] });
+          void qc.invalidateQueries({ queryKey: ["matters-all"] });
+        }
       )
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "activity" },
-        () => qc.invalidateQueries({ queryKey: ["overview"] })
+        () => {
+          void qc.invalidateQueries({ queryKey: ["overview"] });
+          void qc.invalidateQueries({ queryKey: ["matters-all"] });
+        }
       )
       .subscribe();
     return () => {

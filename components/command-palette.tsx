@@ -5,12 +5,12 @@ import { useRouter } from "next/navigation";
 import { useCommandState } from "cmdk";
 import {
   AlertTriangle,
-  FilePlus,
   FileText,
   LayoutDashboard,
-  MessageSquare,
+  Plus,
   Search,
   Send,
+  Sparkles,
   UserPlus,
   Users,
 } from "lucide-react";
@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/command";
 import { useOverview } from "@/hooks/use-overview";
 import { useDashboardActions } from "@/components/actions-provider";
+import { modKeyLabel } from "@/lib/utils";
 
 type Page = "root" | "assign" | "quote";
 type RankKind = "entity" | "action" | "nav" | "filter";
@@ -120,7 +121,6 @@ function CappedGroup({
     </CommandGroup>
   );
 }
-
 export function CommandPalette({
   open,
   onOpenChange,
@@ -130,6 +130,11 @@ export function CommandPalette({
 }) {
   const router = useRouter();
   const { data } = useOverview();
+  const [mod, setMod] = useState("⌘");
+  useEffect(() => {
+    setMod(modKeyLabel());
+  }, []);
+
   const { openAssign, openQuote, openNewMatter, openChat } =
     useDashboardActions();
   const [page, setPage] = useState<Page>("root");
@@ -146,14 +151,33 @@ export function CommandPalette({
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
-      if (!(e.metaKey || e.ctrlKey)) return;
       const key = e.key.toLowerCase();
-      if (key !== "k" && key !== "j") return;
       const target = e.target as HTMLElement | null;
       const tag = target?.tagName?.toLowerCase();
-      if (tag === "input" || tag === "textarea" || target?.isContentEditable) {
-        return;
+      const inField =
+        tag === "input" ||
+        tag === "textarea" ||
+        Boolean(target?.isContentEditable);
+      const inCmdk = Boolean(target?.closest("[cmdk-root]"));
+
+      // Plain N while the palette is open and the search field is empty → New matter.
+      // Capture phase so cmdk does not swallow the key into the filter first.
+      if (open && !e.metaKey && !e.ctrlKey && !e.altKey && key === "n") {
+        const cmdkInput =
+          document.querySelector<HTMLInputElement>("[cmdk-input]");
+        if (!cmdkInput || cmdkInput.value === "") {
+          e.preventDefault();
+          e.stopPropagation();
+          onOpenChange(false);
+          openNewMatter();
+          return;
+        }
       }
+
+      if (!(e.metaKey || e.ctrlKey)) return;
+      if (key !== "k" && key !== "j") return;
+      // Allow toggle from anywhere except ordinary form fields outside the palette.
+      if (inField && !inCmdk) return;
       e.preventDefault();
       if (key === "k") {
         onOpenChange(!open);
@@ -162,9 +186,9 @@ export function CommandPalette({
         openChat();
       }
     };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [open, onOpenChange, openChat]);
+    window.addEventListener("keydown", onKeyDown, true);
+    return () => window.removeEventListener("keydown", onKeyDown, true);
+  }, [open, onOpenChange, openChat, openNewMatter]);
 
   const run = (fn: () => void) => {
     onOpenChange(false);
@@ -310,7 +334,7 @@ export function CommandPalette({
                   keywords={["action"]}
                   onSelect={() => run(() => openNewMatter())}
                 >
-                  <FilePlus />
+                  <Plus />
                   <span>New matter</span>
                   <CommandShortcut>N</CommandShortcut>
                 </CommandItem>
@@ -332,9 +356,9 @@ export function CommandPalette({
                   keywords={["action"]}
                   onSelect={() => run(() => openChat())}
                 >
-                  <MessageSquare />
+                  <Sparkles />
                   <span>Ask about the firm</span>
-                  <CommandShortcut>⌘J</CommandShortcut>
+                  <CommandShortcut>{mod}+J</CommandShortcut>
                 </CommandItem>
               </CommandGroup>
 

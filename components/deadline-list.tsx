@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -31,6 +32,21 @@ function shortLawyerName(name: string | null): string {
   const first = parts[0];
   const lastInitial = parts[parts.length - 1][0];
   return `${first} ${lastInitial}.`;
+}
+
+function DeadlineLawyer({ matter }: { matter: MatterStatus }) {
+  const label = shortLawyerName(matter.lawyer_name);
+  if (!matter.lawyer_id) {
+    return <span>{label}</span>;
+  }
+  return (
+    <Link
+      href={`/lawyers?id=${encodeURIComponent(matter.lawyer_id)}`}
+      className="text-foreground underline-offset-2 hover:underline"
+    >
+      {label}
+    </Link>
+  );
 }
 
 /** Client-side slip signal. Must match server `likelyToSlip` in lib/queries.ts. */
@@ -117,7 +133,7 @@ export function DeadlineList({
                         >
                           <span className="line-clamp-2">
                             {matter.client_name} ·{" "}
-                            {shortLawyerName(matter.lawyer_name)}
+                            <DeadlineLawyer matter={matter} />
                             {slip ? (
                               <>
                                 {" · "}
@@ -304,7 +320,7 @@ export function DeadlineList({
                       >
                         <span className="min-w-0">
                           {matter.client_name} ·{" "}
-                          {shortLawyerName(matter.lawyer_name)}
+                          <DeadlineLawyer matter={matter} />
                           {slip ? (
                             <>
                               {" · "}

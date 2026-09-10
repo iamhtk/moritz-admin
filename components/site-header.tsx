@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import {
   Breadcrumb,
   BreadcrumbItem,
+  BreadcrumbLink,
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
@@ -15,15 +16,17 @@ import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { NotificationBell } from "@/components/notification-center";
 import { useDashboardActions } from "@/components/actions-provider";
+import { modKeyLabel } from "@/lib/utils";
 
 const TITLES: Record<string, string> = {
   "/": "Overview",
   "/matters": "Matters",
   "/lawyers": "Lawyers",
+  "/pulse": "Pulse",
+  "/notifications": "Notifications",
   "/clients": "Clients",
   "/finance": "Finance",
   "/settings": "Settings",
-  "/notifications": "Notifications",
 };
 
 /**
@@ -33,6 +36,10 @@ const TITLES: Record<string, string> = {
  */
 export function SiteHeader() {
   const pathname = usePathname();
+  const [mod, setMod] = useState("⌘");
+  useEffect(() => {
+    setMod(modKeyLabel());
+  }, []);
   const { openCommandPalette, openNewMatter, openChat } =
     useDashboardActions();
   const [scrolled, setScrolled] = useState(false);
@@ -57,12 +64,16 @@ export function SiteHeader() {
   return (
     <header className={`sticky top-0 z-30 flex h-(--topbar-h) shrink-0 items-center justify-between gap-2 border-b border-border bg-background px-4 sm:gap-3 transition-shadow duration-[var(--motion-duration)] ease-[var(--motion-ease-out)] ${scrolled ? "shadow-sm" : ""}`}>
       <div className="flex min-w-0 items-center gap-2">
-        <SidebarTrigger className="-ml-1 hidden min-h-8 min-w-8 md:inline-flex" />
-        <Separator orientation="vertical" className="mr-1 hidden h-4 md:block" />
+        <SidebarTrigger className="-ml-1 hidden min-h-8 min-w-8 xl:inline-flex" />
+        <Separator
+          orientation="vertical"
+          className="mr-1 hidden h-8 md:block"
+          aria-hidden
+        />
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem className="hidden sm:inline-flex">
-              <span className="text-muted-foreground">Moritz</span>
+              <BreadcrumbLink href="/">Moritz</BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator className="hidden sm:block" />
             <BreadcrumbItem>
@@ -102,7 +113,7 @@ export function SiteHeader() {
               className="pointer-events-none inline-flex h-5 items-center rounded-md border border-border px-1.5 font-medium text-text-tertiary"
               style={{ fontSize: "var(--text-11)" }}
             >
-              ⌘K
+              {mod}+K
             </kbd>
           </Button>
           <NotificationBell />
@@ -121,7 +132,7 @@ export function SiteHeader() {
 
         <Separator
           orientation="vertical"
-          className="hidden h-5 sm:block"
+          className="hidden h-8 sm:block"
           aria-hidden
         />
 

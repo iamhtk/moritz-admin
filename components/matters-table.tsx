@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 import {
   useEffect,
   useMemo,
@@ -25,6 +27,13 @@ import {
 } from "@tanstack/react-table";
 import { AutoHideScroll } from "@/components/auto-hide-scroll";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -207,7 +216,10 @@ function MatterCard({
         <span className="text-right">{matter.type || "—"}</span>
         <span>
           {matter.lawyer_id ? (
-            <span className="inline-flex items-center gap-1.5">
+            <Link
+              href={`/lawyers?id=${encodeURIComponent(matter.lawyer_id)}`}
+              className="inline-flex items-center gap-1.5 text-foreground underline-offset-2 hover:underline"
+            >
               <LawyerAvatar
                 lawyerId={matter.lawyer_id}
                 name={matter.lawyer_name ?? "Lawyer"}
@@ -216,7 +228,7 @@ function MatterCard({
                 className="rounded-[7px] after:rounded-[7px]"
               />
               {shortLawyerName(matter.lawyer_name)}
-            </span>
+            </Link>
           ) : (
             <span className="text-text-tertiary">Unassigned</span>
           )}
@@ -295,7 +307,9 @@ export function MattersTable({
 }) {
   const { openAssign, nudgeMatter, nudgingMatterId, openClientUpdate } =
     useDashboardActions();
-  const [sorting, setSorting] = useState<SortingState>([]);
+  const [sorting, setSorting] = useState<SortingState>([
+    { id: "submitted_at", desc: true },
+  ]);
   const [pagination, setPagination] = useState({
     pageIndex: 0,
     pageSize: PAGE_SIZE,
@@ -320,7 +334,11 @@ export function MattersTable({
           />
         ),
       }),
-      columnHelper.accessor("client_name", {
+            columnHelper.accessor("submitted_at", {
+        header: "Submitted",
+        sortFn: "alphanumeric",
+      }),
+columnHelper.accessor("client_name", {
         header: "Client",
         cell: (info) => {
           const v = info.getValue();
@@ -373,7 +391,10 @@ export function MattersTable({
             );
           }
           return (
-            <div className="flex items-center gap-2">
+            <Link
+              href={`/lawyers?id=${encodeURIComponent(row.lawyer_id)}`}
+              className="flex items-center gap-2 text-foreground underline-offset-2 hover:underline"
+            >
               <LawyerAvatar
                 lawyerId={row.lawyer_id}
                 name={row.lawyer_name ?? "Lawyer"}
@@ -382,7 +403,7 @@ export function MattersTable({
                 className="rounded-[7px] after:rounded-[7px]"
               />
               <span>{shortLawyerName(row.lawyer_name)}</span>
-            </div>
+            </Link>
           );
         },
       }),
@@ -560,6 +581,43 @@ export function MattersTable({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3">
+      <div className="flex shrink-0 items-center gap-2 md:hidden">
+        <label htmlFor="matters-sort" className="sr-only">
+          Sort matters
+        </label>
+        <Select
+          value={
+            sorting[0]
+              ? `${sorting[0].id}:${sorting[0].desc ? "desc" : "asc"}`
+              : "submitted_at:desc"
+          }
+          onValueChange={(v) => {
+            const [id, dir] = v.split(":");
+            setSorting([{ id, desc: dir === "desc" }]);
+            setPagination((p) => ({ ...p, pageIndex: 0 }));
+          }}
+        >
+          <SelectTrigger
+            id="matters-sort"
+            className="h-11 min-h-11 w-full"
+            style={{ fontSize: "var(--text-13)" }}
+          >
+            <SelectValue placeholder="Sort by" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="submitted_at:desc">Newest first</SelectItem>
+            <SelectItem value="submitted_at:asc">Oldest first</SelectItem>
+            <SelectItem value="reference:asc">Reference A–Z</SelectItem>
+            <SelectItem value="reference:desc">Reference Z–A</SelectItem>
+            <SelectItem value="client_name:asc">Client A–Z</SelectItem>
+            <SelectItem value="client_name:desc">Client Z–A</SelectItem>
+            <SelectItem value="service_line:asc">Service line A–Z</SelectItem>
+            <SelectItem value="service_line:desc">Service line Z–A</SelectItem>
+            <SelectItem value="minutes_remaining:asc">Least time left</SelectItem>
+            <SelectItem value="minutes_remaining:desc">Most time left</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
       <AutoHideScroll className="min-h-0 flex-1 md:hidden">
         <ul className="flex flex-col gap-2 pb-1">
           {pageRows.map((row) => {
@@ -599,7 +657,9 @@ export function MattersTable({
                     key={group.id}
                     className="border-border hover:bg-transparent"
                   >
-                    {group.headers.map((header) => {
+                    {group.headers
+                      .filter((header) => header.column.id !== "submitted_at")
+                      .map((header) => {
                       const canSort = header.column.getCanSort();
                       const sorted = header.column.getIsSorted();
                       return (
@@ -679,7 +739,10 @@ export function MattersTable({
                         } as CSSProperties
                       }
                     >
-                      {row.getAllCells().map((cell) => (
+                      {row
+                        .getAllCells()
+                        .filter((cell) => cell.column.id !== "submitted_at")
+                        .map((cell) => (
                         <TableCell
                           key={cell.id}
                           className={cn(

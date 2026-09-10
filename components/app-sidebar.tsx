@@ -47,7 +47,11 @@ export function AppSidebar({
   return (
     <Sidebar variant="inset" collapsible="icon" {...props}>
       <SidebarHeader className="px-3 py-3">
-        <div className="flex items-center gap-2.5 px-1 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
+        <Link
+          href="/"
+          className="flex items-center gap-2.5 px-1 outline-none focus-visible:ring-3 focus-visible:ring-ring/50 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"
+          aria-label="Moritz overview"
+        >
           <div
             className="flex size-6 shrink-0 items-center justify-center rounded-md text-primary-foreground"
             style={{ background: "var(--brand)" }}
@@ -66,7 +70,7 @@ export function AppSidebar({
           >
             Moritz
           </span>
-        </div>
+        </Link>
       </SidebarHeader>
 
       <SidebarContent>

@@ -1,5 +1,6 @@
 "use client";
 
+import { useSyncExternalStore } from "react";
 import {
   Bar,
   BarChart,
@@ -18,6 +19,21 @@ import {
   type ChartConfig,
 } from "@/components/ui/chart";
 import type { FinanceDayRow } from "@/lib/supabase";
+
+const NARROW = "(max-width: 767px)";
+function subscribeNarrow(cb: () => void) {
+  const mq = window.matchMedia(NARROW);
+  mq.addEventListener("change", cb);
+  return () => mq.removeEventListener("change", cb);
+}
+function useNarrow() {
+  return useSyncExternalStore(
+    subscribeNarrow,
+    () => window.matchMedia(NARROW).matches,
+    () => false
+  );
+}
+
 
 const chartConfig = {
   delivered: { label: "Delivered" },
@@ -48,6 +64,7 @@ export function DeliveredChart({
   deliveredThisWeek: number;
   plannedThisWeek: number;
 }) {
+  const narrow = useNarrow();
   const data = days.slice(-7).map((d) => {
     const weekend = d.planned_delivered === 0;
     // Weekend zeros need a 2px stub so the day reads as present, not missing.
@@ -69,7 +86,7 @@ export function DeliveredChart({
       </p>
       <ChartContainer
         config={chartConfig}
-        className="aspect-auto h-40 w-full"
+        className="aspect-auto h-28 w-full sm:h-32 md:h-40"
         aria-label="Matters delivered per day against the daily plan"
       >
         <BarChart
@@ -83,6 +100,7 @@ export function DeliveredChart({
           <XAxis
             dataKey="date"
             tickFormatter={weekdayLetter}
+            minTickGap={narrow ? 8 : 4}
             tickLine={false}
             axisLine={false}
             tick={{
@@ -90,13 +108,17 @@ export function DeliveredChart({
               fontSize: 11,
             }}
             height={36}
-            label={{
-              value: "Day",
-              position: "insideBottomRight",
-              offset: 0,
-              fill: "var(--chart-axis-text)",
-              fontSize: 10,
-            }}
+            label={
+              narrow
+                ? undefined
+                : {
+                    value: "Day",
+                    position: "insideBottomRight",
+                    offset: 0,
+                    fill: "var(--chart-axis-text)",
+                    fontSize: 10,
+                  }
+            }
           />
           <YAxis
             tickLine={false}
@@ -107,13 +129,17 @@ export function DeliveredChart({
               fill: "var(--chart-axis-text)",
               fontSize: 10,
             }}
-            label={{
-              value: "Matters",
-              angle: -90,
-              position: "insideLeft",
-              fill: "var(--chart-axis-text)",
-              fontSize: 10,
-            }}
+            label={
+              narrow
+                ? undefined
+                : {
+                    value: "Matters",
+                    angle: -90,
+                    position: "insideLeft",
+                    fill: "var(--chart-axis-text)",
+                    fontSize: 10,
+                  }
+            }
           />
           <ChartTooltip
             content={
@@ -135,7 +161,7 @@ export function DeliveredChart({
             stroke="var(--chart-target-line)"
             strokeDasharray="3 3"
             label={{
-              value: `Plan ${dailyPlan} a day`,
+              value: narrow ? `Plan ${dailyPlan}` : `Plan ${dailyPlan} a day`,
               position: "right",
               offset: 6,
               fill: "var(--chart-axis-text)",
@@ -176,7 +202,7 @@ export function DeliveredChartSkeleton() {
   return (
     <Card className="h-full flex flex-col gap-0 rounded-lg p-4 [--card-spacing:0px]">
       <Skeleton className="h-3 w-48" />
-      <Skeleton className="mt-2 h-40 w-full rounded-md" />
+      <Skeleton className="mt-2 h-28 w-full rounded-md sm:h-32 md:h-40" />
       <Skeleton className="mt-auto h-3 w-3/5 max-w-sm pt-2.5" />
     </Card>
   );

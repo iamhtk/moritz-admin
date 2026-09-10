@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -41,7 +41,6 @@ function LawyerAction({
   lawyer: LawyerLoad;
   mobile?: boolean;
 }) {
-  const router = useRouter();
   const { openAssignForLawyer } = useDashboardActions();
 
   if (lawyer.capacityState === "over") {
@@ -60,16 +59,25 @@ function LawyerAction({
 
   return (
     <Button
-      type="button"
+      asChild
       size="sm"
       variant="outline"
       className={mobile ? "min-h-11" : undefined}
-      onClick={() =>
-        router.push(`/lawyers?id=${encodeURIComponent(lawyer.id)}`)
-      }
     >
-      View
+      <Link href={`/lawyers?id=${encodeURIComponent(lawyer.id)}`}>View</Link>
     </Button>
+  );
+}
+
+function LawyerNameLink({ lawyer }: { lawyer: LawyerLoad }) {
+  return (
+    <Link
+      href={`/lawyers?id=${encodeURIComponent(lawyer.id)}`}
+      className="font-medium text-pretty leading-tight text-foreground underline-offset-2 hover:underline"
+      style={{ fontSize: "var(--text-13)" }}
+    >
+      {lawyer.name}
+    </Link>
   );
 }
 
@@ -84,12 +92,7 @@ function LawyerCard({ lawyer }: { lawyer: LawyerLoad }) {
           size="lg"
         />
         <div className="min-w-0">
-          <div
-            className="font-medium text-pretty text-foreground"
-            style={{ fontSize: "var(--text-13)" }}
-          >
-            {lawyer.name}
-          </div>
+          <LawyerNameLink lawyer={lawyer} />
           <div
             className="text-text-tertiary"
             style={{ fontSize: "var(--text-11)" }}
@@ -154,12 +157,7 @@ function LawyerStackedRow({
           size="md"
         />
         <div className="min-w-0 flex-1">
-          <div
-            className="font-medium text-pretty leading-tight text-foreground"
-            style={{ fontSize: "var(--text-13)" }}
-          >
-            {lawyer.name}
-          </div>
+          <LawyerNameLink lawyer={lawyer} />
           <div
             className="text-text-tertiary"
             style={{ fontSize: "var(--text-11)" }}
@@ -368,12 +366,7 @@ export function CapacityTable({
                             size="md"
                           />
                           <div className="min-w-0">
-                            <div
-                              className="font-medium leading-tight text-pretty text-foreground"
-                              style={{ fontSize: "var(--text-13)" }}
-                            >
-                              {lawyer.name}
-                            </div>
+                            <LawyerNameLink lawyer={lawyer} />
                             <div
                               className="text-text-tertiary"
                               style={{ fontSize: "var(--text-11)" }}

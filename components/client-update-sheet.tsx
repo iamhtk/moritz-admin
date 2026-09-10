@@ -192,6 +192,7 @@ export function ClientUpdateSheet({
       }
       toast.success(`Update logged for ${matter.client_name}.`);
       qc.invalidateQueries({ queryKey: ["overview"] });
+      qc.invalidateQueries({ queryKey: ["matters-all"] });
       onOpenChange(false);
     } catch (e) {
       toast.error(

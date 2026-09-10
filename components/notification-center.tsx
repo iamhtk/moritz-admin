@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type ComponentProps } from "react";
 import { Bell, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -156,8 +155,6 @@ function NotificationList({
   onNavigate?: (href: string | null) => void;
   asMenuItems?: boolean;
 }) {
-  const router = useRouter();
-
   if (isPending) {
     return (
       <div className="space-y-2 px-3 py-3">
@@ -248,17 +245,12 @@ function NotificationList({
         const href = notificationHref(item);
         const activate = () => {
           markRead(item.id);
-          if (onNavigate) onNavigate(href);
-          else if (href) router.push(href);
+          onNavigate?.(href);
         };
 
         if (asMenuItems) {
-          return (
-            <DropdownMenuItem
-              key={item.id}
-              className="cursor-pointer items-start gap-2.5 rounded-none px-2.5 py-2 focus:bg-surface-hover focus:text-foreground"
-              onSelect={activate}
-            >
+          const body = (
+            <>
               <span
                 className={cn(
                   "mt-1.5 size-1.5 shrink-0 rounded-full",
@@ -278,6 +270,34 @@ function NotificationList({
                 </span>
                 <RelativeTime iso={item.at} />
               </span>
+            </>
+          );
+
+          if (href) {
+            return (
+              <DropdownMenuItem
+                key={item.id}
+                asChild
+                className="cursor-pointer items-start gap-2.5 rounded-none px-2.5 py-2 focus:bg-surface-hover focus:text-foreground"
+              >
+                <Link
+                  href={href}
+                  onClick={() => markRead(item.id)}
+                  className="flex w-full items-start gap-2.5"
+                >
+                  {body}
+                </Link>
+              </DropdownMenuItem>
+            );
+          }
+
+          return (
+            <DropdownMenuItem
+              key={item.id}
+              className="cursor-pointer items-start gap-2.5 rounded-none px-2.5 py-2 focus:bg-surface-hover focus:text-foreground"
+              onSelect={activate}
+            >
+              {body}
             </DropdownMenuItem>
           );
         }
@@ -360,7 +380,7 @@ function BellTrigger({
       <Bell className="size-4" aria-hidden />
       {badge ? (
         <span
-          className="absolute top-1.5 right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 font-semibold text-primary-foreground md:top-0.5 md:right-0.5"
+          className="absolute top-1.5 right-1.5 flex h-4 min-w-4 translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full px-1 font-semibold text-primary-foreground ring-2 ring-background md:top-1 md:right-1"
           style={{
             fontSize: "0.625rem",
             background: "var(--status-risk-fill)",
@@ -375,7 +395,6 @@ function BellTrigger({
 }
 
 export function NotificationBell() {
-  const router = useRouter();
   const isMobile = useIsMobile();
   const side = useSheetSide();
   const [open, setOpen] = useState(false);
@@ -405,16 +424,14 @@ export function NotificationBell() {
   const footer = (
     <div className="border-t border-border p-1.5">
       <Button
-        type="button"
+        asChild
         variant="ghost"
         size="sm"
         className="w-full justify-center font-medium"
-        onClick={() => {
-          setOpen(false);
-          router.push("/notifications");
-        }}
       >
-        Show all
+        <Link href="/notifications" onClick={() => setOpen(false)}>
+          Show all
+        </Link>
       </Button>
     </div>
   );
@@ -462,9 +479,8 @@ export function NotificationBell() {
                 isFetching={isFetching}
                 isUnread={isUnread}
                 markRead={markRead}
-                onNavigate={(href) => {
+                onNavigate={() => {
                   setOpen(false);
-                  if (href) router.push(href);
                 }}
               />
             </div>

@@ -18,11 +18,7 @@ import {
   DeliveredChart,
   DeliveredChartSkeleton,
 } from "@/components/delivered-chart";
-import {
-  MoneyStrip,
-  MoneyStripSkeleton,
-  MobileChartStat,
-} from "@/components/money-strip";
+import { MoneyStrip, MoneyStripSkeleton } from "@/components/money-strip";
 import { UnquotedRow } from "@/components/unquoted-row";
 import { useOverview } from "@/hooks/use-overview";
 import type { FinanceDayRow } from "@/lib/supabase";
@@ -52,14 +48,6 @@ function daysLeftInMonth(from: Date = new Date()) {
   return Math.max(0, last - from.getDate());
 }
 
-function cumulativeRevenue(days: FinanceDayRow[]) {
-  let running = 0;
-  return days.map((d) => {
-    running += Number(d.revenue);
-    return running;
-  });
-}
-
 export function ZoneMoney({
   className,
   hideLabel = false,
@@ -77,16 +65,11 @@ export function ZoneMoney({
           meta={hideLabel ? undefined : "Loading…"}
           visuallyHidden={hideLabel}
         />
-        <div className="hidden grid-cols-1 items-stretch gap-3 md:grid lg:grid-cols-2">
+        <div className="grid grid-cols-1 items-stretch gap-3 lg:grid-cols-2">
           <RevenueChartSkeleton />
           <DeliveredChartSkeleton />
         </div>
-        <div className="grid grid-cols-1 gap-2 md:hidden">
-          <MoneyStripSkeleton />
-        </div>
-        <div className="hidden md:block">
-          <MoneyStripSkeleton />
-        </div>
+        <MoneyStripSkeleton />
       </section>
     );
   }
@@ -124,10 +107,6 @@ export function ZoneMoney({
   const daysLeft = daysLeftInMonth();
   const draft = formatDuration(finance.avgDraftMinutes);
   const review = formatDuration(finance.avgReviewMinutes);
-  const revenueSpark = cumulativeRevenue(
-    finance.revenueDays?.length ? finance.revenueDays : finance.days
-  );
-  const deliveredSpark = finance.days.slice(-7).map((d) => Number(d.delivered));
   const meta = (
     <>
       {month} · flat fees per matter, not billable hours
@@ -156,37 +135,7 @@ export function ZoneMoney({
         </p>
       ) : null}
 
-      <div className="grid grid-cols-1 gap-2 md:hidden">
-        <MobileChartStat
-          label="Revenue"
-          value={
-            <>
-              <span className="num">{finance.pctOfTarget}</span>%
-            </>
-          }
-          spark={revenueSpark}
-          caption={
-            <>
-              of target with <span className="num">{daysLeft}</span> days left.
-              On pace for <span className="num">{finance.projectedPct}</span>{" "}
-              percent.
-            </>
-          }
-        />
-        <MobileChartStat
-          label="Delivered"
-          value={<span className="num">{finance.deliveredThisWeek}</span>}
-          spark={deliveredSpark.length > 1 ? deliveredSpark : [0, 1]}
-          caption={
-            <>
-              this week against a plan of{" "}
-              <span className="num">{finance.plannedThisWeek}</span>.
-            </>
-          }
-        />
-      </div>
-
-      <div className="hidden grid-cols-1 items-stretch gap-3 md:grid lg:grid-cols-2">
+      <div className="grid grid-cols-1 items-stretch gap-3 lg:grid-cols-2">
         <RevenueChart
           days={finance.revenueDays?.length ? finance.revenueDays : finance.days}
           target={finance.target}

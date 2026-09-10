@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import {
   Area,
   AreaChart,
@@ -25,6 +25,21 @@ const chartConfig = {
 
 import { formatFeeDollars } from "@/lib/format";
 
+const NARROW = "(max-width: 767px)";
+function subscribeNarrow(cb: () => void) {
+  const mq = window.matchMedia(NARROW);
+  mq.addEventListener("change", cb);
+  return () => mq.removeEventListener("change", cb);
+}
+function useNarrow() {
+  return useSyncExternalStore(
+    subscribeNarrow,
+    () => window.matchMedia(NARROW).matches,
+    () => false
+  );
+}
+
+
 function formatCurrency(n: number) {
   return formatFeeDollars(n);
 }
@@ -35,6 +50,11 @@ function formatShortDate(iso: string) {
     day: "numeric",
     month: "short",
   });
+}
+
+function formatCompactDate(iso: string) {
+  const d = new Date(`${iso}T12:00:00`);
+  return String(d.getDate());
 }
 
 function formatAxisCurrency(n: number) {
@@ -60,6 +80,7 @@ export function RevenueChart({
 }) {
   const hasAnimated = useRef(false);
   const [isAnimationActive, setIsAnimationActive] = useState(false);
+  const narrow = useNarrow();
 
   useEffect(() => {
     if (!hasAnimated.current) {
@@ -91,7 +112,7 @@ export function RevenueChart({
       </p>
       <ChartContainer
         config={chartConfig}
-        className="aspect-auto h-40 w-full"
+        className="aspect-auto h-28 w-full sm:h-32 md:h-40"
         aria-label="Cumulative fee revenue this month against the monthly target"
       >
         <AreaChart
@@ -107,20 +128,25 @@ export function RevenueChart({
             dataKey="date"
             tickLine={false}
             axisLine={false}
-            tickFormatter={formatShortDate}
+            tickFormatter={narrow ? formatCompactDate : formatShortDate}
+            interval="preserveStartEnd"
+            minTickGap={narrow ? 28 : 12}
             tick={{
               fill: "var(--chart-axis-text)",
               fontSize: 10,
             }}
             height={36}
-            interval="preserveStartEnd"
-            label={{
-              value: "Day",
-              position: "insideBottomRight",
-              offset: 0,
-              fill: "var(--chart-axis-text)",
-              fontSize: 10,
-            }}
+            label={
+              narrow
+                ? undefined
+                : {
+                    value: "Day",
+                    position: "insideBottomRight",
+                    offset: 0,
+                    fill: "var(--chart-axis-text)",
+                    fontSize: 10,
+                  }
+            }
           />
           <YAxis
             tickLine={false}
@@ -132,14 +158,18 @@ export function RevenueChart({
             }}
             width={44}
             domain={[0, Math.max(target * 1.05, running * 1.1)]}
-            label={{
-              value: "Revenue ($)",
-              angle: -90,
-              position: "left",
-              offset: 16,
-              fill: "var(--chart-axis-text)",
-              fontSize: 10,
-            }}
+            label={
+              narrow
+                ? undefined
+                : {
+                    value: "Revenue ($)",
+                    angle: -90,
+                    position: "left",
+                    offset: 16,
+                    fill: "var(--chart-axis-text)",
+                    fontSize: 10,
+                  }
+            }
           />
           <ChartTooltip
             content={
@@ -161,7 +191,7 @@ export function RevenueChart({
             stroke="var(--chart-target-line)"
             strokeDasharray="3 3"
             label={{
-              value: `Target ${formatCurrency(target)}`,
+              value: narrow ? `Target` : `Target ${formatCurrency(target)}`,
               position: "insideTopRight",
               fill: "var(--chart-axis-text)",
               fontSize: 11,
@@ -211,7 +241,7 @@ export function RevenueChartSkeleton() {
   return (
     <Card className="h-full flex flex-col gap-0 rounded-lg p-4 [--card-spacing:0px]">
       <Skeleton className="h-3 w-56" />
-      <Skeleton className="mt-2 h-40 w-full rounded-md" />
+      <Skeleton className="mt-2 h-28 w-full rounded-md sm:h-32 md:h-40" />
       <Skeleton className="mt-auto h-3 w-4/5 max-w-md pt-2.5" />
     </Card>
   );
