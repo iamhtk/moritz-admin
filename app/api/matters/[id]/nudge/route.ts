@@ -20,9 +20,10 @@ export async function POST(
   }
 
   // Collapse double-submits and accidental re-clicks into one pulse entry.
+  // Read reconstructed times from activity_feed so seeded rows compare fairly.
   const since = new Date(Date.now() - 2 * 60 * 1000).toISOString();
   const { data: recent } = await db
-    .from("activity")
+    .from("activity_feed")
     .select("id")
     .eq("matter_id", matter.id)
     .eq("verb", "escalated")

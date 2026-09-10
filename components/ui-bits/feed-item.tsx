@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { LawyerAvatar } from "@/components/ui-bits/lawyer-avatar";
 import {
@@ -9,14 +10,26 @@ import {
   isLawyerActor,
   matterHref,
 } from "@/lib/activity-copy";
+import { formatLocalClock } from "@/lib/format";
 import type { ActivityItem } from "@/lib/supabase";
 import { cn } from "cn";
 
-function formatClock(iso: string) {
-  const d = new Date(iso);
-  const hours = String(d.getHours()).padStart(2, "0");
-  const minutes = String(d.getMinutes()).padStart(2, "0");
-  return `${hours}:${minutes}`;
+/** Local clock after mount so SSR (UTC on Vercel) cannot paint midnight for a Pacific evening. */
+function LocalClock({ iso }: { iso: string }) {
+  const [label, setLabel] = useState("");
+  useEffect(() => {
+    setLabel(formatLocalClock(iso));
+  }, [iso]);
+  return (
+    <time
+      dateTime={iso}
+      className="num whitespace-nowrap text-text-tertiary"
+      style={{ fontSize: "var(--text-11)" }}
+      suppressHydrationWarning
+    >
+      {label || " "}
+    </time>
+  );
 }
 
 export function FeedItem({ item }: { item: ActivityItem }) {
@@ -51,13 +64,7 @@ export function FeedItem({ item }: { item: ActivityItem }) {
         {/* Parent Link owns navigation — refs render as plain text to avoid nested <a>. */}
         {buildActivitySentence(item, { linkMatterRefs: false })}
       </p>
-      <time
-        dateTime={item.at}
-        className="num whitespace-nowrap text-text-tertiary"
-        style={{ fontSize: "var(--text-11)" }}
-      >
-        {formatClock(item.at)}
-      </time>
+      <LocalClock iso={item.at} />
     </>
   );
 

@@ -52,7 +52,8 @@ from resolved r
 join clients c on c.id = r.client_id
 left join lawyers l on l.id = r.lawyer_id;
 
--- Same treatment for the feed, so "22:04" stays a plausible recent time.
+-- Same treatment for the feed, so seeded Pulse rows stay minutes/hours ago
+-- rather than locked to the calendar day they were imported.
 create or replace view activity_feed as
 select
   a.id,

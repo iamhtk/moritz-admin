@@ -849,12 +849,17 @@ async function getConfig(db: ReturnType<typeof serverClient>): Promise<Config> {
       refs
     );
   
-    // Today's counts per verb. These are the pulse; the feed is the detail.
-    const startOfDay = new Date();
-    startOfDay.setHours(0, 0, 0, 0);
-    const today = activity.filter((a) => new Date(a.at) >= startOfDay);
-    const activityCounts: Record<string, number> = { all: today.length };
-    for (const a of today) activityCounts[a.verb] = (activityCounts[a.verb] ?? 0) + 1;
+    // Pulse chips recompute on the client with the viewer's local calendar day.
+    // Server counts use a rolling 24h window so Ask (UTC host) is not empty near
+    // local midnight and does not claim a UTC "today" the viewer is not in.
+    const dayAgo = Date.now() - 24 * 60 * 60 * 1000;
+    const recent = activity.filter(
+      (a) => new Date(a.at).getTime() >= dayAgo
+    );
+    const activityCounts: Record<string, number> = { all: recent.length };
+    for (const a of recent) {
+      activityCounts[a.verb] = (activityCounts[a.verb] ?? 0) + 1;
+    }
   
     const deadlines = live
       .filter((m) => m.minutes_remaining <= cfg.slaMinutes)

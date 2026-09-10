@@ -35,8 +35,17 @@ export function formatRelativeTime(iso: string, now = new Date()): string {
   const days = Math.floor(hours / 24);
   if (days === 1) return "Yesterday";
   if (days < 7) return `${days}d ago`;
-  return new Date(iso).toLocaleDateString("en-GB", {
+  return new Date(iso).toLocaleDateString(undefined, {
     day: "numeric",
     month: "short",
+  });
+}
+
+/** Clock time in the viewer's local timezone, e.g. "14:02". */
+export function formatLocalClock(iso: string): string {
+  return new Date(iso).toLocaleTimeString(undefined, {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
   });
 }

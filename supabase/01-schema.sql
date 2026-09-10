@@ -52,7 +52,10 @@ create table if not exists activity (
   verb text not null,
   matter_id text references matters (id),
   client_id text references clients (id),
-  note text
+  note text,
+  -- Relative-time columns (also added by relative-time.sql on existing DBs).
+  offset_minutes int,
+  is_seeded boolean not null default false
 );
 
 create table if not exists finance_days (
@@ -63,6 +66,7 @@ create table if not exists finance_days (
 );
 
 -- Risk and minutes_remaining live in Postgres so the clock is one source of truth.
+-- relative-time.sql rebuilds matter_status with seeded offsets; apply that file after this one.
 create or replace view matter_status as
 select
   m.id, m.reference, m.client_id, m.service_line, m.type, m.stage, m.lawyer_id,
@@ -96,8 +100,16 @@ from matters m
 join clients c on c.id = m.client_id
 left join lawyers l on l.id = m.lawyer_id;
 
+-- Seeded activity reconstructs `at` the same way matter_status reconstructs submitted_at.
 create or replace view activity_feed as
-select a.id, a.at, a.actor_id, a.verb, a.matter_id, a.client_id, a.note
+select
+  a.id,
+  case
+    when a.is_seeded and a.offset_minutes is not null
+      then now() - (a.offset_minutes * interval '1 minute')
+    else a.at
+  end as at,
+  a.actor_id, a.verb, a.matter_id, a.client_id, a.note
 from activity a;
 
 -- Publishable key can read everything and update matters. Inserts/deletes stay on the secret key.

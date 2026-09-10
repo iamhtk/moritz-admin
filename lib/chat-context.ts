@@ -93,7 +93,7 @@ export function buildChatContext(payload: OverviewPayload): string {
   const countParts = Object.entries(activityCounts)
     .map(([k, v]) => `${k} ${v}`)
     .join(", ");
-  lines.push(`Activity today: ${countParts}.`);
+  lines.push(`Activity in the last 24 hours: ${countParts}.`);
 
   // Prefer matching practice on live unassigned for assign grounding.
   const unassigned = payload.matters.filter(

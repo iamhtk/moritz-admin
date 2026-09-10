@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { AlertCircle } from "lucide-react";
 import {
   Alert,
@@ -18,6 +18,7 @@ import {
   ActivityFeedSkeleton,
 } from "@/components/activity-feed";
 import { useOverview } from "@/hooks/use-overview";
+import { countActivityToday } from "@/lib/activity-day";
 import { cn } from "cn";
 
 function PulseShell({ children }: { children: ReactNode }) {
@@ -159,13 +160,18 @@ export function PulsePanel({ embedded = false }: { embedded?: boolean }) {
   const { data, error, isPending, refetch, isFetching } = useOverview();
   const [filter, setFilter] = useState("all");
 
-  const chips = CHIP_ORDER.filter(
-    (chip) => (data?.activityCounts[chip.key] ?? 0) > 0
-  ).map((chip) => ({
-    key: chip.key,
-    label: chip.label,
-    count: data?.activityCounts[chip.key] ?? 0,
-  }));
+  const counts = useMemo(
+    () => countActivityToday(data?.activity ?? []),
+    [data?.activity]
+  );
+
+  const chips = CHIP_ORDER.filter((chip) => (counts[chip.key] ?? 0) > 0).map(
+    (chip) => ({
+      key: chip.key,
+      label: chip.label,
+      count: counts[chip.key] ?? 0,
+    })
+  );
 
   return (
     <PulseBody
@@ -186,13 +192,18 @@ export function PulseRail() {
   const { data, error, isPending, refetch, isFetching } = useOverview();
   const [filter, setFilter] = useState("all");
 
-  const chips = CHIP_ORDER.filter(
-    (chip) => (data?.activityCounts[chip.key] ?? 0) > 0
-  ).map((chip) => ({
-    key: chip.key,
-    label: chip.label,
-    count: data?.activityCounts[chip.key] ?? 0,
-  }));
+  const counts = useMemo(
+    () => countActivityToday(data?.activity ?? []),
+    [data?.activity]
+  );
+
+  const chips = CHIP_ORDER.filter((chip) => (counts[chip.key] ?? 0) > 0).map(
+    (chip) => ({
+      key: chip.key,
+      label: chip.label,
+      count: counts[chip.key] ?? 0,
+    })
+  );
 
   return (
     <PulseShell>
