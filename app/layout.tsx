@@ -33,7 +33,7 @@ export const metadata: Metadata = {
     locale: "en_GB",
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: "Moritz Operations Dashboard",
     description:
       "A single-page command center for law firm operations: triage, capacity, and flat-fee delivery.",
