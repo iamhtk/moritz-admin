@@ -43,7 +43,7 @@
 - **21 AI surfaces** under one actor (Nora), with streaming drafts and a data-scoped Ask panel
 - **Realtime collaboration** through Supabase on `matters` and `activity`
 - **Relative-time seeding** so the four-hour clock stays correct whenever a reviewer opens the link
-- **Token-enforced design system** with Figma foundations, components, variables, and decisions documented below
+- **Token-enforced design system** with Figma Foundations, Tokens, Components, Screens, and Decisions documented below
 
 ## 🧭 Contents
 
@@ -85,8 +85,8 @@ If you have five minutes, this is the order that makes the most sense.
 1. **[Open the live app](https://moritz-admin.vercel.app).** The Overview is the submission. Look at it for two seconds, then look away, and see whether you can name what needs attention. That test drove the entire information architecture.
 2. **Act on something.** Every row that states a problem carries the action that resolves it. Reassign a past-due matter and watch the Pulse feed on the right pick it up, that feed is written by a database trigger rather than a second client call.
 3. **Press Cmd+K, then Cmd+J.** The command palette and the assistant. Ask who can take a commercial matter in the next hour; the answer names real lawyers and each one carries a working Assign button.
-4. **Open it on a phone.** Navigation becomes a bottom bar rather than a drawer, the zones move behind tabs, and the tables become cards.
-5. **[Open the Figma file](https://www.figma.com/design/wCNR8r9BTCy2OiFeniCgQQ/Moritz--assessment).** Four pages: the token architecture, every component mapped to the Obra kit, and the reasoning behind the decisions.
+4. **Open it on a phone.** Navigation becomes a bottom bar rather than a drawer. The zones stack in the same order as desktop, Today then People then Money, and Pulse is its own destination in that bar. Tables become cards; both Money charts stay on the page, just shorter.
+5. **[Open the Figma file](https://www.figma.com/design/wCNR8r9BTCy2OiFeniCgQQ/Moritz--assessment).** Five pages: Foundations, Tokens, Components, Screens, and Decisions.
 
 ---
 
@@ -142,8 +142,8 @@ An over-capacity lawyer has Reassign on their row. A matter running out of clock
 | Tier | Contents | Desktop | Mobile |
 |---|---|---|---|
 | Act now | Past due, under 20 min, unassigned, over capacity | Above the fold | Above the fold |
-| Watch today | Co-counsel load, deadlines, turnaround | No scrolling needed | One tap |
-| Context | Revenue, margin, activity | Below or in the rail | One tap |
+| Watch today | Co-counsel load, deadlines, turnaround | No scrolling needed | Scroll to People |
+| Context | Revenue, margin, activity | Below or in the rail | Scroll to Money; Pulse via bottom nav |
 
 ### Three zones plus a rail
 
@@ -152,7 +152,7 @@ The brief asked the page to balance firm health, workload distribution, and fina
 - **Today** — firm health. Four numbers, the morning brief, the attention list.
 - **People** — workload. Co-counsel sorted by load, deadlines ranked by minutes remaining.
 - **Money** — financial performance. Two charts, each saying one thing, each with a caption.
-- **Pulse** — the rail. Counts as summary, feed as detail.
+- **Pulse** — the rail on wide screens. Below 1200px it leaves the Overview and becomes its own destination in the bottom navigation.
 
 Balance means equal completeness, not equal prominence. Urgency still orders them, so Today is loudest and Money is quietest, but every zone has a label, a primary display, and at least one action.
 
@@ -214,31 +214,31 @@ What was deliberately **not** adopted: their near-total absence of urgency signa
 
 ## 🖼️ The Figma File
 
-The design system is documented in Figma across four pages. It exists to show the parts that read better as a system than as a running app: the token architecture, the mapping to the Obra kit, and the reasoning behind each decision.
+The design system is documented in Figma across five pages. It exists to show the parts that read better as a system than as a running app: the token architecture, the mapping to the Obra kit, and the reasoning behind each decision.
 
 **[Open the Figma file](https://www.figma.com/design/wCNR8r9BTCy2OiFeniCgQQ/Moritz--assessment)**
 
 ### Foundations
 
-The three tiers shown resolving rather than described, the six OKLCH ramps, the five status tones, and the type scale with both faces side by side.
+Colour ramps, status tones, typography with specimens and weights, spacing, radius, elevation, surfaces, borders, opacity, and a live glass demo. The three tiers are shown resolving rather than only described.
 
 <p align="center">
   <img src="./docs/images/figma-foundations.png" alt="Figma Foundations page" width="720" />
 </p>
 
-### Components
+### Tokens
 
-Organised by atomic level. Every component names its Obra equivalent and the reasoning behind how it is used, followed by a map of every composite surface in the product and a section documenting the four places this product deliberately extends the kit.
+Every token in all three tiers as a visual table: primitives with swatches and hex values, semantic with light and dark swatches side by side, component with the full resolution chain shown.
 
-<p align="center">
-  <img src="./docs/images/figma-components.png" alt="Figma Components page" width="720" />
-</p>
+Three collections, **219 variables**. Only the semantic tier carries light and dark modes, because the component tier aliases through it and does not need its own. Zero tier violations: nothing skips a level, and no colour literal exists outside the primitives.
 
-### Variables
+| Collection | Modes | Count |
+|---|---|---|
+| Primitives | Value | 96 |
+| Semantic | Light, Dark | 76 |
+| Component | Value | 47 |
 
-Three collections, 187 variables. Only the semantic tier carries light and dark modes, because the component tier aliases through it and does not need its own. Zero tier violations: nothing skips a level, and no colour literal exists outside the primitives.
-
-**Tier 1, primitives.** Raw values with no meaning attached. Six OKLCH ramps plus the type scale, spacing, radius and opacity stops.
+**Tier 1, primitives.** Raw values with no meaning attached. Six OKLCH ramps (full 50–950 scales) plus the type scale, spacing, radius and opacity stops.
 
 <p align="center">
   <img src="./docs/images/figma-variables--primitives.png" alt="Primitives collection" width="720" />
@@ -255,6 +255,18 @@ Three collections, 187 variables. Only the semantic tier carries light and dark 
 <p align="center">
   <img src="./docs/images/figma-variables--component.png" alt="Component collection" width="720" />
 </p>
+
+### Components
+
+Organised by atomic level. Every component names its Obra equivalent and the reasoning behind how it is used, followed by a map of every composite surface in the product and a section documenting the four places this product deliberately extends the kit.
+
+<p align="center">
+  <img src="./docs/images/figma-components.png" alt="Figma Components page" width="720" />
+</p>
+
+### Screens
+
+The Screens page points at the [live application](https://moritz-admin.vercel.app) rather than duplicating it in Figma. The product is the source of truth for layout and interaction; Figma holds the system that produced it.
 
 ### Decisions
 
@@ -393,7 +405,7 @@ One line in the Money zone: *"Average 2h 47m in draft, 1h 06m in lawyer review."
 
 **Glass.** Floating surfaces use real `backdrop-filter` at 92 percent opacity with a 28px blur, an inset highlight and a soft shadow. The opacity is deliberately high: at 66 percent, text contrast became a moving target depending on what rendered behind the panel. No dashboard surface uses blur.
 
-**Progressive disclosure.** Show more on three lists. Escalation handoff behind a chevron. Every stat number hides its calculation behind a tooltip. Every AI badge hides its basis behind one. On mobile, three zones behind tabs.
+**Progressive disclosure.** Show more on three lists. Escalation handoff behind a chevron. Every stat number hides its calculation behind a tooltip. Every AI badge hides its basis behind one. On narrower screens the zones still stack in full; disclosure shortens charts and swaps tables for cards rather than hiding a zone behind a tab.
 
 The rule throughout: **progressive disclosure hides detail, never the action.** Every level-one row carries its button.
 
@@ -419,13 +431,13 @@ Minimum target sizes: 32px desktop, 44px touch.
 
 ## 📱 Mobile
 
-A reduction, not a squeeze. Nothing scrolls sideways.
+A reduction, not a squeeze. Nothing scrolls sideways. Nothing visible on desktop is absent on a narrower screen; elements adapt rather than disappear.
 
-Navigation is a fixed bottom bar, not a hamburger drawer, because a drawer is the wrong pattern for a phone.
+Navigation is a fixed bottom bar, Overview, Matters, Lawyers, Pulse, More, not a hamburger drawer. Pulse is a primary destination here rather than part of the Overview. On wide screens (≥1200px) it returns as the right rail and the bottom bar hides.
 
-Stacking order by urgency: brief, then a 2×2 stat grid, then attention cards with full-width actions, then People, Money, and Pulse behind sticky tabs.
+On Overview the zones stack vertically in the same order as desktop: Today, then People, then Money. The user scrolls. Today still leads with the brief, a 2×2 stat grid, and attention cards with full-width actions.
 
-The capacity table becomes cards. Charts become a number, a sparkline, and the caption. Every sheet comes up from the bottom at 85vh with the same glass.
+The capacity table becomes cards. Both Money charts stay visible and readable: shorter height, fewer axis ticks, shorter date labels, captions kept. Every sheet comes up from the bottom at 85vh with the same glass.
 
 The two-second test passes at 390px too.
 
