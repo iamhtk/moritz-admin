@@ -1,113 +1,44 @@
-<p align="center">
-  <img src="./public/icon.svg" alt="Moritz Operations Dashboard" width="92" height="92" />
-</p>
+# Moritz Operations Dashboard
 
-<h1 align="center">Moritz Operations Dashboard</h1>
+A single-page command center for a Law Firm Administrator at Moritz, an AI-native law firm.
 
-<p align="center">
-  <strong>A single-page command center for a Law Firm Administrator at Moritz, an AI-native law firm.</strong>
-</p>
+Built as a design assessment. The brief asked for a dashboard that is trustworthy, premium, Nordic-minimal, and pastel, serving a Law Firm Administrator managing case flow, capacity, and revenue.
 
-<p align="center">
-  Design assessment for a dashboard that is trustworthy, premium,<br />
-  Nordic-minimal, and pastel — managing case flow, capacity, and revenue.
-</p>
+**[Live application](https://moritz-admin.vercel.app)** · **[Figma design system](https://www.figma.com/design/wCNR8r9BTCy2OiFeniCgQQ/Moritz--assessment)** · [Design system notes](./docs/design-system.md) · [UX specification](./UX-SPEC.md)
 
-<p align="center">
-  <a href="https://moritz-admin.vercel.app"><strong>View live app</strong></a>
-  ·
-  <a href="https://github.com/iamhtk/moritz-admin">GitHub</a>
-  ·
-  Built by <a href="https://github.com/iamhtk">Hrithik Sanyal</a>
-</p>
-
-<p align="center">
-  <img alt="Next.js" src="https://img.shields.io/badge/Next.js-16-000000?style=flat-square&logo=nextdotjs" />
-  <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-strict-3178C6?style=flat-square&logo=typescript&logoColor=white" />
-  <img alt="Supabase" src="https://img.shields.io/badge/Supabase-Realtime-3FCF8E?style=flat-square&logo=supabase&logoColor=white" />
-  <img alt="Gemini" src="https://img.shields.io/badge/AI-Gemini-8E75B2?style=flat-square&logo=googlegemini&logoColor=white" />
-  <img alt="Vercel" src="https://img.shields.io/badge/Deployed-Vercel-000000?style=flat-square&logo=vercel" />
-</p>
+![Overview dashboard](./docs/images/overview.png)
 
 ---
 
-## Try It Now
+## Five minutes
 
-**Live app (no sign-up required):**
-https://moritz-admin.vercel.app
+If you have five minutes, this is the order that makes the most sense.
 
-Open Overview and work the three questions Ingrid asks every morning. The README opens with a five-minute reviewer path to navigate the build efficiently.
+1. **[Open the live app](https://moritz-admin.vercel.app).** The Overview is the submission. Look at it for two seconds, then look away, and see whether you can name what needs attention. That test drove the entire information architecture.
+2. **Act on something.** Every row that states a problem carries the action that resolves it. Reassign a past-due matter and watch the Pulse feed on the right pick it up, that feed is written by a database trigger rather than a second client call.
+3. **Press Cmd+K, then Cmd+J.** The command palette and the assistant. Ask who can take a commercial matter in the next hour; the answer names real lawyers and each one carries a working Assign button.
+4. **Open it on a phone.** Navigation becomes a bottom bar rather than a drawer, the zones move behind tabs, and the tables become cards.
+5. **[Open the Figma file](https://www.figma.com/design/wCNR8r9BTCy2OiFeniCgQQ/Moritz--assessment).** Four pages: the token architecture, every component mapped to the Obra kit, and the reasoning behind the decisions.
 
-**GitHub:** https://github.com/iamhtk/moritz-admin
+## Running it locally
 
----
+```bash
+git clone https://github.com/iamhtk/moritz-admin.git
+cd moritz-admin
+bun install
+cp .env.example .env.local   # fill in Supabase and Gemini keys
+```
 
-## ✨ At a Glance
+Then run the SQL files in the Supabase editor in order, `supabase/01-schema.sql`, then `supabase/relative-time.sql`, then `supabase/realtime.sql`, and seed:
 
-- **One command-center page** balancing firm health, workload, and financial performance
-- **21 AI surfaces** under one actor (Nora), with streaming drafts and a data-scoped Ask panel
-- **Realtime collaboration** through Supabase on `matters` and `activity`
-- **Relative-time seeding** so the four-hour clock stays correct whenever a reviewer opens the link
-- **Production-minded frontend** with optimistic mutations, TanStack tables, token-enforced design, and WCAG 2.2 AA
-
-## 🧭 Contents
-
-- [Stack](#-stack)
-- [Five-Minute Reviewer Path](#-five-minute-reviewer-path)
-- [Pages](#️-pages)
-- [The One Decision That Shaped Everything](#️-the-one-decision-that-shaped-everything)
-- [The Persona](#-the-persona)
-- [Information Architecture](#️-information-architecture)
-- [Design System](#-design-system)
-- [Backend](#️-backend)
-- [Relative Time](#-relative-time)
-- [AI Surfaces](#-ai-surfaces-21)
-- [Frontend](#️-frontend)
-- [Accessibility](#-accessibility)
-- [Mobile](#-mobile)
-- [How This Was Built](#️-how-this-was-built)
-- [Out of Scope](#-out-of-scope-and-why)
-- [Assumptions](#-assumptions)
-- [Running Locally](#-running-locally)
-- [What I'd Build Next](#️-what-id-build-next)
+```bash
+bun run seed
+bun run dev
+```
 
 ---
 
-## 🧰 Stack
-
-`Next.js 16` · `TypeScript` · `Tailwind CSS v4` · `Supabase` ·
-`Google Gemini` · `Framer Motion` · `Tiptap` · `TanStack Query` ·
-`TanStack Table` · `Recharts` · `shadcn/ui` · `Vercel`
-
-> Supabase powers PostgreSQL, Realtime, and RLS. Gemini powers Ask and client-update drafting through server-only API routes.
-
----
-
-## ⏱️ Five-Minute Reviewer Path
-
-1. Open the live app — Overview loads with live firm state
-2. Read the morning brief — act on Reassign or Dismiss from the same row
-3. Scan the attention list — past due, under 20 min, unassigned, over capacity
-4. Open People — sort co-counsel by load, open a Reassign sheet
-5. Switch to Money — read the revenue chart caption, then the delivered plan line
-6. Press Cmd+K — jump to a matter or lawyer from the command palette
-7. Open Ask — ask who can take an employment matter and use a returned Assign button
-8. Read the decision, design system, and relative-time sections below for the why
-
----
-
-## 🗺️ Pages
-
-`Overview` · `Matters` · `Lawyers` · `Notifications` · `Clients` ·
-`Finance` · `Settings`
-
-Clients, Finance, and Settings are intentionally stubbed — each route states what it would contain and why it isn't here.
-
-The design-system reference lives at [`/system`](https://moritz-admin.vercel.app/system). It is intentionally unlinked from the product nav so the shipped surface stays a single command center; open the URL directly if you want the component and token inventory.
-
----
-
-## ⚖️ The One Decision That Shaped Everything
+## The one decision that shaped everything
 
 Moritz doesn't bill by the hour. They quote a flat fee per matter, pay contracted co-counsel per matter, and promise a four-hour average turnaround on complex commercial work.
 
@@ -126,7 +57,7 @@ That reframe is printed on the dashboard itself, in the Money zone label and in 
 
 ---
 
-## 👤 The Persona
+## The persona
 
 Ingrid Solberg, Head of Operations. Not a lawyer.
 
@@ -140,7 +71,7 @@ Every element on the page answers one of those three. Anything that answered non
 
 ---
 
-## 🗺️ Information Architecture
+## Information architecture
 
 The brief asked for a "command center." That word carries three obligations:
 
@@ -183,13 +114,13 @@ The practical rule is **no red wash**: at most three red elements on screen at a
 
 ---
 
-## 🎨 Design System
+## Design system
 
 Every component is stock shadcn/ui on Radix. Nothing is forked. The entire visual identity lives in the token layer.
 
 ### Three tiers
 
-```text
+```
 primitives → semantic → component → UI
 ```
 
@@ -229,7 +160,39 @@ What was deliberately **not** adopted: their near-total absence of urgency signa
 
 ---
 
-## 🗄️ Backend
+## The Figma file
+
+The design system is documented in Figma across four pages. It exists to show the parts that read better as a system than as a running app: the token architecture, the mapping to the Obra kit, and the reasoning behind each decision.
+
+**[Open the Figma file](https://www.figma.com/design/wCNR8r9BTCy2OiFeniCgQQ/Moritz--assessment)**
+
+### Foundations
+
+The three tiers shown resolving rather than described, the six OKLCH ramps, the five status tones, and the type scale with both faces side by side.
+
+![Figma Foundations page](./docs/images/figma-foundations.png)
+
+### Components
+
+Organised by atomic level. Every component names its Obra equivalent and the reasoning behind how it is used, followed by a map of every composite surface in the product and a section documenting the four places this product deliberately extends the kit.
+
+![Figma Components page](./docs/images/figma-components.png)
+
+### Variables
+
+Three collections, 166 variables. Only the semantic tier carries light and dark modes, because the component tier aliases through it and does not need its own. Zero tier violations: nothing skips a level, and no colour literal exists outside the primitives.
+
+*(Screenshot of the Figma variables panel pending — needs a manual capture of the editor UI; frame export cannot show the panel.)*
+
+### Decisions
+
+Eight cards covering the metric reframe, the persona, the every-row-carries-its-action rule, black for actions and colour for state, pastel as tint, chaos into calm, glass only where things float, and the stated assumptions.
+
+![Figma Decisions page](./docs/images/figma-decisions.png)
+
+---
+
+## Backend
 
 ### Schema
 
@@ -267,7 +230,7 @@ A product whose premise is a live clock shouldn't need a manual refresh.
 
 ---
 
-## ⏳ Relative Time
+## Relative time
 
 The most interesting engineering decision in this project.
 
@@ -291,7 +254,7 @@ Matters created through the app carry real absolute timestamps and age normally,
 
 ---
 
-## 🤖 AI Surfaces (21)
+## AI: twenty-one surfaces, one rule set
 
 The AI actor is named **Nora**. She appears in the activity feed the same way any lawyer does, no badge, no special treatment, no distinct colour. She's identified as an actor, not announced as a feature.
 
@@ -342,7 +305,7 @@ One line in the Money zone: *"Average 2h 47m in draft, 1h 06m in lawyer review."
 
 ---
 
-## 🖥️ Frontend
+## Frontend
 
 **Data.** TanStack Query with a 60-second refetch and Realtime invalidation. One shared query feeds all three zones and the rail. Optimistic updates on all four mutations with snapshot rollback.
 
@@ -362,7 +325,7 @@ The rule throughout: **progressive disclosure hides detail, never the action.** 
 
 ---
 
-## ♿ Accessibility
+## Accessibility
 
 WCAG 2.2 AA, tested rather than assumed, and re-verified after every batch of changes.
 
@@ -380,7 +343,7 @@ Minimum target sizes: 32px desktop, 44px touch.
 
 ---
 
-## 📱 Mobile
+## Mobile
 
 A reduction, not a squeeze. Nothing scrolls sideways.
 
@@ -394,7 +357,7 @@ The two-second test passes at 390px too.
 
 ---
 
-## 🛠️ How This Was Built
+## How this was actually built
 
 The method mattered as much as the output.
 
@@ -404,7 +367,7 @@ The method mattered as much as the output.
 
 **Schema before screens.** Fourteen lawyers, 48 live matters, 90 delivered, a month of finance, 35 activity events, all written before the first component. A dashboard designed against placeholder data looks fine and falls apart on real data.
 
-**Sequential prompts, one at a time.** Nothing started until the previous change was committed and verified. Every batch produced a written report with before/after evidence before the next began.
+**One change at a time.** Nothing started until the previous change was committed and verified, and every batch produced a written record with before and after evidence before the next began. That discipline is why a regression could always be traced to the change that caused it.
 
 **Verification over assumption.** When an external audit claimed three specific bugs, each was independently verified before fixing. Two were real; one was a measurement artifact. Two later "fixed" issues turned out to need a second, different fix when the first didn't fully land, caught only because each fix was re-tested rather than assumed.
 
@@ -414,7 +377,7 @@ The method mattered as much as the output.
 
 ---
 
-## 🚫 Out of Scope, and Why
+## Out of scope, and why
 
 **Authentication.** One reviewer, one page. A login screen is friction on a demo. The RLS policies are real; production would scope them to the authenticated administrator.
 
@@ -428,7 +391,7 @@ Matters and Lawyers were built, because the command palette, the filters, and th
 
 ---
 
-## 📌 Assumptions
+## Assumptions
 
 Moritz's internal admin workflows aren't public. The persona and the model of the work are inferred from their published operating model: flat fees, contracted co-counsel, same-day turnaround, intake by email and Slack.
 
@@ -444,52 +407,7 @@ In a real engagement these would be validated with the operations lead and two c
 
 ---
 
-## 🧑‍💻 Running Locally
-
-**1. Clone and install**
-
-```bash
-git clone https://github.com/iamhtk/moritz-admin.git
-cd moritz-admin
-bun install
-```
-
-**2. Add `.env.local`**
-
-Copy `.env.example` and fill in real values (never commit this file):
-
-```bash
-NEXT_PUBLIC_SUPABASE_URL=your_url
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your_key
-SUPABASE_SECRET_KEY=your_secret
-GEMINI_API_KEY=your_key
-```
-
-**3. Create the database**
-
-In the Supabase SQL editor, run these files in order:
-
-1. `supabase/01-schema.sql` — tables, view, trigger, RLS
-2. `supabase/relative-time.sql` — relative-time helpers for seeded rows
-3. `supabase/realtime.sql` — publish `matters` and `activity` for live updates
-
-**4. Seed demo data**
-
-```bash
-bun run seed
-```
-
-**5. Start the app**
-
-```bash
-bun run dev
-```
-
-Open [http://localhost:3000](http://localhost:3000). Overview loads with the live command center.
-
----
-
-## ⏭️ What I'd Build Next
+## What I'd build next
 
 **Validate the thresholds.** An hour each with the operations lead and two co-counsel. Every number in the assumptions list is a hypothesis until then.
 
@@ -503,6 +421,4 @@ Open [http://localhost:3000](http://localhost:3000). Overview loads with the liv
 
 ---
 
-<p align="center">
-  Built for a firm that sells speed, by someone who thinks the interface should disappear.
-</p>
+Built for a firm that sells speed, by someone who thinks the interface should disappear.
