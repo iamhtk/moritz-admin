@@ -12,7 +12,7 @@ export function buildChatContext(payload: OverviewPayload): string {
 
   const lines: string[] = [
     `Now: ${now}`,
-    `SLA: ${config.slaMinutes} minutes (four hour clock). Watch at ${config.slaWatchMinutes}m. Capacity watch ${config.capacityWatchPct}%, over at ${config.capacityOverPct}%.`,
+    `SLA: ${config.slaMinutes} minutes (four hour clock). Watch at ${config.slaWatchMinutes}m. Capacity watch ${config.capacityWatchPct}%, over above ${config.capacityOverPct}%.`,
     `Stats: in flight ${stats.inFlight}; due next hour ${stats.dueNextHour}; due today ${stats.dueToday}; at risk ${stats.atRisk} (${stats.breached} past due); unassigned ${stats.unassigned}${
       stats.oldestUnassignedMinutes != null
         ? ` (oldest ${stats.oldestUnassignedMinutes}m)`

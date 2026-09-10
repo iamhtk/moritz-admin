@@ -26,7 +26,7 @@ The third is the one most dashboards fail. So the rule is: **every problem this 
 
 **Balance.** The brief asks the command center to balance firm health, workload distribution, and financial performance. Those are the three zones, one each, and none may swallow the page. Balance means equal completeness and equal rhythm, not equal prominence: every zone gets one section label, one primary display, and at least one action. Urgency still orders them, so Today is loudest and Money is quietest, but no zone is a footnote and no fourth zone is added. If a fourth idea appears, it goes into a tab, the rail, or the backlog.
 
-**Chaos into calm.** The page must look calmest when the firm is busiest. The demo state is a genuinely busy Friday: 48 matters in flight, 2 past due, 3 lawyers near capacity, 24 events today. Calm comes from hierarchy, not from having little on screen, and designing the quiet version by showing almost no data is the easy way out. Practical rule: no red wash. Red appears only where a person must act, and never twice for the same fact as two filled containers — small badges and one at-risk number for matters; over-capacity bars with plain coloured state text for load. Never red cards. Alarm is carried by position and by one word or number, never by area of color.
+**Chaos into calm.** The page must look calmest when the firm is busiest. The demo state is a genuinely busy Friday: 48 matters in flight, 2 past due, 1 lawyer over capacity and 4 at the watch threshold, 24 events today. Calm comes from hierarchy, not from having little on screen, and designing the quiet version by showing almost no data is the easy way out. Practical rule: no red wash. Red appears only where a person must act, and never twice for the same fact as two filled containers — small badges and one at-risk number for matters; over-capacity bars with plain coloured state text for load. Never red cards. Alarm is carried by position and by one word or number, never by area of color.
 
 **Metaphor.** A finance dashboard is a to-do list wearing charts. The command center is a triage inbox with numbers around it.
 
@@ -105,9 +105,9 @@ Submitted (neutral) · Quoted (info) · Drafting (info) · In review (watch) · 
 
 ### Capacity thresholds
 
-Under 80 percent: muted Room fill with a plain ratio, no badge. 80 to 100: watch fill with a High badge. Over 100: over fill with an Over badge. Over-capacity stays in the People table; it is not repeated as an attention row. The thresholds live in mapped tokens so the walkthrough can show them as system decisions.
+Under 80 percent: muted Room fill with a plain ratio, no badge and no status colour. 80 to 100 inclusive: watch fill with plain High text. Strictly over 100: over fill with plain Over capacity text. Over-capacity stays in the People table; it is not repeated as an attention row. The thresholds live in mapped tokens so the walkthrough can show them as system decisions.
 
-Capacity is always shown as a ratio (`4 of 3`), never colour alone. Room rows are a muted bar plus the ratio. High and Over keep a badge and coloured fill (`High · 4 of 5`, `Over capacity · 4 of 3`). The percentage lives in the tooltip and `aria-label`.
+Capacity is always shown as a ratio (`4 of 3`), never colour alone. Room rows are a muted bar plus the ratio. High and Over use plain status-coloured text beside a coloured fill (`High · 4 of 5`, `Over capacity · 4 of 3`), not a filled pill. The percentage lives in the tooltip and `aria-label`.
 
 ### SLA thresholds
 
@@ -125,14 +125,14 @@ Density comes from typography, not from boxes.
 - Body and table text 13px. Secondary text 12px in `--text-secondary`. Tertiary 11px in `--text-tertiary`. Three levels, no more.
 - Table rows 44px. Attention rows 48px because they carry a button.
 - Every number is tabular. Money right-aligned. Minutes right-aligned.
-- Every capacity indicator shows a ratio (and a state badge when High or Over), not color alone.
+- Every capacity indicator shows a ratio (and plain state text when High or Over), not color alone.
 - Every chart has a caption sentence.
 - Every stat number carries a tooltip stating how it is calculated, including the threshold. "At risk: matters with under 60 minutes left on the four-hour clock, or past due."
 - Three content zones on desktop. If a fourth zone appears, something moves to a tab or the rail.
-- Charts have no titles inside the chart. The title is the section label. Axis text is tertiary. Grid is `--chart-grid`. No legends when the section label already names the series.
-- The Money zone carries one line under its label: "Moritz bills flat fees per matter, so the target is fee revenue and matters delivered, not billable hours." That sentence turns the reframe into a visible decision.
-- Every chart supports one sentence, and that sentence is rendered as a caption under the chart in 12px secondary text. Revenue: "Revenue is 62 percent of target with 15 days left. On pace for 94 percent." Delivered: "38 matters delivered this week against a plan of 42." If a chart cannot produce a sentence, it is removed.
-- Color means state and nothing else. The stat row is monochrome except At risk. The table is monochrome except the capacity fill and the badge. The charts use chart-1 and chart-2 and a gray target line.
+- Money chart panels carry an in-card title (11px secondary) naming the series; the zone label stays the zone name. Axis text is tertiary. Grid is `--chart-grid`. No legends when the card title already names the series.
+- The Money zone carries one line under its label: "{Month} · flat fees per matter, not billable hours." That sentence turns the reframe into a visible decision.
+- Every chart supports one sentence, and that sentence is rendered as a caption under the chart in 12px secondary text. Revenue: "Revenue is 62 percent of target with 15 days left. On pace for 94 percent." Delivered: "38 matters delivered in the last 7 days against a plan of 42." If a chart cannot produce a sentence, it is removed.
+- Color means state and nothing else. The stat row is monochrome except At risk. The table is monochrome except the capacity fill and plain High/Over state text. The charts use chart-1 and chart-2 and a gray target line.
 
 ---
 
@@ -178,12 +178,12 @@ Moritz is an AI-native firm, so AI belongs on this page. It belongs in decisions
 ### Ambient
 
 **A1 · Morning brief.** One line above the four numbers, generated from current state. It connects two or more facts and proposes the single action that resolves the most of them.
-> "Two matters are past due and Lars is at 118 percent. Reassigning MOR-1042 to Sofie clears both."
+> "Two matters are past due and Lars is at 133 percent. Reassigning MOR-1042 to Ingrid clears both."
 
 Buttons: the proposed action, and Dismiss. Regenerates when state changes. When the firm is calm it says so in one line and offers nothing: "Nothing at risk. Five matters due in the next hour, all assigned." Component: Card with fjord tint, Button size="sm", Button variant="ghost" for Dismiss.
 
 **A2 · Capacity forecast (daily).** One line above the co-counsel table.
-> "2 lawyers are over capacity, 1 at the 80 percent watch threshold. 3 matters arrived in the last hour. Sofie and Catarina have room."
+> "1 lawyer is over capacity, 4 at the 80 percent watch threshold. 3 matters arrived in the last hour. Sofie and Catarina have room."
 
 States who is already over or at watch, recent intake, and who still has room. Does not invent a tip-over clock the data cannot support. Component: inline text in the zone label row, `--text-secondary`, no card.
 
@@ -346,7 +346,7 @@ interface FinanceSummary {
 
 ### Seed rules
 
-- 14 lawyers with Nordic and international names. Capacity 6 to 10 matters per week. Two are over 100 percent. Three are between 80 and 100. The rest are under.
+- 14 lawyers with Nordic and international names. Capacity 3 to 6 concurrent matters. One is over 100 percent. Four are between 80 and 100 inclusive. The rest are under.
 - 48 active matters plus 90 delivered in the last 30 days. Fees inside the band. Payout 35 to 55 percent of fee.
 - The clock feels live: at the seeded "now", 2 matters are past due, 3 are inside the last hour, 2 are unassigned and arrived within the last 15 minutes, 11 are in review, 20 are drafting.
 - 12 clients. Names that sound like real startups. Two on enterprise plans.
@@ -360,7 +360,7 @@ interface FinanceSummary {
 
 - Sentence case everywhere. No uppercase labels.
 - Verbs on buttons: Assign, Reassign, Send quote, New matter, Show more.
-- Reasons in plain words: "Past due by 12 min" · "Arrived 8 min ago, no lawyer" · "Julie is at 120 percent".
+- Reasons in plain words: "Past due by 12 min" · "Arrived 8 min ago, no lawyer" · "Lars is at 133 percent".
 - Stat labels: In flight · Due next hour · At risk · Unassigned · Revenue to date · Target · Average fee · Margin per matter · Opened vs closed.
 - Empty states invite: "No matters at risk. The clock is clear." One line, one button.
 - Errors say what happened and what to do: "Couldn't load matters. Retry."
@@ -394,13 +394,13 @@ Said out loud in the walkthrough and printed on the /system page. Stating them i
 - Every component on the page appears on the /system page with its variant name.
 - No hex or oklch literal outside Tier 1 of globals.css.
 - Every number is tabular.
-- Every capacity indicator shows a ratio (and a state badge when High or Over), not color alone.
+- Every capacity indicator shows a ratio (and plain state text when High or Over), not color alone.
 - Every chart has a caption sentence, and no chart carries a legend.
 - Assign sheet marks a suggested lawyer with a reason.
 - Every stat number has a tooltip stating its calculation and threshold.
 - Contrast 4.5 to 1 on all text, 3 to 1 on all UI borders and fills that carry meaning.
 - The busy state is the default. Screenshot it and ask whether it reads calm. If not, the fix is hierarchy, not less data.
-- No red wash. Count the red pixels: badges and one number only.
+- No red wash. Red appears only where a person must act, and never twice for the same fact as two filled containers.
 - All three zones pass the balance check.
 - Keyboard reaches every action. Focus is visible.
 - Assign, Reassign, Nudge, and Send quote all change state. No dead buttons.

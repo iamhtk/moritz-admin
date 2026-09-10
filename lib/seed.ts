@@ -7,7 +7,7 @@
  *
  * Friday 5 September 2026, 14:32 local. A busy afternoon on purpose:
  * two matters past due, one inside twenty minutes, two unassigned,
- * two lawyers over capacity, three near it.
+ * one lawyer over capacity, four at the watch threshold.
  */
 
 export const NOW = new Date("2026-09-05T14:32:00Z");

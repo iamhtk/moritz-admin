@@ -91,8 +91,8 @@ import { cn } from "cn";
 const TOKEN_CHAINS = [
   {
     mapped: "--capacity-fill-over",
-    semantic: "--status-risk-fill-soft",
-    primitive: "--rowan-400",
+    semantic: "--status-risk-fill",
+    primitive: "--rowan-500",
   },
   {
     mapped: "--badge-delivered-bg",
@@ -168,8 +168,8 @@ const COMPOSITES = [
   },
   {
     ours: "Capacity meter",
-    shadcn: "Progress, StatusBadge → Badge",
-    obra: "Progress, Badge",
+    shadcn: "Progress",
+    obra: "Progress",
   },
   {
     ours: "Deadline list",
@@ -1217,8 +1217,11 @@ export function SystemReference() {
               className="mt-4 text-text-secondary"
               style={{ fontSize: "var(--text-13)" }}
             >
-              Colour only ever means state. The only red on the dashboard is the
-              at-risk number and the breach badges.
+              Colour only ever means state. Red appears only where a person must
+              act, and never twice for the same fact as two filled containers —
+              the at-risk number and past-due badges for matters; over-capacity
+              bars for load, with the state word as plain coloured text beside
+              them rather than a second red pill.
             </p>
           </Section>
 

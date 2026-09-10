@@ -47,8 +47,9 @@ async function getConfig(db: ReturnType<typeof serverClient>): Promise<Config> {
   
   /* ---------- capacity ----------------------------------------------------- */
   
+  /** Over means strictly above capacity (e.g. 4 of 3). Exact capacity is High. */
   function capacityState(pct: number, cfg: Config): CapacityState {
-    if (pct >= cfg.capacityOverPct) return "over";
+    if (pct > cfg.capacityOverPct) return "over";
     if (pct >= cfg.capacityWatchPct) return "high";
     return "room";
   }

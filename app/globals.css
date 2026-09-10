@@ -208,8 +208,8 @@
   --status-risk-border: var(--rowan-700);
   --status-risk-fg: var(--rowan-700);
   --status-risk-fill: var(--rowan-500);
-  /* Soft risk fill for broad washes (capacity bars). Keeps --status-risk-fill
-     at rowan-500 for dots, rings, and feed marks without a red wash. */
+  /* Soft risk fill for small unread marks and similar washes. Capacity over
+     bars use --status-risk-fill so severity reads stronger than High amber. */
   --status-risk-fill-soft: var(--rowan-400);
 
   --status-info-bg: var(--fjord-100);
@@ -282,7 +282,8 @@
   --capacity-fill-quiet: color-mix(in oklab, var(--foreground) 22%, var(--capacity-track));
   --capacity-fill-ok: var(--status-ok-fill);
   --capacity-fill-watch: var(--status-watch-fill);
-  --capacity-fill-over: var(--status-risk-fill-soft);
+  /* Rowan-500 via semantic risk fill: stronger than High amber, not a soft wash. */
+  --capacity-fill-over: var(--status-risk-fill);
   --capacity-threshold-watch: 80;
   --capacity-threshold-over: 100;
   --capacity-tick: var(--input);

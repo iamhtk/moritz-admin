@@ -1,6 +1,6 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import { useMemo } from "react";
 import {
   Bar,
   BarChart,
@@ -10,30 +10,17 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { Card } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
-  ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
   type ChartConfig,
 } from "@/components/ui/chart";
+import {
+  MoneyChartCard,
+  MoneyChartCardSkeleton,
+  useMoneyChartNarrow,
+} from "@/components/ui-bits/money-chart-card";
 import type { FinanceDayRow } from "@/lib/supabase";
-
-const NARROW = "(max-width: 767px)";
-function subscribeNarrow(cb: () => void) {
-  const mq = window.matchMedia(NARROW);
-  mq.addEventListener("change", cb);
-  return () => mq.removeEventListener("change", cb);
-}
-function useNarrow() {
-  return useSyncExternalStore(
-    subscribeNarrow,
-    () => window.matchMedia(NARROW).matches,
-    () => false
-  );
-}
-
 
 const chartConfig = {
   delivered: { label: "Delivered" },
@@ -64,146 +51,161 @@ export function DeliveredChart({
   deliveredThisWeek: number;
   plannedThisWeek: number;
 }) {
-  const narrow = useNarrow();
-  const data = days.slice(-7).map((d) => {
-    const weekend = d.planned_delivered === 0;
-    // Weekend zeros need a 2px stub so the day reads as present, not missing.
-    const stub = weekend && d.delivered === 0 ? Math.max(dailyPlan * 0.04, 0.15) : 0;
-    return {
-      ...d,
-      weekend,
-      bar: d.delivered > 0 ? d.delivered : stub,
-    };
-  });
+  const narrow = useMoneyChartNarrow();
+
+  const data = useMemo(
+    () =>
+      days.slice(-7).map((d) => {
+        const weekend = d.planned_delivered === 0;
+        // Weekend zeros need a 2px stub so the day reads as present, not missing.
+        const stub =
+          weekend && d.delivered === 0
+            ? Math.max(dailyPlan * 0.04, 0.15)
+            : 0;
+        return {
+          ...d,
+          weekend,
+          bar: d.delivered > 0 ? d.delivered : stub,
+        };
+      }),
+    [days, dailyPlan]
+  );
+
+  const cells = useMemo(
+    () =>
+      data.map((d) => (
+        <Cell
+          key={d.date}
+          fill={
+            d.weekend
+              ? "var(--fjord-200)"
+              : "var(--chart-delivered-bar)"
+          }
+        />
+      )),
+    [data]
+  );
+
+  const yDomain = useMemo(
+    () =>
+      [
+        0,
+        (dataMax: number) =>
+          Math.max(
+            Number.isFinite(dataMax) ? dataMax : 0,
+            dailyPlan,
+            1
+          ),
+      ] as [number, (max: number) => number],
+    [dailyPlan]
+  );
 
   return (
-    <Card className="h-full flex flex-col gap-0 rounded-lg p-4 [--card-spacing:0px]">
-      <p
-        className="mb-2 font-medium text-text-secondary"
-        style={{ fontSize: "var(--text-11)" }}
+    <MoneyChartCard
+      title="Matters delivered · last 7 days"
+      ariaLabel="Matters delivered per day over the last seven calendar days against the daily plan"
+      config={chartConfig}
+      caption={
+        <>
+          <span className="num">{deliveredThisWeek}</span> matters delivered
+          in the last 7 days against a plan of{" "}
+          <span className="num">{plannedThisWeek}</span>.
+        </>
+      }
+    >
+      <BarChart
+        data={data}
+        margin={{ top: 8, right: 64, left: 0, bottom: 8 }}
       >
-        Matters delivered this week
-      </p>
-      <ChartContainer
-        config={chartConfig}
-        className="aspect-auto h-28 w-full sm:h-32 md:h-40"
-        aria-label="Matters delivered per day against the daily plan"
-      >
-        <BarChart
-          data={data}
-          margin={{ top: 8, right: 64, left: 0, bottom: 8 }}
-        >
-          <CartesianGrid
-            vertical={false}
-            stroke="var(--chart-grid)"
-          />
-          <XAxis
-            dataKey="date"
-            tickFormatter={weekdayLetter}
-            minTickGap={narrow ? 8 : 4}
-            tickLine={false}
-            axisLine={false}
-            tick={{
-              fill: "var(--chart-axis-text)",
-              fontSize: 11,
-            }}
-            height={36}
-            label={
-              narrow
-                ? undefined
-                : {
-                    value: "Day",
-                    position: "insideBottomRight",
-                    offset: 0,
-                    fill: "var(--chart-axis-text)",
-                    fontSize: 10,
-                  }
-            }
-          />
-          <YAxis
-            tickLine={false}
-            axisLine={false}
-            width={28}
-            allowDecimals={false}
-            tick={{
-              fill: "var(--chart-axis-text)",
-              fontSize: 10,
-            }}
-            label={
-              narrow
-                ? undefined
-                : {
-                    value: "Matters",
-                    angle: -90,
-                    position: "insideLeft",
-                    fill: "var(--chart-axis-text)",
-                    fontSize: 10,
-                  }
-            }
-          />
-          <ChartTooltip
-            content={
-              <ChartTooltipContent
-                labelFormatter={(_, payload) => {
-                  const date = payload?.[0]?.payload?.date as string | undefined;
-                  return date ? formatShortDate(date) : "";
-                }}
-                formatter={(_value, _name, item) => (
-                  <span className="num font-medium text-foreground">
-                    {Number(item?.payload?.delivered ?? 0)} delivered
-                  </span>
-                )}
-              />
-            }
-          />
-          <ReferenceLine
-            y={dailyPlan}
-            stroke="var(--chart-target-line)"
-            strokeDasharray="3 3"
-            label={{
-              value: narrow ? `Plan ${dailyPlan}` : `Plan ${dailyPlan} a day`,
-              position: "right",
-              offset: 6,
-              fill: "var(--chart-axis-text)",
-              fontSize: 11,
-            }}
-          />
-          <Bar
-            dataKey="bar"
-            radius={[3, 3, 0, 0]}
-            maxBarSize={28}
-          >
-            {data.map((d) => (
-              <Cell
-                key={d.date}
-                fill={
-                  d.weekend
-                    ? "var(--fjord-200)"
-                    : "var(--chart-delivered-bar)"
+        <CartesianGrid vertical={false} stroke="var(--chart-grid)" />
+        <XAxis
+          dataKey="date"
+          tickFormatter={weekdayLetter}
+          minTickGap={narrow ? 8 : 4}
+          tickLine={false}
+          axisLine={false}
+          tick={{
+            fill: "var(--chart-axis-text)",
+            fontSize: 11,
+          }}
+          height={36}
+          label={
+            narrow
+              ? undefined
+              : {
+                  value: "Day",
+                  position: "insideBottomRight",
+                  offset: 0,
+                  fill: "var(--chart-axis-text)",
+                  fontSize: 10,
                 }
-              />
-            ))}
-          </Bar>
-        </BarChart>
-      </ChartContainer>
-      <p
-        className="mt-auto text-text-secondary"
-        style={{ fontSize: "var(--text-12)", paddingTop: "10px" }}
-      >
-        <span className="num">{deliveredThisWeek}</span> matters delivered this
-        week against a plan of{" "}
-        <span className="num">{plannedThisWeek}</span>.
-      </p>
-    </Card>
+          }
+        />
+        <YAxis
+          tickLine={false}
+          axisLine={false}
+          width={28}
+          allowDecimals={false}
+          domain={yDomain}
+          tick={{
+            fill: "var(--chart-axis-text)",
+            fontSize: 10,
+          }}
+          label={
+            narrow
+              ? undefined
+              : {
+                  value: "Matters",
+                  angle: -90,
+                  position: "insideLeft",
+                  fill: "var(--chart-axis-text)",
+                  fontSize: 10,
+                }
+          }
+        />
+        <ChartTooltip
+          content={
+            <ChartTooltipContent
+              labelFormatter={(_, payload) => {
+                const date = payload?.[0]?.payload?.date as
+                  | string
+                  | undefined;
+                return date ? formatShortDate(date) : "";
+              }}
+              formatter={(_value, _name, item) => (
+                <span className="num font-medium text-foreground">
+                  {Number(item?.payload?.delivered ?? 0)} delivered
+                </span>
+              )}
+            />
+          }
+        />
+        <ReferenceLine
+          y={dailyPlan}
+          ifOverflow="extendDomain"
+          stroke="var(--chart-target-line)"
+          strokeDasharray="3 3"
+          label={{
+            value: narrow ? `Plan ${dailyPlan}` : `Plan ${dailyPlan} a day`,
+            position: "right",
+            offset: 6,
+            fill: "var(--chart-axis-text)",
+            fontSize: 11,
+          }}
+        />
+        <Bar dataKey="bar" radius={[3, 3, 0, 0]} maxBarSize={28}>
+          {cells}
+        </Bar>
+      </BarChart>
+    </MoneyChartCard>
   );
 }
 
 export function DeliveredChartSkeleton() {
   return (
-    <Card className="h-full flex flex-col gap-0 rounded-lg p-4 [--card-spacing:0px]">
-      <Skeleton className="h-3 w-48" />
-      <Skeleton className="mt-2 h-28 w-full rounded-md sm:h-32 md:h-40" />
-      <Skeleton className="mt-auto h-3 w-3/5 max-w-sm pt-2.5" />
-    </Card>
+    <MoneyChartCardSkeleton
+      titleClassName="w-52"
+      captionClassName="w-3/5 max-w-sm"
+    />
   );
 }
