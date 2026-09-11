@@ -50,7 +50,7 @@ The third is the one most dashboards fail. So the rule is: **every problem this 
 
 **Zone 3 · Money.** Left, revenue this month as a line with the monthly target as a dotted reference. Right, matters delivered per day as bars against a plan line. Each chart carries a one-sentence caption that states its story. Below both, five money numbers: Revenue to date · Target · Average fee · Margin per matter · Opened vs closed this month. Any matter still unquoted appears as a single line under the numbers with a Send quote action, because an unquoted matter cannot start and that is the admin's blocker to clear.
 
-**Rail · Pulse.** Activity feed, grouped by day, one line per event, avatar plus verb plus object. Filter chips with today's counts: All 24 · Submitted 7 · Assigned 6 · Delivered 4 · Filed 2 · Meetings 3 · Escalated 1 · Onboarded 1. Counts are computed from the seed, never hardcoded. The counts are the pulse at a glance; the feed is the detail. Event types include filed and meeting, because the brief names filings and meetings and Moritz runs litigation and discovery work. Sticky right rail on wide screens (≥1200px). Below that breakpoint, Pulse leaves the Overview and is a primary destination in the bottom navigation.
+**Rail · Pulse.** Activity feed for the last 24 hours, grouped by day, one line per event, avatar plus verb plus object. Filter chips with counts from the same rolling window. Counts are computed from the seed, never hardcoded. The counts are the pulse at a glance; the feed is the detail. Event types include filed and meeting, because the brief names filings and meetings and Moritz runs litigation and discovery work. Sticky right rail on wide screens (≥1200px). Below that breakpoint, Pulse leaves the Overview and is a primary destination in the bottom navigation.
 
 ### The balance check
 
@@ -84,7 +84,7 @@ Every element uses a shadcn component in the way shadcn intends. No custom boxes
 | Revenue chart | ChartContainer, AreaChart from Recharts | ChartTooltip | Target as ReferenceLine dashed. No legend, the section label names the series |
 | Delivered chart | ChartContainer, BarChart | | Plan as ReferenceLine |
 | Activity feed | ScrollArea, Avatar, Separator | | Grouped by day with a small day label |
-| Feed filters | ToggleGroup | | Single select. Each chip shows today's count, computed from the seed. Chips: All · Submitted · Assigned · Delivered · Filed · Meetings · Escalated · Onboarded. The counts are the pulse summary. |
+| Feed filters | ToggleGroup | | Single select. Each chip shows the last-24-hours count, computed from the seed. Chips: All · Submitted · Assigned · Delivered · Filed · Meetings · Escalated · Onboarded. The counts are the pulse summary. |
 | AI chat panel | Sheet, Input, Button, Skeleton | side="right", width 380px, Cmd+J | Streaming with stop. Three state-generated prompts. Answers cite rows and end in the row's own action |
 | Client update | Sheet, Tiptap editor, Button | side="right" | Draft streams into an editable Tiptap field, not a preview |
 | Morning brief | Card, Button | fjord tint, Button size="sm" | One line, one action, Dismiss |
@@ -271,7 +271,7 @@ Every level-one row carries its action inline. Progressive disclosure hides deta
 | Attention row | Matter, reason, action | Hover: client, lawyer, minutes | Click: matter detail (not built) |
 | Co-counsel row | Name, load bar, next due | Expand: active matters list | Lawyer page (not built) |
 | Revenue chart | Line, target, gap | Hover: day value vs plan | Finance page (not built) |
-| Activity feed | Today, collapsed after 8 items | Show more | Filter chips |
+| Activity feed | Last 24 hours, collapsed after 8 items | Show more | Filter chips |
 | Command palette | Hidden | Cmd+K | Groups: Actions, Go to, Recent matters |
 
 Everything collapsed by default opens the section that answers the current question first. On mobile, level one is the whole screen; levels two and three are reached by scrolling the stacked zones or opening sheets, not by hiding zones behind tabs.

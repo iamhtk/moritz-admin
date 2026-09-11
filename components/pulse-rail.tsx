@@ -18,7 +18,7 @@ import {
   ActivityFeedSkeleton,
 } from "@/components/activity-feed";
 import { useOverview } from "@/hooks/use-overview";
-import { countActivityToday } from "@/lib/activity-day";
+import { countActivityRecent } from "@/lib/activity-day";
 import { cn } from "cn";
 
 function PulseShell({ children }: { children: ReactNode }) {
@@ -71,7 +71,7 @@ function PulseBody({
     <>
       <ZoneLabel
         title="Pulse"
-        meta={embedded ? undefined : "today"}
+        meta={embedded ? undefined : "last 24 hours"}
         className={embedded ? undefined : "mb-0"}
         visuallyHidden={embedded}
       />
@@ -161,7 +161,7 @@ export function PulsePanel({ embedded = false }: { embedded?: boolean }) {
   const [filter, setFilter] = useState("all");
 
   const counts = useMemo(
-    () => countActivityToday(data?.activity ?? []),
+    () => countActivityRecent(data?.activity ?? []),
     [data?.activity]
   );
 
@@ -193,7 +193,7 @@ export function PulseRail() {
   const [filter, setFilter] = useState("all");
 
   const counts = useMemo(
-    () => countActivityToday(data?.activity ?? []),
+    () => countActivityRecent(data?.activity ?? []),
     [data?.activity]
   );
 

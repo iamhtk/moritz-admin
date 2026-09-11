@@ -818,9 +818,8 @@ async function getConfig(db: ReturnType<typeof serverClient>): Promise<Config> {
       refs
     );
   
-    // Pulse chips recompute on the client with the viewer's local calendar day.
-    // Server counts use a rolling 24h window so Ask (UTC host) is not empty near
-    // local midnight and does not claim a UTC "today" the viewer is not in.
+    // Pulse chips/feed and Ask share a rolling 24h window so neither empties
+    // just after local midnight when a calendar-day filter would.
     const dayAgo = Date.now() - 24 * 60 * 60 * 1000;
     const recent = activity.filter(
       (a) => new Date(a.at).getTime() >= dayAgo

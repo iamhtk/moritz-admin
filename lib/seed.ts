@@ -292,9 +292,9 @@ export const deliveredMatters: Matter[] = (() => {
 
 export const activity: ActivityEvent[] = [
   // Spread across the last ~5 hours. Fifteen of the eighteen "recent" events
-  // sit in the last hour (irregular gaps, denser near now) so a local "today"
-  // filter still shows ~15 just after midnight; the other three thin out to
-  // ~2.7h. Six trail to ~5h for daytime depth.
+  // sit in the last hour (irregular gaps, denser near now); the other three
+  // thin out to ~2.7h. Six trail to ~5h. Pulse uses a rolling 24h window, so
+  // the feed stays populated just after local midnight.
   { id: "e1",  at: minsAgo(3),   actorId: "system", verb: "escalated", matterId: "m1",  clientId: "c1",  note: "past due" },
   { id: "e2",  at: minsAgo(41),  actorId: "l5",     verb: "delivered", matterId: null,  clientId: "c7",  note: "MSA for Fjordline" },
   { id: "e3",  at: minsAgo(55),  actorId: "system", verb: "submitted", matterId: "m5",  clientId: "c4",  note: "NDA via Slack" },

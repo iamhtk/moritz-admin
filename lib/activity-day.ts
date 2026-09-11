@@ -1,31 +1,31 @@
-/** Shared today filter for Pulse counts and feed lists (viewer's local day). */
+/** Shared rolling 24-hour window for Pulse counts and feed lists. */
 
-export function startOfToday(now = new Date()) {
-  const d = new Date(now);
-  d.setHours(0, 0, 0, 0);
-  return d;
+export const ACTIVITY_WINDOW_MS = 24 * 60 * 60 * 1000;
+
+export function activityWindowStart(now = new Date()) {
+  return new Date(now.getTime() - ACTIVITY_WINDOW_MS);
 }
 
-export function isActivityToday(iso: string, now = new Date()) {
-  return new Date(iso) >= startOfToday(now);
+export function isActivityInWindow(iso: string, now = new Date()) {
+  return new Date(iso).getTime() >= activityWindowStart(now).getTime();
 }
 
-export function filterActivityToday<T extends { at: string }>(
+export function filterActivityRecent<T extends { at: string }>(
   items: T[],
   now = new Date()
 ) {
-  const start = startOfToday(now);
-  return items.filter((a) => new Date(a.at) >= start);
+  const start = activityWindowStart(now).getTime();
+  return items.filter((a) => new Date(a.at).getTime() >= start);
 }
 
-/** Chip counts for the viewer's local calendar day. */
-export function countActivityToday<T extends { at: string; verb: string }>(
+/** Chip counts for the same rolling window as the feed. */
+export function countActivityRecent<T extends { at: string; verb: string }>(
   items: T[],
   now = new Date()
 ): Record<string, number> {
-  const today = filterActivityToday(items, now);
-  const counts: Record<string, number> = { all: today.length };
-  for (const a of today) {
+  const recent = filterActivityRecent(items, now);
+  const counts: Record<string, number> = { all: recent.length };
+  for (const a of recent) {
     counts[a.verb] = (counts[a.verb] ?? 0) + 1;
   }
   return counts;

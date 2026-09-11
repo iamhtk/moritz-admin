@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { FeedItem } from "@/components/ui-bits/feed-item";
 import { groupActivityByDay } from "@/lib/activity-copy";
-import { filterActivityToday } from "@/lib/activity-day";
+import { filterActivityRecent } from "@/lib/activity-day";
 import type { ActivityItem } from "@/lib/supabase";
 
 const PREVIEW = 8;
@@ -24,15 +24,15 @@ export function ActivityFeed({
     setExpanded(false);
   }
 
-  const todayActivity = useMemo(
-    () => filterActivityToday(activity),
+  const recentActivity = useMemo(
+    () => filterActivityRecent(activity),
     [activity]
   );
 
   const filtered = useMemo(() => {
-    if (filter === "all") return todayActivity;
-    return todayActivity.filter((a) => a.verb === filter);
-  }, [todayActivity, filter]);
+    if (filter === "all") return recentActivity;
+    return recentActivity.filter((a) => a.verb === filter);
+  }, [recentActivity, filter]);
 
   const visible = expanded ? filtered : filtered.slice(0, PREVIEW);
   const groups = groupActivityByDay(visible);
@@ -44,7 +44,7 @@ export function ActivityFeed({
         className="py-6 text-center text-text-secondary"
         style={{ fontSize: "var(--text-12)" }}
       >
-        Nothing here today.
+        Nothing in the last 24 hours.
       </p>
     );
   }
