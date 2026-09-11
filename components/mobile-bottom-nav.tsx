@@ -43,8 +43,8 @@ function isActivePath(pathname: string, href: string) {
 }
 
 /**
- * Primary navigation below the Pulse-rail breakpoint (1200px).
- * Desktop (≥1200) uses the sidebar + Overview rail instead.
+ * Primary navigation below the Pulse-rail breakpoint (1280px, Tailwind `xl`).
+ * Desktop (≥1280) uses the sidebar + Overview rail instead.
  */
 export function MobileBottomNav() {
   const pathname = usePathname();

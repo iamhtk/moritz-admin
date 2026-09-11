@@ -6,7 +6,7 @@ import { ZonePeople } from "@/components/zone-people";
 import { ZoneMoney } from "@/components/zone-money";
 import { PulseRail } from "@/components/pulse-rail";
 
-const XL = "(min-width: 1200px)";
+const XL = "(min-width: 1280px)";
 const emptySubscribe = () => () => {};
 
 function subscribeXl(onStoreChange: () => void) {
@@ -17,8 +17,8 @@ function subscribeXl(onStoreChange: () => void) {
 
 /**
  * Overview layout. Zones always stack: Today → People → Money.
- * Pulse is a sticky right rail from 1200px up; below that it is its own
- * route in the bottom navigation (/pulse), not a tab on this page.
+ * Pulse is a sticky right rail from 1280px up (Tailwind `xl`); below that it
+ * is its own route in the bottom navigation (/pulse), not a tab on this page.
  */
 export function OverviewLayout() {
   const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);

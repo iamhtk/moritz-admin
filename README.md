@@ -152,7 +152,7 @@ The brief asked the page to balance firm health, workload distribution, and fina
 - **Today** — firm health. Four numbers, the morning brief, the attention list.
 - **People** — workload. Co-counsel sorted by load, deadlines ranked by minutes remaining.
 - **Money** — financial performance. Two charts, each saying one thing, each with a caption.
-- **Pulse** — the rail on wide screens. Below 1200px it leaves the Overview and becomes its own destination in the bottom navigation.
+- **Pulse** — the rail on wide screens. Below 1280px it leaves the Overview and becomes its own destination in the bottom navigation.
 
 Balance means equal completeness, not equal prominence. Urgency still orders them, so Today is loudest and Money is quietest, but every zone has a label, a primary display, and at least one action.
 
@@ -416,7 +416,7 @@ Minimum target sizes: 32px desktop, 44px touch.
 
 A reduction, not a squeeze. Nothing scrolls sideways. Nothing visible on desktop is absent on a narrower screen; elements adapt rather than disappear.
 
-Navigation is a fixed bottom bar, Overview, Matters, Lawyers, Pulse, More, not a hamburger drawer. Pulse is a primary destination here rather than part of the Overview. On wide screens (≥1200px) it returns as the right rail and the bottom bar hides.
+Navigation is a fixed bottom bar, Overview, Matters, Lawyers, Pulse, More, not a hamburger drawer. Pulse is a primary destination here rather than part of the Overview. On wide screens (≥1280px) it returns as the right rail and the bottom bar hides.
 
 On Overview the zones stack vertically in the same order as desktop: Today, then People, then Money. The user scrolls. Today still leads with the brief, a 2×2 stat grid, and attention cards with full-width actions.
 

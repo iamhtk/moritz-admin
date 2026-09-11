@@ -50,7 +50,7 @@ The third is the one most dashboards fail. So the rule is: **every problem this 
 
 **Zone 3 · Money.** Left, revenue this month as a line with the monthly target as a dotted reference. Right, matters delivered per day as bars against a plan line. Each chart carries a one-sentence caption that states its story. Below both, five money numbers: Revenue to date · Target · Average fee · Margin per matter · Opened vs closed this month. Any matter still unquoted appears as a single line under the numbers with a Send quote action, because an unquoted matter cannot start and that is the admin's blocker to clear.
 
-**Rail · Pulse.** Activity feed for the last 24 hours, grouped by day, one line per event, avatar plus verb plus object. Filter chips with counts from the same rolling window. Counts are computed from the seed, never hardcoded. The counts are the pulse at a glance; the feed is the detail. Event types include filed and meeting, because the brief names filings and meetings and Moritz runs litigation and discovery work. Sticky right rail on wide screens (≥1200px). Below that breakpoint, Pulse leaves the Overview and is a primary destination in the bottom navigation.
+**Rail · Pulse.** Activity feed for the last 24 hours, grouped by day, one line per event, avatar plus verb plus object. Filter chips with counts from the same rolling window. Counts are computed from the seed, never hardcoded. The counts are the pulse at a glance; the feed is the detail. Event types include filed and meeting, because the brief names filings and meetings and Moritz runs litigation and discovery work. Sticky right rail on wide screens (≥1280px). Below that breakpoint, Pulse leaves the Overview and is a primary destination in the bottom navigation.
 
 ### The balance check
 
@@ -372,7 +372,7 @@ interface FinanceSummary {
 
 AI on mobile: the morning brief stays above the stat grid, because it is the fastest read on the page. The chat panel becomes a full-height bottom Sheet. Inline AI badges survive. Capacity forecast and money anomaly stay inline in their stacked zones. Client update opens as a full-screen Sheet.
 
-Stacking order on Overview: morning brief · stat grid 2 by 2 · attention cards · People · Money. Pulse is a primary item in the bottom navigation (Overview, Matters, Lawyers, Pulse, More), not an Overview tab. Sidebar is desktop-only above 1200px; below that the bottom bar owns destinations. New matter opens as a bottom Sheet from the header. Both Money charts stay visible: shorter height, fewer axis ticks, captions kept. Co-counsel table becomes cards: name, load bar, next due. Deadline list stays a list. Feed stays a feed on `/pulse`. Nothing scrolls horizontally. Touch targets 44px. Nothing visible on desktop is absent on a narrower screen; elements adapt rather than disappear.
+Stacking order on Overview: morning brief · stat grid 2 by 2 · attention cards · People · Money. Pulse is a primary item in the bottom navigation (Overview, Matters, Lawyers, Pulse, More), not an Overview tab. Sidebar is desktop-only above 1280px; below that the bottom bar owns destinations. New matter opens as a bottom Sheet from the header. Both Money charts stay visible: shorter height, fewer axis ticks, captions kept. Co-counsel table becomes cards: name, load bar, next due. Deadline list stays a list. Feed stays a feed on `/pulse`. Nothing scrolls horizontally. Touch targets 44px. Nothing visible on desktop is absent on a narrower screen; elements adapt rather than disappear.
 
 ---
 
