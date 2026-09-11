@@ -347,7 +347,7 @@ export function CommandPalette({
                   onSelect={() => run(() => openChat())}
                 >
                   <Sparkles />
-                  <span>Ask about the firm</span>
+                  <span>Ask Nora about the firm</span>
                   <CommandShortcut>{mod}+J</CommandShortcut>
                 </CommandItem>
               </CommandGroup>

@@ -331,8 +331,8 @@ export function ChatPanel({
         <div className="min-w-0 flex-1">
           <label htmlFor="chat-ask" className="sr-only">
             {askMode === "legal"
-              ? "Ask a general legal information question"
-              : "Ask about the firm"}
+              ? "Ask Nora a general legal information question"
+              : "Ask Nora about the firm"}
           </label>
           <Textarea
             id="chat-ask"
@@ -341,8 +341,8 @@ export function ChatPanel({
             onKeyDown={onKeyDown}
             placeholder={
               askMode === "legal"
-                ? "Ask for a general legal definition…"
-                : "Ask about matters, lawyers, or the month."
+                ? "Ask Nora for a general legal definition…"
+                : "Ask Nora about matters, lawyers, or the month."
             }
             rows={1}
             className="max-h-[4.5rem] min-h-8 w-full resize-none overflow-y-auto border-0 bg-transparent px-1.5 py-1.5 shadow-none focus-visible:border-transparent focus-visible:ring-0"
@@ -421,9 +421,7 @@ export function ChatPanel({
           <SheetHandle visible={side === "bottom"} />
           <SheetHeader className="shrink-0 border-b border-border px-5 py-4 text-left">
             <SheetTitle style={{ fontSize: "var(--text-14)" }}>
-              {askMode === "legal"
-                ? "General legal information"
-                : "Ask about the firm"}
+              Nora
             </SheetTitle>
             <SheetDescription
               className="text-text-tertiary"
@@ -436,7 +434,7 @@ export function ChatPanel({
                 </>
               ) : (
                 <>
-                  Answers come from this firm&apos;s live data. Updated{" "}
+                  Answers from this firm&apos;s live data. Updated{" "}
                   {formatUpdatedAt(data?.generatedAt)}.
                 </>
               )}
@@ -484,26 +482,17 @@ export function ChatPanel({
               <div className="mx-auto flex w-full max-w-sm flex-col gap-6">
                 <div className="space-y-1 text-center">
                   <p
-                    className="font-medium text-foreground"
-                    style={{ fontSize: "var(--text-14)" }}
-                  >
-                    {askMode === "legal"
-                      ? "Ask for general legal information"
-                      : "Ask about the firm"}
-                  </p>
-                  <p
-                    className="text-text-tertiary"
-                    style={{ fontSize: "var(--text-12)" }}
+                    className="text-text-secondary"
+                    style={{ fontSize: "var(--text-13)" }}
                   >
                     {askMode === "legal" ? (
                       <>
-                        You&apos;re chatting with Nora in general-information
-                        mode. This is not legal advice.
+                        Nora answers general legal questions here — not legal
+                        advice.
                       </>
                     ) : (
                       <>
-                        You&apos;re chatting with Nora, grounded in this
-                        firm&apos;s live data.
+                        Nora answers from this firm&apos;s live data.
                       </>
                     )}
                   </p>

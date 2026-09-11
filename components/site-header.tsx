@@ -122,11 +122,11 @@ export function SiteHeader() {
             variant="ghost"
             className="min-h-11 shrink-0 gap-1.5 px-0 sm:h-8 sm:min-h-8 sm:min-w-0 sm:px-3"
             aria-keyshortcuts="Meta+J Control+J"
-            aria-label="Ask"
+            aria-label="Ask Nora"
             onClick={() => openChat()}
           >
             <Sparkles className="size-4" aria-hidden />
-            <span className="hidden sm:inline">Ask</span>
+            <span className="hidden sm:inline">Ask Nora</span>
           </Button>
         </div>
 

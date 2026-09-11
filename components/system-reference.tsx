@@ -960,9 +960,9 @@ function ComponentGroups() {
       <div>
         <Textarea
           className="max-w-sm"
-          placeholder="Ask about capacity or deadlines"
+          placeholder="Ask Nora about capacity or deadlines"
           rows={3}
-          aria-label="Ask"
+          aria-label="Ask Nora"
         />
         <Caption shadcn="@/components/ui/textarea" obra="Textarea" />
       </div>
